@@ -32,8 +32,8 @@ def run_cv_model(train, test, target, model_fn, eval_fn, label):
         print_step(label + ' cv score ' + str(i) + ' : ' + str(cv_score))
         i += 1
     print_step(label + ' cv scores : ' + str(cv_scores))
-    mean_cv_score = np.mean(cv_scores)
-    print_step(label + ' mean cv score : ' + str(mean_cv_score))
+    print_step(label + ' mean cv score : ' + str(np.mean(cv_scores)))
+    print_step(label + ' std cv score : ' + str(np.std(cv_scores)))
     pred_full_test = pred_full_test / 5.0
     results = {'label': label,
                'train': pred_train, 'test': pred_full_test,

@@ -139,14 +139,14 @@ print('~~~~~~~~~~~~~')
 print_step('Dropping')
 drops = ['activation_date', 'title', 'description']
 merge.drop(drops, axis=1, inplace=True)
-currently_unused = ['region', 'user_id', 'city', 'image', 'item_seq_number']
+currently_unused = ['user_id', 'image', 'item_seq_number']
 merge.drop(currently_unused, axis=1, inplace=True)
 
 print('~~~~~~~~~~~~')
 print_step('Dummies 1/2')
 print(merge.shape)
 dummy_cols = ['parent_category_name', 'category_name', 'user_type', 'param_1',
-              'param_2', 'param_3', 'image_top_1', 'day_of_week']
+              'param_2', 'param_3', 'image_top_1', 'day_of_week', 'region', 'city']
 for col in dummy_cols:
     le = LabelEncoder()
     merge[col] = le.fit_transform(merge[col])
@@ -183,8 +183,20 @@ submission['deal_probability'] = results['test'].clip(0.0, 1.0)
 submission.to_csv('submit/submit_lgb.csv', index=False)
 print_step('Done!')
 
+# LGB: no text, geo, date, image, param data, or item_seq_number                    - Dim 51,   5CV 0.23129, Submit 0.235, Delta -.00371
+# LGB: +missing data, +OHE params (no text, geo, date, image, or item_seq_number)   - Dim 5057, 5CV 0.22694, Submit 0.230, Delta -.00306
+# LGB: +basic NLP  (no other text, geo, date, image, or item_seq_number)            - Dim 5078, 5CV 0.22607, Submit 0.229, Delta -.00293
+# LGB: +date (no other text, geo, image, or item_seq_number)                        - Dim 5086, 5CV 0.22607, Submit ?
+# LGB: +OHE city and region (no other text, image, or item_seq_number)              - Dim 6866, 5CV 0.22540, Submit ?
+
+# CURRENT
+# lgb cv scores : [0.22602729062895577, 0.22488220722427357, 0.22521759265245006, 0.22519002929663026, 0.22568916848126516]
+# lgb mean cv score : 0.22540125765671495
+# lgb std cv score : 0.00040560412486539765
+
+
+
 # TODO
-# OHE region and city
 # Include item_seq_number as a straightforward numeric
 # Basic NLP
     # merge['sentence'] = merge['description'].apply(lambda x: [s for s in re.split(r'[.!?\n]+', str(x))])
@@ -212,10 +224,17 @@ print_step('Done!')
 # Train classification and regression
 # Image analysis
     # img_hash.py?
+	# pic2vec
     # https://www.kaggle.com/classtag/extract-avito-image-features-via-keras-vgg16)
     # Contrast? https://dsp.stackexchange.com/questions/3309/measuring-the-contrast-of-an-image
     # https://www.pyimagesearch.com/2014/03/03/charizard-explains-describe-quantify-image-using-feature-vectors/
     # NNs?
+# Vary model
+	# Train Ridge on text, include into as-is LGB
+    # Take LGB, add text OHE with Ridge / SelectKBest
+    # Take LGB, add text OHE with SVD + embedding
+    # OHE everything into Ridge and then take just encoded categorical and numeric into LGB and boost with LGB
+	# OHE everything into LGB except text, then use text and residuals and boost with Ridge
 # Train more models (Ridge, FM, Ridge, NNs)
 # Look to DonorsChoose
     # https://www.kaggle.com/qinhui1999/deep-learning-is-all-you-need-lb-0-80x/code
