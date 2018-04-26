@@ -129,17 +129,24 @@ print_step('Basic NLP 20/20')
 merge['chars_per_word_title'] = merge['num_chars_title'] / merge['num_words_title']
 merge['chars_per_word_title'].fillna(0, inplace=True)
 
+print('~~~~~~~~~~~~~~~~~~~~')
+print_step('Activation Date')
+merge['activation_date'] = pd.to_datetime(merge['activation_date'])
+merge['day_of_week'] = merge['activation_date'].dt.weekday
+merge['weekend'] = ((merge['day_of_week'] == 5) | (merge['day_of_week'] == 6)).astype(int)
+
 print('~~~~~~~~~~~~~')
 print_step('Dropping')
-drops = ['region', 'activation_date', 'user_id', 'city', 'title', 'description',
-         'image', 'item_seq_number']
+drops = ['activation_date', 'title', 'description']
 merge.drop(drops, axis=1, inplace=True)
+currently_unused = ['region', 'user_id', 'city', 'image', 'item_seq_number']
+merge.drop(currently_unused, axis=1, inplace=True)
 
 print('~~~~~~~~~~~~')
 print_step('Dummies 1/2')
 print(merge.shape)
 dummy_cols = ['parent_category_name', 'category_name', 'user_type', 'param_1',
-              'param_2', 'param_3', 'image_top_1']
+              'param_2', 'param_3', 'image_top_1', 'day_of_week']
 for col in dummy_cols:
     le = LabelEncoder()
     merge[col] = le.fit_transform(merge[col])
@@ -177,7 +184,9 @@ submission.to_csv('submit/submit_lgb.csv', index=False)
 print_step('Done!')
 
 # TODO
-# Activation count DOW and is_weekend
+# OHE region and city
+# Include item_seq_number as a straightforward numeric
+# Basic NLP
     # merge['sentence'] = merge['description'].apply(lambda x: [s for s in re.split(r'[.!?\n]+', str(x))])
     # merge['num_sentence'] = merge['sentence'].apply(lambda x: len(x))
     # merge['sentence_mean'] = merge.sentence.apply(lambda xs: [len(x) for x in xs]).apply(lambda x: np.mean(x))
@@ -186,16 +195,35 @@ print_step('Done!')
     # merge['sentence_std'] = merge.sentence.apply(lambda xs: [len(x) for x in xs]).apply(lambda x: np.std(x))
     # merge['words_per_sentence'] = merge['num_words'] / merge['num_sentence']
     # merge.drop('sentence', axis=1, inplace=True)
-# description_words_per_title_words
-# description_characters_per_title_characters
-# Frequency encode user_id, city, region, parent_category_name, category_name, param_1, param_2, param_3, image_top_1
+    # description_words_per_title_words
+    # description_characters_per_title_characters
+    # Number english characters
+    # Number russian characters
+    # Number english words
+    # Number russian words
+# Frequency encode user_id, city, region, parent_category_name, category_name, param_1, param_2, param_3, image_top_1, day_of_week
 # encode(mean, median, std, min, max) of target, price, item_seq_number with user_id
-# encode(mean, median, std, min, max) of target, price with city, region, parent_category_name, category_name, param_1, param_2, param_3, image_top_1, user_type
-# Text mine concat(title, description) -> LR, SelectKBest, SVD, Embedding
-# Text mine concat(title, description, param_1, param_2, param_3) -> LR, SelectKBest, SVD, Embedding
+# encode(mean, median, std, min, max) of target, price with city, region, parent_category_name, category_name, param_1, param_2, param_3, image_top_1, user_type, day_of_week
+# TFIDF concat(title, description) -> LR, SelectKBest, SVD, Embedding
+    # https://www.kaggle.com/iggisv9t/basic-tfidf-on-text-features-0-233-lb
+# TFIDF concat(title, description, param_1, param_2, param_3, parent_category_name, category_name) -> LR, SelectKBest, SVD, Embedding
 # Check feature impact in DR
 # Tune models some
-# Train more models
-# Look to DonorsChoose
 # Train classification and regression
-# Image analysis (Mandy's hash? contrast?)
+# Image analysis
+    # img_hash.py?
+    # https://www.kaggle.com/classtag/extract-avito-image-features-via-keras-vgg16)
+    # Contrast? https://dsp.stackexchange.com/questions/3309/measuring-the-contrast-of-an-image
+    # https://www.pyimagesearch.com/2014/03/03/charizard-explains-describe-quantify-image-using-feature-vectors/
+    # NNs?
+# Train more models (Ridge, FM, Ridge, NNs)
+# Look to DonorsChoose
+    # https://www.kaggle.com/qinhui1999/deep-learning-is-all-you-need-lb-0-80x/code
+    # https://www.kaggle.com/fizzbuzz/the-all-in-one-model
+    # https://www.kaggle.com/emotionevil/beginners-workflow-meanencoding-lgb-nn-ensemble
+    # https://www.kaggle.com/safavieh/ultimate-feature-engineering-xgb-lgb-nn
+    # https://www.kaggle.com/jagangupta/understanding-approval-donorschoose-eda-fe-eli5
+    # https://www.kaggle.com/fizzbuzz/beginner-s-guide-to-capsule-networks
+    # https://www.kaggle.com/nicapotato/abc-s-of-tf-idf-boosting-0-798
+# https://www.kaggle.com/c/avito-duplicate-ads-detection
+# Use train_active and test_active somehow?
