@@ -139,7 +139,7 @@ print('~~~~~~~~~~~~~')
 print_step('Dropping')
 drops = ['activation_date', 'title', 'description']
 merge.drop(drops, axis=1, inplace=True)
-currently_unused = ['user_id', 'image', 'item_seq_number']
+currently_unused = ['user_id', 'image']
 merge.drop(currently_unused, axis=1, inplace=True)
 
 print('~~~~~~~~~~~~')
@@ -183,22 +183,22 @@ submission['deal_probability'] = results['test'].clip(0.0, 1.0)
 submission.to_csv('submit/submit_lgb.csv', index=False)
 print_step('Done!')
 
-# LGB: no text, geo, date, image, param data, or item_seq_number                    - Dim 51,   5CV 0.23129, Submit 0.235, Delta -.00371
-# LGB: +missing data, +OHE params (no text, geo, date, image, or item_seq_number)   - Dim 5057, 5CV 0.22694, Submit 0.230, Delta -.00306
-# LGB: +basic NLP  (no other text, geo, date, image, or item_seq_number)            - Dim 5078, 5CV 0.22607, Submit 0.229, Delta -.00293
-# LGB: +date (no other text, geo, image, or item_seq_number)                        - Dim 5086, 5CV 0.22607, Submit ?
-# LGB: +OHE city and region (no other text, image, or item_seq_number)              - Dim 6866, 5CV 0.22540, Submit ?
+# LGB: no text, geo, date, image, param data, or item_seq_number                    - Dim 51,   5CV 0.2313, Submit 0.235, Delta -.00371
+# LGB: +missing data, +OHE params (no text, geo, date, image, or item_seq_number)   - Dim 5057, 5CV 0.2269, Submit 0.230, Delta -.00306
+# LGB: +basic NLP  (no other text, geo, date, image, or item_seq_number)            - Dim 5078, 5CV 0.2261, Submit 0.229, Delta -.00293
+# LGB: +date (no other text, geo, image, or item_seq_number)                        - Dim 5086, 5CV 0.2261, Submit ?
+# LGB: +OHE city and region (no other text, image, or item_seq_number)              - Dim 6866, 5CV 0.2254, Submit ?
+# LGB: +item_seq_number (no other text or image)                                    - Dim 6867, 5CV 0.2252, Submit ?
+# LGB: +                                                                            - Dim ?, 5CV ?, Submit ?
 
 # CURRENT
-# lgb cv scores : [0.22602729062895577, 0.22488220722427357, 0.22521759265245006, 0.22519002929663026, 0.22568916848126516]
-# lgb mean cv score : 0.22540125765671495
-# lgb std cv score : 0.00040560412486539765
-
+# lgb cv scores : [0.2257400518470943, 0.2247160341503356, 0.22497035601630214, 0.22496896245460637, 0.2254702517046445]
+# lgb mean cv score : 0.2251731312345966
+# lgb std cv score : 0.00037454505173963834
 
 
 # TODO
-# Include item_seq_number as a straightforward numeric
-# Basic NLP
+# Sentence NLP
     # merge['sentence'] = merge['description'].apply(lambda x: [s for s in re.split(r'[.!?\n]+', str(x))])
     # merge['num_sentence'] = merge['sentence'].apply(lambda x: len(x))
     # merge['sentence_mean'] = merge.sentence.apply(lambda xs: [len(x) for x in xs]).apply(lambda x: np.mean(x))
@@ -207,21 +207,20 @@ print_step('Done!')
     # merge['sentence_std'] = merge.sentence.apply(lambda xs: [len(x) for x in xs]).apply(lambda x: np.std(x))
     # merge['words_per_sentence'] = merge['num_words'] / merge['num_sentence']
     # merge.drop('sentence', axis=1, inplace=True)
+# Ratio NLP
     # description_words_per_title_words
     # description_characters_per_title_characters
+# English-Russian NLP
     # Number english characters
     # Number russian characters
     # Number english words
     # Number russian words
+# TFIDF concat(title, description) -> Ridge
+    # https://www.kaggle.com/iggisv9t/basic-tfidf-on-text-features-0-233-lb
+# TFIDF concat(title, description, param_1, param_2, param_3, parent_category_name, category_name) -> Ridge
 # Frequency encode user_id, city, region, parent_category_name, category_name, param_1, param_2, param_3, image_top_1, day_of_week
 # encode(mean, median, std, min, max) of target, price, item_seq_number with user_id
 # encode(mean, median, std, min, max) of target, price with city, region, parent_category_name, category_name, param_1, param_2, param_3, image_top_1, user_type, day_of_week
-# TFIDF concat(title, description) -> LR, SelectKBest, SVD, Embedding
-    # https://www.kaggle.com/iggisv9t/basic-tfidf-on-text-features-0-233-lb
-# TFIDF concat(title, description, param_1, param_2, param_3, parent_category_name, category_name) -> LR, SelectKBest, SVD, Embedding
-# Check feature impact in DR
-# Tune models some
-# Train classification and regression
 # Image analysis
     # img_hash.py?
 	# pic2vec
@@ -229,6 +228,9 @@ print_step('Done!')
     # Contrast? https://dsp.stackexchange.com/questions/3309/measuring-the-contrast-of-an-image
     # https://www.pyimagesearch.com/2014/03/03/charizard-explains-describe-quantify-image-using-feature-vectors/
     # NNs?
+# Check feature impact in DR
+# Tune models some
+# Train classification and regression
 # Vary model
 	# Train Ridge on text, include into as-is LGB
     # Take LGB, add text OHE with Ridge / SelectKBest
