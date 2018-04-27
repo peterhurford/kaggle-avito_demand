@@ -1,6 +1,7 @@
 import string
 
 import pandas as pd
+import numpy as np
 
 from scipy.sparse import hstack
 
@@ -231,17 +232,35 @@ print_step('Merging')
 merge = pd.concat([train, test])
 print(merge.shape)
 
-# print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
-# print_step('More feature encoding 1/4')
-# merge['target'] = target
-# merge['image_top_1_target_std'] = merge.groupby('image_top_1')['target'].transform('std').fillna(0)
-# print_step('More feature encoding 2/4')
-# merge['parent_category_name_target_std'] = merge.groupby('parent_category_name')['target'].transform('std').fillna(0)
-# print_step('More feature encoding 3/4')
-# merge['user_id_target_std'] = merge.groupby('user_id')['target'].transform('std').fillna(0)
-# print_step('More feature encoding 4/4')
-# merge.drop('target', axis=1, inplace=True)
-# print(merge.shape)
+print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+print_step('More feature encoding 1/11')
+merge['price'] = np.log1p(merge['price'])
+print_step('More feature encoding 2/11')
+merge['image_top_1'] = train['image_top_1'].fillna(-8).astype(str)
+merge['image_top_1_mean_price'] = merge.groupby('image_top_1')['price'].transform('mean')
+print_step('More feature encoding 3/11')
+merge['image_top_1_price_std'] = merge.groupby('image_top_1')['price'].transform('std').fillna(0)
+print_step('More feature encoding 4/11')
+merge['param_1_mean_price'] = merge.groupby('param_1')['price'].transform('mean')
+print_step('More feature encoding 5/11')
+merge['param_1_price_std'] = merge.groupby('param_1')['price'].transform('std').fillna(0)
+print_step('More feature encoding 6/11')
+merge['param_2_mean_price'] = merge.groupby('param_2')['price'].transform('mean')
+print_step('More feature encoding 7/11')
+merge['param_2_price_std'] = merge.groupby('param_2')['price'].transform('std').fillna(0)
+print_step('More feature encoding 8/11')
+merge['param_3_mean_price'] = merge.groupby('param_3')['price'].transform('mean')
+print_step('More feature encoding 9/11')
+merge['param_3_price_std'] = merge.groupby('param_3')['price'].transform('std').fillna(0)
+print_step('More feature encoding 10/11')
+merge['user_id_mean_price'] = merge.groupby('user_id')['price'].transform('mean')
+print_step('More feature encoding 11/11')
+merge['user_id_price_std'] = merge.groupby('user_id')['price'].transform('std').fillna(0)
+print_step('More feature encoding 10/11')
+merge['category_name_mean_price'] = merge.groupby('category_name')['price'].transform('mean')
+print_step('More feature encoding 11/11')
+merge['category_name_price_std'] = merge.groupby('category_name')['price'].transform('std').fillna(0)
+print(merge.shape)
 
 # print('~~~~~~~~~~~~~~')
 # print_step('TFIDF 1/4')
@@ -278,7 +297,6 @@ print(merge.shape)
 
 print('~~~~~~~~~~~~~~~~')
 print_step('Dummies 1/2')
-merge['image_top_1'] = merge['image_top_1'].fillna(-8).astype(str)
 dummy_cols = ['parent_category_name', 'category_name', 'user_type', 'param_1',
               'param_2', 'param_3', 'image_top_1', 'day_of_week', 'region', 'city']
 for col in dummy_cols:
@@ -330,15 +348,15 @@ print_step('Done!')
 # LGB: +more basic NLP (no other text or image)                                    - Dim 6877,  5CV 0.2251, Submit 0.229, Delta -.0039  <f47d17d>
 # LGB: +SelectKBest TFIDF description + text (no image)                            - Dim 54877, 5CV 0.2221, Submit 0.225, Delta -.0029  <5e4f5be>
 # LGB: -SelectKBest TFIDF, +frequency encoding                                     - Dim 6887,  5CV 0.2243, Submit ?                    <f7787b2>
-# LGB: +total missing, +adjusted item_seq_number                                   - Dim 6889,  5CV 0.2243, Submit ?
-# LGB: +target encoding                                                            - Dim 6901,  5CV 0.2234, Submit 0.227, Delta -.0036
+# LGB: +total missing, +adjusted item_seq_number                                   - Dim 6889,  5CV 0.2243, Submit ?                    <0107d26>
+# LGB: +target encoding                                                            - Dim 6901,  5CV 0.2234, Submit 0.227, Delta -.0036  <7a849b1>
+# LGB: +price encoding                                                             - Dim 6912,  5CV 0.2229, Submit ?
 # LGB: -                                                                           - Dim ?, 5CV ?, Submit ?
 
 # CURRENT
-# [2018-04-27 05:56:37.332921] lgb cv scores : [0.22389932158001333, 0.22300516159765532, 0.22320813824069294, 0.2232187296508764, 0.22371286204551516]
-# [2018-04-27 05:56:37.333119] lgb mean cv score : 0.22340884262295063
-# [2018-04-27 05:56:37.334227] lgb std cv score : 0.0003383433102662402
-
+# [2018-04-27 16:39:08.709221] lgb cv scores : [0.22343898332728193, 0.22250389688187794, 0.2227847395274668, 0.22261006668808794, 0.22316359778745867]
+# [2018-04-27 16:39:08.710569] lgb mean cv score : 0.22290025684243467
+# [2018-04-27 16:39:08.712052] lgb std cv score : 0.0003504940720958682
 
 # [2018-04-26 21:46:32.974844] lgb cv scores : [0.22256053295460215, 0.22160517248374503, 0.22192232562406788, 0.22177930697296735, 0.22242885702632134]
 # [2018-04-26 21:46:32.976301] lgb mean cv score : 0.22205923901234076
@@ -347,32 +365,17 @@ print_step('Done!')
 
 
 # TODO
-# Submit to Kaggle
-
-# log price transform, then mean of price for image_top_1
-# std of price for image_top_1
-# mean of price for param_1
-# std of price for param_1
-# mean of price for param_2
-# std of price for param_2
-# mean of price for param_3
-# mean of price for item_seq_number
-# mean of price for adjusted_item_seq_number
-# std of price for item_seq_number
-# std of price for adjusted_item_seq_number
-# mean of price for user_id
-# std of price for user_id
-# std of target for user_id
-# mean of price for parent_category_name
-# std of price for parent_category_name
-# std of target for category_name
-# mean of price for category_name
-# std of price for category_name
 
 # mean of item_seq_number for user_id
 # max of item_seq_number for user_id
 # min of item_seq_number for user_id
 # max - min of item_seq_number for user_id
+
+# Get CV score re-adding TFIDF
+
+# Handle time features
+	# https://github.com/mxbi/ftim
+	# OTV validation
 
 #tr['title_first'] = tr['title'].apply(lambda ss: ss.translate(ss.maketrans('', '', string.punctuation)).replace('\n', ' ').lower().split(' ')[0])
 # 0.7634060532342571
@@ -380,8 +383,6 @@ print_step('Done!')
 #get_element = lambda elem, item: elem[item] if len(elem) > item else ''
 #tr['title_second'] = tr['title'].apply(lambda ss: get_element(ss.translate(ss.maketrans('', '', string.punctuation)).replace('\n', ' ').lower().split(' '), 1))
 # 0.7419195431638979
-
-# Get CV score re-adding TFIDF
 
 # Image analysis
     # pic2vec
