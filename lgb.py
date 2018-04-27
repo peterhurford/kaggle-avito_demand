@@ -11,7 +11,7 @@ from sklearn.feature_selection.univariate_selection import SelectKBest, f_regres
 import lightgbm as lgb
 
 from cv import run_cv_model
-from utils import print_step, rmse
+from utils import print_step, rmse, TargetEncoder
 from cache import get_data, is_in_cache, load_cache, save_in_cache
 
 
@@ -79,8 +79,7 @@ if not is_in_cache('data_with_fe'):
     merge['description_missing'] = merge['description'].isna().astype(int)
     merge['description'].fillna('', inplace=True)
     print_step('Impute 6/6')
-    merge['image_missing'] = merge['image'].isna().astype(int)
-    merge['image_top_1'] = merge['image_top_1'].astype('str').fillna('missing')
+    merge['image_top_1'] = train['image_top_1'].fillna(-8).astype(str)
 
 
     print('~~~~~~~~~~~~~~~~~~~')
@@ -214,10 +213,35 @@ else:
     print('~~~~~~~~~~~~~~~~~~')
     print_step('Cache Loading')
     train, test = load_cache('data_with_fe')
-    print('~~~~~~~~~~~~')
-    print_step('Merging')
-    merge = pd.concat([train, test])
 
+
+print(train.shape)
+print(test.shape)
+print('~~~~~~~~~~~~~~~~~~~~')
+print_step('Target encoding')
+f_cats = ['image_top_1', 'item_seq_number', 'category_name', 'param_1', 'param_2', 'param_3']
+target_encode = TargetEncoder(min_samples_leaf=100, smoothing=10, noise_level=0.01,
+                              keep_original=True, cols=f_cats, calc_std=True)
+train, test = target_encode.encode(train, test, target)
+print(train.shape)
+print(test.shape)
+
+print('~~~~~~~~~~~~')
+print_step('Merging')
+merge = pd.concat([train, test])
+print(merge.shape)
+
+# print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+# print_step('More feature encoding 1/4')
+# merge['target'] = target
+# merge['image_top_1_target_std'] = merge.groupby('image_top_1')['target'].transform('std').fillna(0)
+# print_step('More feature encoding 2/4')
+# merge['parent_category_name_target_std'] = merge.groupby('parent_category_name')['target'].transform('std').fillna(0)
+# print_step('More feature encoding 3/4')
+# merge['user_id_target_std'] = merge.groupby('user_id')['target'].transform('std').fillna(0)
+# print_step('More feature encoding 4/4')
+# merge.drop('target', axis=1, inplace=True)
+# print(merge.shape)
 
 # print('~~~~~~~~~~~~~~')
 # print_step('TFIDF 1/4')
@@ -245,14 +269,16 @@ else:
 # print(tfidf_train.shape)
 # print(tfidf_test.shape)
 
+print(merge.shape)
 print('~~~~~~~~~~~~~')
 print_step('Dropping')
-drops = ['user_id']
+drops = ['user_id'] # 'text'
 merge.drop(drops, axis=1, inplace=True)
+print(merge.shape)
 
 print('~~~~~~~~~~~~~~~~')
 print_step('Dummies 1/2')
-print(merge.shape)
+merge['image_top_1'] = merge['image_top_1'].fillna(-8).astype(str)
 dummy_cols = ['parent_category_name', 'category_name', 'user_type', 'param_1',
               'param_2', 'param_3', 'image_top_1', 'day_of_week', 'region', 'city']
 for col in dummy_cols:
@@ -295,22 +321,24 @@ submission['deal_probability'] = results['test'].clip(0.0, 1.0)
 submission.to_csv('submit/submit_lgb.csv', index=False)
 print_step('Done!')
 
-# LGB: no text, geo, date, image, param data, or item_seq_number                   - Dim 51,    5CV 0.2313, Submit 0.235, Delta -.00371
-# LGB: +missing data, +OHE params (no text, geo, date, image, or item_seq_number)  - Dim 5057,  5CV 0.2269, Submit 0.230, Delta -.00306
-# LGB: +basic NLP (no other text, geo, date, image, or item_seq_number)            - Dim 5078,  5CV 0.2261, Submit 0.229, Delta -.00293  <a9e424c>
-# LGB: +date (no other text, geo, image, or item_seq_number)                       - Dim 5086,  5CV 0.2261, Submit ?                     <f6c28f2>
-# LGB: +OHE city and region (no other text, image, or item_seq_number)             - Dim 6866,  5CV 0.2254, Submit ?                     <531df17>
-# LGB: +item_seq_number (no other text or image)                                   - Dim 6867,  5CV 0.2252, Submit ?                     <624f1a4>
-# LGB: +more basic NLP (no other text or image)                                    - Dim 6877,  5CV 0.2251, Submit 0.229, Delta -.00390  <f47d17d>
-# LGB: +SelectKBest TFIDF description + text (no image)                            - Dim 54877, 5CV 0.2221, Submit 0.225, Delta -.00290  <5e4f5be>
-# LGB: -SelectKBest TFIDF, +frequency encoding                                     - Dim 6887,  5CV 0.2243, Submit ?                     <f7787b2>
+# LGB: no text, geo, date, image, param data, or item_seq_number                   - Dim 51,    5CV 0.2313, Submit 0.235, Delta -.0037
+# LGB: +missing data, +OHE params (no text, geo, date, image, or item_seq_number)  - Dim 5057,  5CV 0.2269, Submit 0.230, Delta -.0031
+# LGB: +basic NLP (no other text, geo, date, image, or item_seq_number)            - Dim 5078,  5CV 0.2261, Submit 0.229, Delta -.0029  <a9e424c>
+# LGB: +date (no other text, geo, image, or item_seq_number)                       - Dim 5086,  5CV 0.2261, Submit ?                    <f6c28f2>
+# LGB: +OHE city and region (no other text, image, or item_seq_number)             - Dim 6866,  5CV 0.2254, Submit ?                    <531df17>
+# LGB: +item_seq_number (no other text or image)                                   - Dim 6867,  5CV 0.2252, Submit ?                    <624f1a4>
+# LGB: +more basic NLP (no other text or image)                                    - Dim 6877,  5CV 0.2251, Submit 0.229, Delta -.0039  <f47d17d>
+# LGB: +SelectKBest TFIDF description + text (no image)                            - Dim 54877, 5CV 0.2221, Submit 0.225, Delta -.0029  <5e4f5be>
+# LGB: -SelectKBest TFIDF, +frequency encoding                                     - Dim 6887,  5CV 0.2243, Submit ?                    <f7787b2>
 # LGB: +total missing, +adjusted item_seq_number                                   - Dim 6889,  5CV 0.2243, Submit ?
+# LGB: +target encoding                                                            - Dim 6901,  5CV 0.2234, Submit 0.227, Delta -.0036
 # LGB: -                                                                           - Dim ?, 5CV ?, Submit ?
 
 # CURRENT
-# [2018-04-27 02:28:45.002130] lgb cv scores : [0.22489175574540765, 0.22389951200094904, 0.22402409330291484, 0.22408721463318387, 0.2245843163819873]
-# [2018-04-27 02:28:45.003583] lgb mean cv score : 0.22429737841288855
-# [2018-04-27 02:28:45.004631] lgb std cv score : 0.00037756299048125996
+# [2018-04-27 05:56:37.332921] lgb cv scores : [0.22389932158001333, 0.22300516159765532, 0.22320813824069294, 0.2232187296508764, 0.22371286204551516]
+# [2018-04-27 05:56:37.333119] lgb mean cv score : 0.22340884262295063
+# [2018-04-27 05:56:37.334227] lgb std cv score : 0.0003383433102662402
+
 
 # [2018-04-26 21:46:32.974844] lgb cv scores : [0.22256053295460215, 0.22160517248374503, 0.22192232562406788, 0.22177930697296735, 0.22242885702632134]
 # [2018-04-26 21:46:32.976301] lgb mean cv score : 0.22205923901234076
@@ -319,18 +347,8 @@ print_step('Done!')
 
 
 # TODO
-# Target encode image_top_1
-# Target encode item_seq_number
-# Target encode adjusted_item_seq_number
-# std of target for image_top_1
-# Target encode param_1
-# std of target for param_1
-# Target encode param_2
-# std of target for param_2
-# Target encode param_3
-# std of target for param_3
-# Target encode category_name
-# Target encode parent_category_name
+# Submit to Kaggle
+
 # log price transform, then mean of price for image_top_1
 # std of price for image_top_1
 # mean of price for param_1
@@ -338,45 +356,53 @@ print_step('Done!')
 # mean of price for param_2
 # std of price for param_2
 # mean of price for param_3
-# std of target for item_seq_number
-# Target encode item_seq_number
-# std of target for parent_category_name
 # mean of price for item_seq_number
 # mean of price for adjusted_item_seq_number
 # std of price for item_seq_number
 # std of price for adjusted_item_seq_number
-# Target encode user_id
 # mean of price for user_id
 # std of price for user_id
 # std of target for user_id
-# mean of item_seq_number for user_id
-# max of item_seq_number for user_id
-# min of item_seq_number for user_id
-# max - min of item_seq_number for user_id
 # mean of price for parent_category_name
 # std of price for parent_category_name
 # std of target for category_name
 # mean of price for category_name
 # std of price for category_name
 
+# mean of item_seq_number for user_id
+# max of item_seq_number for user_id
+# min of item_seq_number for user_id
+# max - min of item_seq_number for user_id
+
+#tr['title_first'] = tr['title'].apply(lambda ss: ss.translate(ss.maketrans('', '', string.punctuation)).replace('\n', ' ').lower().split(' ')[0])
+# 0.7634060532342571
+
+#get_element = lambda elem, item: elem[item] if len(elem) > item else ''
+#tr['title_second'] = tr['title'].apply(lambda ss: get_element(ss.translate(ss.maketrans('', '', string.punctuation)).replace('\n', ' ').lower().split(' '), 1))
+# 0.7419195431638979
+
+# Get CV score re-adding TFIDF
+
 # Image analysis
-	# pic2vec
+    # pic2vec
     # img_hash.py?
-    # https://www.kaggle.com/classtag/extract-avito-image-features-via-keras-vgg16)
+	# https://www.kaggle.com/classtag/extract-avito-image-features-via-keras-vgg16
     # Contrast? https://dsp.stackexchange.com/questions/3309/measuring-the-contrast-of-an-image
     # https://www.pyimagesearch.com/2014/03/03/charizard-explains-describe-quantify-image-using-feature-vectors/
     # NNs?
+# Geo stuff with the cities (get lat/long)
 # Train classification model with AUC
 # Implement https://www.kaggle.com/yekenot/ridge-text-cat, add as submodel
 # Check feature impact and tuning in DR
 # Tune models some
 # Vary model
-	# Train Ridge on text, include into as-is LGB
+    # Train Ridge on text, include into as-is LGB
     # Take LGB, add text OHE with Ridge / SelectKBest
     # Take LGB, add text OHE with SVD + embedding
     # OHE everything into Ridge and then take just encoded categorical and numeric into LGB and boost with LGB
-	# OHE everything into LGB except text, then use text and residuals and boost with Ridge
+    # OHE everything into LGB except text, then use text and residuals and boost with Ridge
 # Train more models (Ridge, FM, Ridge, NNs)
+# Predict log price to impute missing, also look at difference between predicted and actual price
 # Look to DonorsChoose
     # https://www.kaggle.com/qinhui1999/deep-learning-is-all-you-need-lb-0-80x/code
     # https://www.kaggle.com/fizzbuzz/the-all-in-one-model
@@ -385,7 +411,4 @@ print_step('Done!')
     # https://www.kaggle.com/jagangupta/understanding-approval-donorschoose-eda-fe-eli5
     # https://www.kaggle.com/fizzbuzz/beginner-s-guide-to-capsule-networks
     # https://www.kaggle.com/nicapotato/abc-s-of-tf-idf-boosting-0-798
-# https://www.kaggle.com/c/avito-duplicate-ads-detection/discussion
-# https://www.kaggle.com/c/two-sigma-connect-rental-listing-inquiries/discussion
-# https://www.kaggle.com/c/cdiscount-image-classification-challenge/discussion
 # Use train_active and test_active somehow?
