@@ -186,9 +186,15 @@ if not is_in_cache('data_with_fe'):
     print_step('Frequency Encode 10/10')
     merge['day_of_week_count'] = merge.groupby('day_of_week')['day_of_week'].transform('count')
 
+    print('~~~~~~~~~~~~~~~~~~~~~~')
+    print_step('Additional FE 1/2')
+    merge['num_missing'] = merge.isna().sum(axis=1)
+    print_step('Additional FE 2/2')
+    merge['adjusted_item_seq_number'] = merge['item_seq_number'] - merge.groupby('user_id')['item_seq_number'].transform('min')
+
     print('~~~~~~~~~~~~~')
     print_step('Dropping')
-    drops = ['activation_date', 'title', 'description', 'user_id']
+    drops = ['activation_date', 'title', 'description']
     merge.drop(drops, axis=1, inplace=True)
     currently_unused = ['image']
     merge.drop(currently_unused, axis=1, inplace=True)
@@ -238,6 +244,11 @@ else:
 # merge.drop('text', axis=1, inplace=True)
 # print(tfidf_train.shape)
 # print(tfidf_test.shape)
+
+print('~~~~~~~~~~~~~')
+print_step('Dropping')
+drops = ['user_id']
+merge.drop(drops, axis=1, inplace=True)
 
 print('~~~~~~~~~~~~~~~~')
 print_step('Dummies 1/2')
@@ -291,8 +302,9 @@ print_step('Done!')
 # LGB: +OHE city and region (no other text, image, or item_seq_number)             - Dim 6866,  5CV 0.2254, Submit ?                     <531df17>
 # LGB: +item_seq_number (no other text or image)                                   - Dim 6867,  5CV 0.2252, Submit ?                     <624f1a4>
 # LGB: +more basic NLP (no other text or image)                                    - Dim 6877,  5CV 0.2251, Submit 0.229, Delta -.00390  <f47d17d>
-# LGB: +SelectKBest TFIDF description + text (no image)                            - Dim 54877, 5CV 0.2221, Submit 0.225, Delta -.00290
-# LGB: -SelectKBest TFIDF, +frequency encoding                                     - Dim 6887,  5CV 0.2243, Submit ?
+# LGB: +SelectKBest TFIDF description + text (no image)                            - Dim 54877, 5CV 0.2221, Submit 0.225, Delta -.00290  <5e4f5be>
+# LGB: -SelectKBest TFIDF, +frequency encoding                                     - Dim 6887,  5CV 0.2243, Submit ?                     <f7787b2>
+# LGB: +total missing, +adjusted item_seq_number                                   - Dim 6889,  5CV 0.2243, Submit ?
 # LGB: -                                                                           - Dim ?, 5CV ?, Submit ?
 
 # CURRENT
@@ -307,9 +319,9 @@ print_step('Done!')
 
 
 # TODO
-# Add tr['num_missing'] = tr.isna().sum(axis=1)
 # Target encode image_top_1
 # Target encode item_seq_number
+# Target encode adjusted_item_seq_number
 # std of target for image_top_1
 # Target encode param_1
 # std of target for param_1
@@ -326,15 +338,13 @@ print_step('Done!')
 # mean of price for param_2
 # std of price for param_2
 # mean of price for param_3
-# std of price for param_3
 # std of target for item_seq_number
-# std of target for city
-# mean of price for user_type
 # Target encode item_seq_number
-# Target encode city
 # std of target for parent_category_name
-# Target encode user_type
 # mean of price for item_seq_number
+# mean of price for adjusted_item_seq_number
+# std of price for item_seq_number
+# std of price for adjusted_item_seq_number
 # Target encode user_id
 # mean of price for user_id
 # std of price for user_id
@@ -343,27 +353,15 @@ print_step('Done!')
 # max of item_seq_number for user_id
 # min of item_seq_number for user_id
 # max - min of item_seq_number for user_id
-# tr['adjusted_item_seq_number'] = tr['item_seq_number'] - tr.groupby('user_id')['item_seq_number'].transform('min')
-# mean of price for city
-# std of price for city
-# target encode region
-# std of target for region
-# mean of price for region
-# std of price for region
 # mean of price for parent_category_name
 # std of price for parent_category_name
 # std of target for category_name
 # mean of price for category_name
 # std of price for category_name
-# std of target for user_type
-# std of price for user_type
-# target encode day_of_week
-# std of target for day_of_week
-# mean of price for day_of_week
-# std of price for day_of_week
+
 # Image analysis
-    # img_hash.py?
 	# pic2vec
+    # img_hash.py?
     # https://www.kaggle.com/classtag/extract-avito-image-features-via-keras-vgg16)
     # Contrast? https://dsp.stackexchange.com/questions/3309/measuring-the-contrast-of-an-image
     # https://www.pyimagesearch.com/2014/03/03/charizard-explains-describe-quantify-image-using-feature-vectors/
