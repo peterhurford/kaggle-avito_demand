@@ -12,7 +12,7 @@ from sklearn.feature_selection.univariate_selection import SelectKBest, f_regres
 import lightgbm as lgb
 
 from cv import run_cv_model
-from utils import print_step, rmse, TargetEncoder
+from utils import print_step, rmse, univariate_analysis, TargetEncoder
 from cache import get_data, is_in_cache, load_cache, save_in_cache
 
 
@@ -84,6 +84,7 @@ if not is_in_cache('data_with_fe'):
 
 
     print('~~~~~~~~~~~~~~~~~~~')
+    # Note: Many candidate features were considered, only features with univariate score >= 0.55 were kept.
     print_step('Basic NLP 1/32')
     merge['num_words_description'] = merge['description'].apply(lambda x: len(str(x).split()))
     print_step('Basic NLP 2/32')
@@ -220,6 +221,7 @@ print(train.shape)
 print(test.shape)
 print('~~~~~~~~~~~~~~~~~~~~')
 print_step('Target encoding')
+# Note: In addition to univariate analysis check, all encoded features were added one at a time and checked for CV lift before keeping.
 f_cats = ['image_top_1', 'item_seq_number', 'category_name', 'param_1', 'param_2', 'param_3']
 target_encode = TargetEncoder(min_samples_leaf=100, smoothing=10, noise_level=0.01,
                               keep_original=True, cols=f_cats, calc_std=True)
@@ -260,6 +262,8 @@ print_step('More feature encoding 10/11')
 merge['category_name_mean_price'] = merge.groupby('category_name')['price'].transform('mean')
 print_step('More feature encoding 11/11')
 merge['category_name_price_std'] = merge.groupby('category_name')['price'].transform('std').fillna(0)
+print_step('More feature encoding 12/12')
+merge['user_mean_adjusted_item_seq_number'] = merge.groupby('user_id')['adjusted_item_seq_number'].transform('mean')
 print(merge.shape)
 
 # print('~~~~~~~~~~~~~~')
@@ -350,13 +354,14 @@ print_step('Done!')
 # LGB: -SelectKBest TFIDF, +frequency encoding                                     - Dim 6887,  5CV 0.2243, Submit ?                    <f7787b2>
 # LGB: +total missing, +adjusted item_seq_number                                   - Dim 6889,  5CV 0.2243, Submit ?                    <0107d26>
 # LGB: +target encoding                                                            - Dim 6901,  5CV 0.2234, Submit 0.227, Delta -.0036  <7a849b1>
-# LGB: +price encoding                                                             - Dim 6912,  5CV 0.2229, Submit ?
+# LGB: +price encoding                                                             - Dim 6912,  5CV 0.2229, Submit ?                    <cc42428>
+# LGB: +item_seq_number encoding                                                   - Dim 6913,  5CV 0.2228, Submit ?
 # LGB: -                                                                           - Dim ?, 5CV ?, Submit ?
 
 # CURRENT
-# [2018-04-27 16:39:08.709221] lgb cv scores : [0.22343898332728193, 0.22250389688187794, 0.2227847395274668, 0.22261006668808794, 0.22316359778745867]
-# [2018-04-27 16:39:08.710569] lgb mean cv score : 0.22290025684243467
-# [2018-04-27 16:39:08.712052] lgb std cv score : 0.0003504940720958682
+# [2018-04-27 17:48:14.090087] lgb cv scores : [0.22328669060603606, 0.2224408914355273, 0.2226185154103227, 0.22251650297054024, 0.22302808187262874]
+# [2018-04-27 17:48:14.091512] lgb mean cv score : 0.22277813645901104
+# [2018-04-27 17:48:14.092403] lgb std cv score : 0.0003251969242115237
 
 # [2018-04-26 21:46:32.974844] lgb cv scores : [0.22256053295460215, 0.22160517248374503, 0.22192232562406788, 0.22177930697296735, 0.22242885702632134]
 # [2018-04-26 21:46:32.976301] lgb mean cv score : 0.22205923901234076
@@ -365,13 +370,8 @@ print_step('Done!')
 
 
 # TODO
-
-# mean of item_seq_number for user_id
-# max of item_seq_number for user_id
-# min of item_seq_number for user_id
-# max - min of item_seq_number for user_id
-
 # Get CV score re-adding TFIDF
+# Handle russian inflectional structure <https://www.kaggle.com/iggisv9t/handling-russian-language-inflectional-structure>
 
 # Handle time features
 	# https://github.com/mxbi/ftim

@@ -4,7 +4,7 @@ from math import sqrt
 import pandas as pd
 import numpy as np
 
-from sklearn.metrics import mean_squared_error
+from sklearn.metrics import mean_squared_error, roc_auc_score
 
 
 def print_step(step):
@@ -13,6 +13,11 @@ def print_step(step):
 
 def rmse(actual, predicted):
     return sqrt(mean_squared_error(actual, predicted))
+
+
+def univariate_analysis(target, feature):
+    score = roc_auc_score(target > 0, feature)
+    return 1 - score if score < 0.5 else score
 
 
 class TargetEncoder:
