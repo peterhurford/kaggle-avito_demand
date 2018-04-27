@@ -1,13 +1,12 @@
-import re
-import gc
 import string
 
 import pandas as pd
-import numpy as np
 
-from scipy.sparse import csr_matrix, hstack
+from scipy.sparse import hstack
 
 from sklearn.preprocessing import OneHotEncoder, LabelEncoder
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.feature_selection.univariate_selection import SelectKBest, f_regression
 
 import lightgbm as lgb
 
@@ -83,6 +82,30 @@ merge['image_missing'] = merge['image'].isna().astype(int)
 merge['image_top_1'] = merge['image_top_1'].astype('str').fillna('missing')
 
 print('~~~~~~~~~~~~~~')
+print_step('TFIDF 1/3')
+merge['text'] = merge['title'] + ' ' + merge['description'].fillna('')
+tfidf = TfidfVectorizer(ngram_range=(1, 2),
+                        max_features=100000,
+                        min_df=2,
+                        max_df=0.8,
+                        binary=True,
+                        encoding='KOI8-R')
+tfidf_merge = tfidf.fit_transform(merge['text'])
+print(tfidf_merge.shape)
+print_step('TFIDF 2/3')
+dim = train.shape[0]
+tfidf_train = tfidf_merge[:dim]
+tfidf_test = tfidf_merge[dim:]
+print(tfidf_train.shape)
+print(tfidf_test.shape)
+print_step('TFIDF 3/3')
+fselect = SelectKBest(f_regression, k=48000)
+tfidf_train = fselect.fit_transform(tfidf_train, target)
+tfidf_test = fselect.transform(tfidf_test)
+print(tfidf_train.shape)
+print(tfidf_test.shape)
+
+print('~~~~~~~~~~~~~~~~~~~')
 print_step('Basic NLP 1/32')
 merge['num_words_description'] = merge['description'].apply(lambda x: len(str(x).split()))
 print_step('Basic NLP 2/32')
@@ -137,9 +160,9 @@ merge['description_chars_per_title_chars'] = merge['num_chars_description'] / me
 print_step('Basic NLP 24/32')
 merge['description_chars_per_title_chars'].fillna(0, inplace=True)
 print_step('Basic NLP 25/32')
-merge['num_english_chars_description'] = merge['description'].apply(lambda ss: len([s for s in ss.lower().translate(ss.maketrans('', '', string.punctuation)).replace('\n', '').replace(' ', '') if s in string.ascii_lowercase]))
+merge['num_english_chars_description'] = merge['description'].apply(lambda ss: len([s for s in ss.lower() if s in string.ascii_lowercase]))
 print_step('Basic NLP 26/32')
-merge['num_english_chars_title'] = merge['title'].apply(lambda ss: len([s for s in ss.lower().translate(ss.maketrans('', '', string.punctuation)).replace('\n', '').replace(' ', '') if s in string.ascii_lowercase]))
+merge['num_english_chars_title'] = merge['title'].apply(lambda ss: len([s for s in ss.lower() if s in string.ascii_lowercase]))
 print_step('Basic NLP 27/32')
 merge['english_chars_per_char_description'] = merge['num_english_chars_description'] / merge['num_chars_description']
 merge['english_chars_per_char_description'].fillna(0, inplace=True)
@@ -165,12 +188,12 @@ merge['weekend'] = ((merge['day_of_week'] == 5) | (merge['day_of_week'] == 6)).a
 
 print('~~~~~~~~~~~~~')
 print_step('Dropping')
-drops = ['activation_date', 'title', 'description']
+drops = ['activation_date', 'title', 'description', 'text']
 merge.drop(drops, axis=1, inplace=True)
 currently_unused = ['user_id', 'image']
 merge.drop(currently_unused, axis=1, inplace=True)
 
-print('~~~~~~~~~~~~')
+print('~~~~~~~~~~~~~~~~')
 print_step('Dummies 1/2')
 print(merge.shape)
 dummy_cols = ['parent_category_name', 'category_name', 'user_type', 'param_1',
@@ -186,16 +209,20 @@ print(merge.shape)
 print_step('Unmerge')
 merge = merge.tocsr()
 dim = train.shape[0]
-train_ = merge[:dim]
-test_ = merge[dim:]
+train = merge[:dim]
+test = merge[dim:]
+print(train.shape)
+print(test.shape)
 
+print('Combine')
+train = hstack((train, tfidf_train)).tocsr()
+test = hstack((test, tfidf_test)).tocsr()
+print(train.shape)
+print(test.shape)
 
 print('~~~~~~~~~~~~')
 print_step('Run LGB')
-print(train_.shape)
-print(test_.shape)
-
-results = run_cv_model(train_, test_, target, runLGB, rmse, 'lgb')
+results = run_cv_model(train, test, target, runLGB, rmse, 'lgb')
 import pdb
 pdb.set_trace()
 
@@ -211,28 +238,33 @@ submission['deal_probability'] = results['test'].clip(0.0, 1.0)
 submission.to_csv('submit/submit_lgb.csv', index=False)
 print_step('Done!')
 
-# LGB: no text, geo, date, image, param data, or item_seq_number                   - Dim 51,   5CV 0.2313, Submit 0.235, Delta -.00371
-# LGB: +missing data, +OHE params (no text, geo, date, image, or item_seq_number)  - Dim 5057, 5CV 0.2269, Submit 0.230, Delta -.00306
-# LGB: +basic NLP (no other text, geo, date, image, or item_seq_number)            - Dim 5078, 5CV 0.2261, Submit 0.229, Delta -.00293  <a9e424c>
-# LGB: +date (no other text, geo, image, or item_seq_number)                       - Dim 5086, 5CV 0.2261, Submit ?                     <f6c28f2>
-# LGB: +OHE city and region (no other text, image, or item_seq_number)             - Dim 6866, 5CV 0.2254, Submit ?                     <531df17>
-# LGB: +item_seq_number (no other text or image)                                   - Dim 6867, 5CV 0.2252, Submit ?                     <624f1a4>
-# LGB: +more basic NLP (no other text or image)                                    - Dim 6877, 5CV 0.2251, Submit ?
+# LGB: no text, geo, date, image, param data, or item_seq_number                   - Dim 51,    5CV 0.2313, Submit 0.235, Delta -.00371
+# LGB: +missing data, +OHE params (no text, geo, date, image, or item_seq_number)  - Dim 5057,  5CV 0.2269, Submit 0.230, Delta -.00306
+# LGB: +basic NLP (no other text, geo, date, image, or item_seq_number)            - Dim 5078,  5CV 0.2261, Submit 0.229, Delta -.00293  <a9e424c>
+# LGB: +date (no other text, geo, image, or item_seq_number)                       - Dim 5086,  5CV 0.2261, Submit ?                     <f6c28f2>
+# LGB: +OHE city and region (no other text, image, or item_seq_number)             - Dim 6866,  5CV 0.2254, Submit ?                     <531df17>
+# LGB: +item_seq_number (no other text or image)                                   - Dim 6867,  5CV 0.2252, Submit ?                     <624f1a4>
+# LGB: +more basic NLP (no other text or image)                                    - Dim 6877,  5CV 0.2251, Submit 0.229, Delta -.00390  <f47d17d>
+# LGB: +SelectKBest TFIDF description + text (no image)                            - Dim 54877, 5CV 0.2221, Submit 0.225, Delta -.00290
 # LGB: +                                                                           - Dim ?, 5CV ?, Submit ?
 
 # CURRENT
-# [2018-04-26 14:53:32.834101] lgb cv scores : [0.2256567380989068, 0.2246736622115502, 0.22490071131939054, 0.22484800048773446, 0.22533893816001835]
-# [2018-04-26 14:53:32.840178] lgb mean cv score : 0.22508361005552008
-# [2018-04-26 14:53:32.841407] lgb std cv score : 0.0003607462393285434
+# [2018-04-26 21:46:32.974844] lgb cv scores : [0.22256053295460215, 0.22160517248374503, 0.22192232562406788, 0.22177930697296735, 0.22242885702632134]
+# [2018-04-26 21:46:32.976301] lgb mean cv score : 0.22205923901234076
+# [2018-04-26 21:46:32.979111] lgb std cv score : 0.00037180552114082565
+
 
 
 # TODO
-# TFIDF concat(title, description) -> Ridge
-    # https://www.kaggle.com/iggisv9t/basic-tfidf-on-text-features-0-233-lb
-# TFIDF concat(title, description, param_1, param_2, param_3, parent_category_name, category_name) -> Ridge
-# Frequency encode user_id, city, region, parent_category_name, category_name, param_1, param_2, param_3, image_top_1, day_of_week
-# encode(mean, median, std, min, max) of target, price, item_seq_number with user_id
-# encode(mean, median, std, min, max) of target, price with city, region, parent_category_name, category_name, param_1, param_2, param_3, image_top_1, user_type, day_of_week
+# TFIDF concat(title, description, param_1, param_2, param_3, parent_category_name, category_name) -> SelectKBest
+# Caching?
+
+# Do the following without TFIDF for initial exploration, then re-add after TFIDF -- try to add features one at a time:
+# (when re-adding after TFIDF, run on EC2)
+  # Frequency encode user_id, city, region, parent_category_name, category_name, param_1, param_2, param_3, image_top_1, day_of_week
+  # encode(mean, median, std, min, max) of target, price, item_seq_number with user_id
+  # encode(mean, median, std, min, max) of target, price with city, region, parent_category_name, category_name, param_1, param_2, param_3, image_top_1, user_type, day_of_week
+
 # Image analysis
     # img_hash.py?
 	# pic2vec
@@ -240,9 +272,10 @@ print_step('Done!')
     # Contrast? https://dsp.stackexchange.com/questions/3309/measuring-the-contrast-of-an-image
     # https://www.pyimagesearch.com/2014/03/03/charizard-explains-describe-quantify-image-using-feature-vectors/
     # NNs?
+# Train classification model with AUC
+# Implement https://www.kaggle.com/yekenot/ridge-text-cat, add as submodel
 # Check feature impact and tuning in DR
 # Tune models some
-# Train classification and regression
 # Vary model
 	# Train Ridge on text, include into as-is LGB
     # Take LGB, add text OHE with Ridge / SelectKBest
@@ -258,5 +291,7 @@ print_step('Done!')
     # https://www.kaggle.com/jagangupta/understanding-approval-donorschoose-eda-fe-eli5
     # https://www.kaggle.com/fizzbuzz/beginner-s-guide-to-capsule-networks
     # https://www.kaggle.com/nicapotato/abc-s-of-tf-idf-boosting-0-798
-# https://www.kaggle.com/c/avito-duplicate-ads-detection
+# https://www.kaggle.com/c/avito-duplicate-ads-detection/discussion
+# https://www.kaggle.com/c/two-sigma-connect-rental-listing-inquiries/discussion
+# https://www.kaggle.com/c/cdiscount-image-classification-challenge/discussion
 # Use train_active and test_active somehow?
