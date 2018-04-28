@@ -191,36 +191,34 @@ if not is_in_cache('data_with_fe'):
 
     print('~~~~~~~~~~~~~~~~~~~~~~')
     # Note: In addition to univariate analysis check, all additional features were added one at a time and checked for CV lift before keeping.
-    print_step('Additional FE 1/15')
+    print_step('Additional FE 1/14')
     merge['adjusted_item_seq_number'] = merge['item_seq_number'] - merge.groupby('user_id')['item_seq_number'].transform('min')
-    print_step('Additional FE 2/15')
+    print_step('Additional FE 2/14')
     merge['price'] = np.log1p(merge['price'])
-    print_step('Additional FE 3/15')
+    print_step('Additional FE 3/14')
     merge['image_top_1_mean_price'] = merge.groupby('image_top_1')['price'].transform('mean')
-    print_step('Additional FE 4/15')
+    print_step('Additional FE 4/14')
     merge['image_top_1_price_std'] = merge.groupby('image_top_1')['price'].transform('std').fillna(0)
-    print_step('Additional FE 5/15')
+    print_step('Additional FE 5/14')
     merge['param_1_mean_price'] = merge.groupby('param_1')['price'].transform('mean')
-    print_step('Additional FE 6/15')
+    print_step('Additional FE 6/14')
     merge['param_1_price_std'] = merge.groupby('param_1')['price'].transform('std').fillna(0)
-    print_step('Additional FE 7/15')
+    print_step('Additional FE 7/14')
     merge['param_2_mean_price'] = merge.groupby('param_2')['price'].transform('mean')
-    print_step('Additional FE 8/15')
+    print_step('Additional FE 8/14')
     merge['param_2_price_std'] = merge.groupby('param_2')['price'].transform('std').fillna(0)
-    print_step('Additional FE 9/15')
+    print_step('Additional FE 9/14')
     merge['param_3_mean_price'] = merge.groupby('param_3')['price'].transform('mean')
-    print_step('Additional FE 10/15')
+    print_step('Additional FE 10/14')
     merge['param_3_price_std'] = merge.groupby('param_3')['price'].transform('std').fillna(0)
-    print_step('Additional FE 11/15')
+    print_step('Additional FE 11/14')
     merge['user_id_mean_price'] = merge.groupby('user_id')['price'].transform('mean')
-    print_step('Additional FE 12/15')
+    print_step('Additional FE 12/14')
     merge['user_id_price_std'] = merge.groupby('user_id')['price'].transform('std').fillna(0)
-    print_step('Additional FE 13/15')
+    print_step('Additional FE 13/14')
     merge['category_name_mean_price'] = merge.groupby('category_name')['price'].transform('mean')
-    print_step('Additional FE 14/15')
+    print_step('Additional FE 14/14')
     merge['category_name_price_std'] = merge.groupby('category_name')['price'].transform('std').fillna(0)
-    print_step('Additional FE 15/15')
-    merge['user_mean_adjusted_item_seq_number'] = merge.groupby('user_id')['adjusted_item_seq_number'].transform('mean')
     print(merge.shape)
 
     print('~~~~~~~~~~~~~')
@@ -359,22 +357,28 @@ print_step('Done!')
 # LGB: +target encoding                                                            - Dim 6901,  5CV 0.2234, Submit 0.227, Delta -.0036  <7a849b1>
 # LGB: +price encoding                                                             - Dim 6912,  5CV 0.2229, Submit ?                    <cc42428>
 # LGB: +item_seq_number encoding                                                   - Dim 6913,  5CV 0.2228, Submit ?                    <741021a>
-# LGB: +SelectKBest TFIDF description + text (no image)                            - Dim 54912, 5CV 0.2203, Submit 0.235, Delta -.0147
+# LGB: +SelectKBest TFIDF description + text (no image)                            - Dim 54912, 5CV 0.2203, Submit 0.235, Delta -.0147  <3fc926b>
+# LGB: -item_seq_number encoding                                                   - Dim 54911, 5CV 0.2204, Submit ?
 # LGB: -                                                                           - Dim ?, 5CV ?, Submit ?
 
 # CURRENT
-# [2018-04-27 21:13:13.796457] lgb cv scores : [0.22073328385151872, 0.21988090151456235, 0.22018893924318064, 0.22007120143816986, 0.2206706082075792]
-# [2018-04-27 21:13:13.797781] lgb mean cv score : 0.22030898685100214
-# [2018-04-27 21:13:13.800415] lgb std cv score : 0.00033615720612661064
-
+# 2018-04-28 00:24:26.617746] lgb cv scores : [0.2208652180609692, 0.21993533991823921, 0.2202705826815021, 0.22013816245777895, 0.22074175017907405]
+# 2018-04-28 00:24:26.620808] lgb mean cv score : 0.22039021065951267
+# 2018-04-28 00:24:26.623475] lgb std cv score : 0.0003560782514107525
 
 
 # TODO
 # Fix LB score
 
+# Mean and max length of word
+# Inclusion of numerics
+# Include more punctuation in punctuation
+
 # Handle time features
 	# https://github.com/mxbi/ftim
-	# OTV validation
+	# Try OTV validation
+    # Include date as a feature
+    # Days since user last posted and such
 
 # Handle russian inflectional structure <https://www.kaggle.com/iggisv9t/handling-russian-language-inflectional-structure>
 
@@ -420,3 +424,4 @@ print_step('Done!')
     # https://www.kaggle.com/fizzbuzz/beginner-s-guide-to-capsule-networks
     # https://www.kaggle.com/nicapotato/abc-s-of-tf-idf-boosting-0-798
 # Use train_active and test_active somehow?
+# Denoising autoencoder? https://github.com/phdowling/mSDA
