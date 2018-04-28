@@ -64,6 +64,7 @@ if not is_in_cache('data_with_fe'):
 
     print('~~~~~~~~~~~~~~~')
     print_step('Impute 1/6')
+    merge['num_missing'] = merge.isna().sum(axis=1)
     merge['param_1_missing'] = merge['param_1'].isna().astype(int)
     merge['param_1'].fillna('missing', inplace=True)
     print_step('Impute 2/6')
@@ -167,6 +168,7 @@ if not is_in_cache('data_with_fe'):
 
     print('~~~~~~~~~~~~~~~~~~~~~~~~~~')
     print_step('Frequency Encode 1/10')
+    # Note: In addition to univariate analysis check, all encoded features were added one at a time and checked for CV lift before keeping.
     merge['user_id_count'] = merge.groupby('user_id')['user_id'].transform('count')
     print_step('Frequency Encode 2/10')
     merge['city_count'] = merge.groupby('city')['city'].transform('count')
@@ -188,10 +190,38 @@ if not is_in_cache('data_with_fe'):
     merge['day_of_week_count'] = merge.groupby('day_of_week')['day_of_week'].transform('count')
 
     print('~~~~~~~~~~~~~~~~~~~~~~')
-    print_step('Additional FE 1/2')
-    merge['num_missing'] = merge.isna().sum(axis=1)
-    print_step('Additional FE 2/2')
+    # Note: In addition to univariate analysis check, all additional features were added one at a time and checked for CV lift before keeping.
+    print_step('Additional FE 1/15')
     merge['adjusted_item_seq_number'] = merge['item_seq_number'] - merge.groupby('user_id')['item_seq_number'].transform('min')
+    print_step('Additional FE 2/15')
+    merge['price'] = np.log1p(merge['price'])
+    print_step('Additional FE 3/15')
+    merge['image_top_1_mean_price'] = merge.groupby('image_top_1')['price'].transform('mean')
+    print_step('Additional FE 4/15')
+    merge['image_top_1_price_std'] = merge.groupby('image_top_1')['price'].transform('std').fillna(0)
+    print_step('Additional FE 5/15')
+    merge['param_1_mean_price'] = merge.groupby('param_1')['price'].transform('mean')
+    print_step('Additional FE 6/15')
+    merge['param_1_price_std'] = merge.groupby('param_1')['price'].transform('std').fillna(0)
+    print_step('Additional FE 7/15')
+    merge['param_2_mean_price'] = merge.groupby('param_2')['price'].transform('mean')
+    print_step('Additional FE 8/15')
+    merge['param_2_price_std'] = merge.groupby('param_2')['price'].transform('std').fillna(0)
+    print_step('Additional FE 9/15')
+    merge['param_3_mean_price'] = merge.groupby('param_3')['price'].transform('mean')
+    print_step('Additional FE 10/15')
+    merge['param_3_price_std'] = merge.groupby('param_3')['price'].transform('std').fillna(0)
+    print_step('Additional FE 11/15')
+    merge['user_id_mean_price'] = merge.groupby('user_id')['price'].transform('mean')
+    print_step('Additional FE 12/15')
+    merge['user_id_price_std'] = merge.groupby('user_id')['price'].transform('std').fillna(0)
+    print_step('Additional FE 13/15')
+    merge['category_name_mean_price'] = merge.groupby('category_name')['price'].transform('mean')
+    print_step('Additional FE 14/15')
+    merge['category_name_price_std'] = merge.groupby('category_name')['price'].transform('std').fillna(0)
+    print_step('Additional FE 15/15')
+    merge['user_mean_adjusted_item_seq_number'] = merge.groupby('user_id')['adjusted_item_seq_number'].transform('mean')
+    print(merge.shape)
 
     print('~~~~~~~~~~~~~')
     print_step('Dropping')
@@ -199,103 +229,74 @@ if not is_in_cache('data_with_fe'):
     merge.drop(drops, axis=1, inplace=True)
     currently_unused = ['image']
     merge.drop(currently_unused, axis=1, inplace=True)
+    print(merge.shape)
 
     print('~~~~~~~~~~~~')
     print_step('Unmerge')
     dim = train.shape[0]
-    train = pd.DataFrame(merge.values[:dim, :], columns = merge.columns)
-    test = pd.DataFrame(merge.values[dim:, :], columns = merge.columns)
-    print(train.shape)
-    print(test.shape)
+    train_fe = pd.DataFrame(merge.values[:dim, :], columns = merge.columns)
+    test_fe = pd.DataFrame(merge.values[dim:, :], columns = merge.columns)
+    print(train_fe.shape)
+    print(test_fe.shape)
+
+    print('~~~~~~~~~~~~~~~~~~~~')
+    print_step('Target encoding')
+    # Note: In addition to univariate analysis check, all encoded features were added one at a time and checked for CV lift before keeping.
+    f_cats = ['image_top_1', 'item_seq_number', 'category_name', 'param_1', 'param_2', 'param_3']
+    target_encode = TargetEncoder(min_samples_leaf=100, smoothing=10, noise_level=0.01,
+                                  keep_original=True, cols=f_cats, calc_std=True)
+    train_fe, test_fe = target_encode.encode(train_fe, test_fe, target)
+    print(train_fe.shape)
+    print(test_fe.shape)
 
     print('~~~~~~~~~~~~')
     print_step('Caching')
-    save_in_cache('data_with_fe', train, test)
+    save_in_cache('data_with_fe', train_fe, test_fe)
 else:
     print('~~~~~~~~~~~~~~~~~~')
     print_step('Cache Loading')
-    train, test = load_cache('data_with_fe')
+    train_fe, test_fe = load_cache('data_with_fe')
 
 
-print(train.shape)
-print(test.shape)
-print('~~~~~~~~~~~~~~~~~~~~')
-print_step('Target encoding')
-# Note: In addition to univariate analysis check, all encoded features were added one at a time and checked for CV lift before keeping.
-f_cats = ['image_top_1', 'item_seq_number', 'category_name', 'param_1', 'param_2', 'param_3']
-target_encode = TargetEncoder(min_samples_leaf=100, smoothing=10, noise_level=0.01,
-                              keep_original=True, cols=f_cats, calc_std=True)
-train, test = target_encode.encode(train, test, target)
-print(train.shape)
-print(test.shape)
 
-print('~~~~~~~~~~~~')
-print_step('Merging')
-merge = pd.concat([train, test])
+print('~~~~~~~~~~~~~~~~')
+print_step('Merging 1/2')
+train_fe['text'] = train['title'] + ' ' + train['description'].fillna('')
+test_fe['text'] = test['title'] + ' ' + test['description'].fillna('')
+print_step('Merging 2/2')
+merge = pd.concat([train_fe, test_fe])
 print(merge.shape)
 
-print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
-print_step('More feature encoding 1/11')
-merge['price'] = np.log1p(merge['price'])
-print_step('More feature encoding 2/11')
-merge['image_top_1'] = train['image_top_1'].fillna(-8).astype(str)
-merge['image_top_1_mean_price'] = merge.groupby('image_top_1')['price'].transform('mean')
-print_step('More feature encoding 3/11')
-merge['image_top_1_price_std'] = merge.groupby('image_top_1')['price'].transform('std').fillna(0)
-print_step('More feature encoding 4/11')
-merge['param_1_mean_price'] = merge.groupby('param_1')['price'].transform('mean')
-print_step('More feature encoding 5/11')
-merge['param_1_price_std'] = merge.groupby('param_1')['price'].transform('std').fillna(0)
-print_step('More feature encoding 6/11')
-merge['param_2_mean_price'] = merge.groupby('param_2')['price'].transform('mean')
-print_step('More feature encoding 7/11')
-merge['param_2_price_std'] = merge.groupby('param_2')['price'].transform('std').fillna(0)
-print_step('More feature encoding 8/11')
-merge['param_3_mean_price'] = merge.groupby('param_3')['price'].transform('mean')
-print_step('More feature encoding 9/11')
-merge['param_3_price_std'] = merge.groupby('param_3')['price'].transform('std').fillna(0)
-print_step('More feature encoding 10/11')
-merge['user_id_mean_price'] = merge.groupby('user_id')['price'].transform('mean')
-print_step('More feature encoding 11/11')
-merge['user_id_price_std'] = merge.groupby('user_id')['price'].transform('std').fillna(0)
-print_step('More feature encoding 10/11')
-merge['category_name_mean_price'] = merge.groupby('category_name')['price'].transform('mean')
-print_step('More feature encoding 11/11')
-merge['category_name_price_std'] = merge.groupby('category_name')['price'].transform('std').fillna(0)
-print_step('More feature encoding 12/12')
-merge['user_mean_adjusted_item_seq_number'] = merge.groupby('user_id')['adjusted_item_seq_number'].transform('mean')
-print(merge.shape)
 
-# print('~~~~~~~~~~~~~~')
-# print_step('TFIDF 1/4')
-# merge['text'] = merge['title'] + ' ' + merge['description'].fillna('')
-# tfidf = TfidfVectorizer(ngram_range=(1, 2),
-#                         max_features=100000,
-#                         min_df=2,
-#                         max_df=0.8,
-#                         binary=True,
-#                         encoding='KOI8-R')
-# tfidf_merge = tfidf.fit_transform(merge['text'])
-# print(tfidf_merge.shape)
-# print_step('TFIDF 2/4')
-# dim = train.shape[0]
-# tfidf_train = tfidf_merge[:dim]
-# tfidf_test = tfidf_merge[dim:]
-# print(tfidf_train.shape)
-# print(tfidf_test.shape)
-# print_step('TFIDF 3/4')
-# fselect = SelectKBest(f_regression, k=48000)
-# tfidf_train = fselect.fit_transform(tfidf_train, target)
-# tfidf_test = fselect.transform(tfidf_test)
-# print_step('TFIDF 4/4')
-# merge.drop('text', axis=1, inplace=True)
-# print(tfidf_train.shape)
-# print(tfidf_test.shape)
+print('~~~~~~~~~~~~~~')
+print_step('TFIDF 1/4')
+tfidf = TfidfVectorizer(ngram_range=(1, 2),
+                        max_features=100000,
+                        min_df=2,
+                        max_df=0.8,
+                        binary=True,
+                        encoding='KOI8-R')
+tfidf_merge = tfidf.fit_transform(merge['text'])
+print(tfidf_merge.shape)
+print_step('TFIDF 2/4')
+dim = train.shape[0]
+tfidf_train = tfidf_merge[:dim]
+tfidf_test = tfidf_merge[dim:]
+print(tfidf_train.shape)
+print(tfidf_test.shape)
+print_step('TFIDF 3/4')
+fselect = SelectKBest(f_regression, k=48000)
+tfidf_train = fselect.fit_transform(tfidf_train, target)
+tfidf_test = fselect.transform(tfidf_test)
+print_step('TFIDF 4/4')
+merge.drop('text', axis=1, inplace=True)
+print(tfidf_train.shape)
+print(tfidf_test.shape)
 
 print(merge.shape)
 print('~~~~~~~~~~~~~')
 print_step('Dropping')
-drops = ['user_id'] # 'text'
+drops = ['user_id']
 merge.drop(drops, axis=1, inplace=True)
 print(merge.shape)
 
@@ -311,6 +312,7 @@ ohe = OneHotEncoder(categorical_features=[merge.columns.get_loc(c) for c in dumm
 merge = ohe.fit_transform(merge)
 print(merge.shape)
 
+print('~~~~~~~~~~~~')
 print_step('Unmerge')
 merge = merge.tocsr()
 dim = train.shape[0]
@@ -319,11 +321,12 @@ test = merge[dim:]
 print(train.shape)
 print(test.shape)
 
-# print('Combine')
-# train = hstack((train, tfidf_train)).tocsr()
-# test = hstack((test, tfidf_test)).tocsr()
-# print(train.shape)
-# print(test.shape)
+print('~~~~~~~~~~~~')
+print_step('Combine')
+train = hstack((train, tfidf_train)).tocsr()
+test = hstack((test, tfidf_test)).tocsr()
+print(train.shape)
+print(test.shape)
 
 print('~~~~~~~~~~~~')
 print_step('Run LGB')
@@ -355,34 +358,38 @@ print_step('Done!')
 # LGB: +total missing, +adjusted item_seq_number                                   - Dim 6889,  5CV 0.2243, Submit ?                    <0107d26>
 # LGB: +target encoding                                                            - Dim 6901,  5CV 0.2234, Submit 0.227, Delta -.0036  <7a849b1>
 # LGB: +price encoding                                                             - Dim 6912,  5CV 0.2229, Submit ?                    <cc42428>
-# LGB: +item_seq_number encoding                                                   - Dim 6913,  5CV 0.2228, Submit ?
+# LGB: +item_seq_number encoding                                                   - Dim 6913,  5CV 0.2228, Submit ?                    <741021a>
+# LGB: +SelectKBest TFIDF description + text (no image)                            - Dim 54912, 5CV 0.2203, Submit 0.235, Delta -.0147
 # LGB: -                                                                           - Dim ?, 5CV ?, Submit ?
 
 # CURRENT
-# [2018-04-27 17:48:14.090087] lgb cv scores : [0.22328669060603606, 0.2224408914355273, 0.2226185154103227, 0.22251650297054024, 0.22302808187262874]
-# [2018-04-27 17:48:14.091512] lgb mean cv score : 0.22277813645901104
-# [2018-04-27 17:48:14.092403] lgb std cv score : 0.0003251969242115237
-
-# [2018-04-26 21:46:32.974844] lgb cv scores : [0.22256053295460215, 0.22160517248374503, 0.22192232562406788, 0.22177930697296735, 0.22242885702632134]
-# [2018-04-26 21:46:32.976301] lgb mean cv score : 0.22205923901234076
-# [2018-04-26 21:46:32.979111] lgb std cv score : 0.00037180552114082565
+# [2018-04-27 21:13:13.796457] lgb cv scores : [0.22073328385151872, 0.21988090151456235, 0.22018893924318064, 0.22007120143816986, 0.2206706082075792]
+# [2018-04-27 21:13:13.797781] lgb mean cv score : 0.22030898685100214
+# [2018-04-27 21:13:13.800415] lgb std cv score : 0.00033615720612661064
 
 
 
 # TODO
-# Get CV score re-adding TFIDF
-# Handle russian inflectional structure <https://www.kaggle.com/iggisv9t/handling-russian-language-inflectional-structure>
+# Fix LB score
 
 # Handle time features
 	# https://github.com/mxbi/ftim
 	# OTV validation
 
-#tr['title_first'] = tr['title'].apply(lambda ss: ss.translate(ss.maketrans('', '', string.punctuation)).replace('\n', ' ').lower().split(' ')[0])
-# 0.7634060532342571
+# Handle russian inflectional structure <https://www.kaggle.com/iggisv9t/handling-russian-language-inflectional-structure>
 
 #get_element = lambda elem, item: elem[item] if len(elem) > item else ''
+#tr['title_first'] = tr['title'].apply(lambda ss: get_element(ss.translate(ss.maketrans('', '', string.punctuation)).replace('\n', ' ').lower().split(' '), 0))
+# 0.7634060532342571
 #tr['title_second'] = tr['title'].apply(lambda ss: get_element(ss.translate(ss.maketrans('', '', string.punctuation)).replace('\n', ' ').lower().split(' '), 1))
 # 0.7419195431638979
+#tr['title_last'] = tr['title'].apply(lambda ss: get_element(ss.translate(ss.maketrans('', '', string.punctuation)).replace('\n', ' ').lower().split(' '), -1))
+# 0.7815870814266627
+
+# Try Title SVD + Desc SVD vs. Text SVD vs. Title SVD + Desc SVD + Text SVD
+
+# Translate to english?
+# Words in other words (e.g., param_1 or title in descripton)?
 
 # Image analysis
     # pic2vec

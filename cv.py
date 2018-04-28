@@ -2,9 +2,7 @@ import numpy as np
 import pandas as pd
 
 from sklearn.model_selection import StratifiedKFold, KFold
-from sklearn.metrics import roc_auc_score, confusion_matrix
 
-from cache import is_in_cache, load_cache, save_in_cache, get_data
 from utils import print_step
 
 
