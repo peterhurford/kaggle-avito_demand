@@ -63,24 +63,26 @@ if not is_in_cache('data_with_fe'):
     merge = pd.concat([train, test])
 
     print('~~~~~~~~~~~~~~~')
-    print_step('Impute 1/6')
-    merge['num_missing'] = merge.isna().sum(axis=1)
+    print_step('Impute 1/7')
+    #merge['adjusted_item_seq_number'] = merge['item_seq_number'] - merge.groupby('user_id')['item_seq_number'].transform('min')
+    #merge['num_missing'] = merge.isna().sum(axis=1)
+    print_step('Impute 2/7')
     merge['param_1_missing'] = merge['param_1'].isna().astype(int)
     merge['param_1'].fillna('missing', inplace=True)
-    print_step('Impute 2/6')
+    print_step('Impute 3/7')
     merge['param_2_missing'] = merge['param_2'].isna().astype(int)
     merge['param_2'].fillna('missing', inplace=True)
-    print_step('Impute 3/6')
+    print_step('Impute 4/7')
     merge['param_3_missing'] = merge['param_3'].isna().astype(int)
     merge['param_3'].fillna('missing', inplace=True)
-    print_step('Impute 4/6')
+    print_step('Impute 5/7')
     merge['price_missing'] = merge['price'].isna().astype(int)
     merge['price'].fillna(merge['price'].median(), inplace=True)
     merge['has_price'] = (merge['price'] > 0).astype(int)
-    print_step('Impute 5/6')
+    print_step('Impute 6/7')
     merge['description_missing'] = merge['description'].isna().astype(int)
     merge['description'].fillna('', inplace=True)
-    print_step('Impute 6/6')
+    print_step('Impute 7/7')
     merge['image_top_1'] = train['image_top_1'].fillna(-8).astype(str)
 
 
@@ -166,61 +168,6 @@ if not is_in_cache('data_with_fe'):
     merge['day_of_week'] = merge['activation_date'].dt.weekday
     merge['weekend'] = ((merge['day_of_week'] == 5) | (merge['day_of_week'] == 6)).astype(int)
 
-    print('~~~~~~~~~~~~~~~~~~~~~~~~~~')
-    print_step('Frequency Encode 1/10')
-    # Note: In addition to univariate analysis check, all encoded features were added one at a time and checked for CV lift before keeping.
-    merge['user_id_count'] = merge.groupby('user_id')['user_id'].transform('count')
-    print_step('Frequency Encode 2/10')
-    merge['city_count'] = merge.groupby('city')['city'].transform('count')
-    print_step('Frequency Encode 3/10')
-    merge['region_count'] = merge.groupby('region')['region'].transform('count')
-    print_step('Frequency Encode 4/10')
-    merge['parent_category_name_count'] = merge.groupby('parent_category_name')['parent_category_name'].transform('count')
-    print_step('Frequency Encode 5/10')
-    merge['category_name_count'] = merge.groupby('category_name')['category_name'].transform('count')
-    print_step('Frequency Encode 6/10')
-    merge['param_1_count'] = merge.groupby('param_1')['param_1'].transform('count')
-    print_step('Frequency Encode 7/10')
-    merge['param_2_count'] = merge.groupby('param_2')['param_2'].transform('count')
-    print_step('Frequency Encode 8/10')
-    merge['param_3_count'] = merge.groupby('param_3')['param_3'].transform('count')
-    print_step('Frequency Encode 9/10')
-    merge['image_top_1_count'] = merge.groupby('image_top_1')['image_top_1'].transform('count')
-    print_step('Frequency Encode 10/10')
-    merge['day_of_week_count'] = merge.groupby('day_of_week')['day_of_week'].transform('count')
-
-    print('~~~~~~~~~~~~~~~~~~~~~~')
-    # Note: In addition to univariate analysis check, all additional features were added one at a time and checked for CV lift before keeping.
-    print_step('Additional FE 1/14')
-    merge['adjusted_item_seq_number'] = merge['item_seq_number'] - merge.groupby('user_id')['item_seq_number'].transform('min')
-    print_step('Additional FE 2/14')
-    merge['price'] = np.log1p(merge['price'])
-    print_step('Additional FE 3/14')
-    merge['image_top_1_mean_price'] = merge.groupby('image_top_1')['price'].transform('mean')
-    print_step('Additional FE 4/14')
-    merge['image_top_1_price_std'] = merge.groupby('image_top_1')['price'].transform('std').fillna(0)
-    print_step('Additional FE 5/14')
-    merge['param_1_mean_price'] = merge.groupby('param_1')['price'].transform('mean')
-    print_step('Additional FE 6/14')
-    merge['param_1_price_std'] = merge.groupby('param_1')['price'].transform('std').fillna(0)
-    print_step('Additional FE 7/14')
-    merge['param_2_mean_price'] = merge.groupby('param_2')['price'].transform('mean')
-    print_step('Additional FE 8/14')
-    merge['param_2_price_std'] = merge.groupby('param_2')['price'].transform('std').fillna(0)
-    print_step('Additional FE 9/14')
-    merge['param_3_mean_price'] = merge.groupby('param_3')['price'].transform('mean')
-    print_step('Additional FE 10/14')
-    merge['param_3_price_std'] = merge.groupby('param_3')['price'].transform('std').fillna(0)
-    print_step('Additional FE 11/14')
-    merge['user_id_mean_price'] = merge.groupby('user_id')['price'].transform('mean')
-    print_step('Additional FE 12/14')
-    merge['user_id_price_std'] = merge.groupby('user_id')['price'].transform('std').fillna(0)
-    print_step('Additional FE 13/14')
-    merge['category_name_mean_price'] = merge.groupby('category_name')['price'].transform('mean')
-    print_step('Additional FE 14/14')
-    merge['category_name_price_std'] = merge.groupby('category_name')['price'].transform('std').fillna(0)
-    print(merge.shape)
-
     print('~~~~~~~~~~~~~')
     print_step('Dropping')
     drops = ['activation_date', 'title', 'description']
@@ -234,16 +181,6 @@ if not is_in_cache('data_with_fe'):
     dim = train.shape[0]
     train_fe = pd.DataFrame(merge.values[:dim, :], columns = merge.columns)
     test_fe = pd.DataFrame(merge.values[dim:, :], columns = merge.columns)
-    print(train_fe.shape)
-    print(test_fe.shape)
-
-    print('~~~~~~~~~~~~~~~~~~~~')
-    print_step('Target encoding')
-    # Note: In addition to univariate analysis check, all encoded features were added one at a time and checked for CV lift before keeping.
-    f_cats = ['image_top_1', 'item_seq_number', 'category_name', 'param_1', 'param_2', 'param_3']
-    target_encode = TargetEncoder(min_samples_leaf=100, smoothing=10, noise_level=0.01,
-                                  keep_original=True, cols=f_cats, calc_std=True)
-    train_fe, test_fe = target_encode.encode(train_fe, test_fe, target)
     print(train_fe.shape)
     print(test_fe.shape)
 
@@ -341,7 +278,7 @@ print_step('Prepping submission file')
 submission = pd.DataFrame()
 submission['item_id'] = test_id
 submission['deal_probability'] = results['test'].clip(0.0, 1.0)
-submission.to_csv('submit/submit_lgb.csv', index=False)
+submission.to_csv('submit/submit_lgb1.csv', index=False)
 print_step('Done!')
 
 # LGB: no text, geo, date, image, param data, or item_seq_number                   - Dim 51,    5CV 0.2313, Submit 0.235, Delta -.0037
@@ -352,23 +289,43 @@ print_step('Done!')
 # LGB: +item_seq_number (no other text or image)                                   - Dim 6867,  5CV 0.2252, Submit ?                    <624f1a4>
 # LGB: +more basic NLP (no other text or image)                                    - Dim 6877,  5CV 0.2251, Submit 0.229, Delta -.0039  <f47d17d>
 # LGB: +SelectKBest TFIDF description + text (no image)                            - Dim 54877, 5CV 0.2221, Submit 0.225, Delta -.0029  <5e4f5be>
-# LGB: -SelectKBest TFIDF, +frequency encoding                                     - Dim 6887,  5CV 0.2243, Submit ?                    <f7787b2>
-# LGB: +total missing, +adjusted item_seq_number                                   - Dim 6889,  5CV 0.2243, Submit ?                    <0107d26>
-# LGB: +target encoding                                                            - Dim 6901,  5CV 0.2234, Submit 0.227, Delta -.0036  <7a849b1>
-# LGB: +price encoding                                                             - Dim 6912,  5CV 0.2229, Submit ?                    <cc42428>
-# LGB: +item_seq_number encoding                                                   - Dim 6913,  5CV 0.2228, Submit ?                    <741021a>
-# LGB: +SelectKBest TFIDF description + text (no image)                            - Dim 54912, 5CV 0.2203, Submit 0.235, Delta -.0147  <3fc926b>
-# LGB: -item_seq_number encoding                                                   - Dim 54911, 5CV 0.2204, Submit ?
-# LGB: -                                                                           - Dim ?, 5CV ?, Submit ?
+# LGB: +SelectKBest TFIDF description + text (no image)                            - Dim 54875, 5CV 0.2220, Submit 0.225, Delta -.0029  <5e4f5be>
+# LGB: +                                                                           - Dim ?, 5CV ?, Submit ?
 
-# CURRENT
-# 2018-04-28 00:24:26.617746] lgb cv scores : [0.2208652180609692, 0.21993533991823921, 0.2202705826815021, 0.22013816245777895, 0.22074175017907405]
-# 2018-04-28 00:24:26.620808] lgb mean cv score : 0.22039021065951267
-# 2018-04-28 00:24:26.623475] lgb std cv score : 0.0003560782514107525
+# [2018-04-29 01:33:18.215149] lgb cv scores : [0.22254376970558482, 0.22157821504665512, 0.22189080428582306, 0.2218044691982475, 0.222405863025811]
+# [2018-04-29 01:33:18.218096] lgb mean cv score : 0.22204462425242433
+# [2018-04-29 01:33:18.220445] lgb std cv score : 0.0003683781248138519
 
 
 # TODO
-# Fix LB score
+# Total missing
+# Look for covariate shifts
+# Add SVD of text
+# Add Embedding and start doing embedding corrections
+    # https://github.com/nlpub/russe-evaluation/tree/master/russe/measures/word2vec
+# See if SVD + embedding + top 300 words
+# Do image and image_top_1 match?
+# Are params subcategories? are they entirely missing for some categories? Are they partially missing in any categories?
+# Compare adjusted sequence number to user_id ordered by date
+# Are there users in multiple regions? Multiple cities?
+# Recategorize categories according to english translation (maybe by hand or CountVectorizer)
+# Are there users in multiple parent categories? Regular categories? Recategorized categories?
+# User attempt by category (group by category / user, order by date, number)
+# Population encode region?
+# Category - region interaction?
+# Look at user_ids that are in both train and test (careful!)
+# Delta between price and price of category (careful!)
+
+
+
+# Price encoding?
+
+# Frequency and price encode parent_category_name X region, parent_category_name X city
+
+# Target encoding? (careful!)
+
+# Price minus mean price for category
+# Price divided by mean price for category
 
 # Mean and max length of word
 # Inclusion of numerics
@@ -409,8 +366,8 @@ print_step('Done!')
 # Tune models some
 # Vary model
     # Train Ridge on text, include into as-is LGB
-    # Take LGB, add text OHE with Ridge / SelectKBest
-    # Take LGB, add text OHE with SVD + embedding
+    # Take LGB, add text with Ridge / SelectKBest
+    # Take LGB, add text with SVD + embedding
     # OHE everything into Ridge and then take just encoded categorical and numeric into LGB and boost with LGB
     # OHE everything into LGB except text, then use text and residuals and boost with Ridge
 # Train more models (Ridge, FM, Ridge, NNs)
@@ -423,5 +380,6 @@ print_step('Done!')
     # https://www.kaggle.com/jagangupta/understanding-approval-donorschoose-eda-fe-eli5
     # https://www.kaggle.com/fizzbuzz/beginner-s-guide-to-capsule-networks
     # https://www.kaggle.com/nicapotato/abc-s-of-tf-idf-boosting-0-798
+# Russian NLP http://www.redhenlab.org/home/the-cognitive-core-research-topics-in-red-hen/the-barnyard/russian-nlp
 # Use train_active and test_active somehow?
 # Denoising autoencoder? https://github.com/phdowling/mSDA
