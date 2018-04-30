@@ -5,9 +5,8 @@ from pprint import pprint
 import pandas as pd
 import numpy as np
 
-from scipy.sparse import hstack
+from nltk.corpus import stopwords
 
-from sklearn.preprocessing import OneHotEncoder, LabelEncoder
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.feature_selection.univariate_selection import SelectKBest, f_regression
 from sklearn.model_selection import train_test_split
@@ -74,7 +73,6 @@ if not is_in_cache('data_with_fe'):
     merge['param_3'].fillna('missing', inplace=True)
     merge['price_missing'] = merge['price'].isna().astype(int)
     merge['price'].fillna(merge['price'].median(), inplace=True)
-    merge['has_price'] = (merge['price'] > 0).astype(int)
     merge['image_missing'] = merge['image'].isna().astype(int)
     merge['image_top_1'] = merge['image_top_1'].astype('str').fillna('missing')
     merge['description'].fillna('', inplace=True)
@@ -85,79 +83,89 @@ if not is_in_cache('data_with_fe'):
     merge['day_of_week'] = merge['activation_date'].dt.weekday
 
     print('~~~~~~~~~~~~~~~~~~~')
-    print_step('Basic NLP 1/32')
+    print_step('Basic NLP 1/36')
     merge['num_words_description'] = merge['description'].apply(lambda x: len(str(x).split()))
-    print_step('Basic NLP 2/32')
+    print_step('Basic NLP 2/36')
     merge['num_words_title'] = merge['title'].apply(lambda x: len(str(x).split()))
-    print_step('Basic NLP 3/32')
+    print_step('Basic NLP 3/36')
     merge['num_chars_description'] = merge['description'].apply(lambda x: len(str(x)))
-    print_step('Basic NLP 4/32')
+    print_step('Basic NLP 4/36')
     merge['num_chars_title'] = merge['title'].apply(lambda x: len(str(x)))
-    print_step('Basic NLP 5/32')
+    print_step('Basic NLP 5/36')
     merge['num_capital_description'] = merge['description'].apply(lambda x: len([c for c in x if c.isupper()]))
-    print_step('Basic NLP 6/32')
+    print_step('Basic NLP 6/36')
     merge['num_capital_title'] = merge['title'].apply(lambda x: len([c for c in x if c.isupper()]))
-    print_step('Basic NLP 7/32')
+    print_step('Basic NLP 7/36')
     merge['num_lowercase_description'] = merge['description'].apply(lambda x: len([c for c in x if c.islower()]))
-    print_step('Basic NLP 8/32')
+    print_step('Basic NLP 8/36')
     merge['num_lowercase_title'] = merge['title'].apply(lambda x: len([c for c in x if c.islower()]))
-    print_step('Basic NLP 9/32')
+    print_step('Basic NLP 9/36')
     merge['capital_per_char_description'] = merge['num_capital_description'] / merge['num_chars_description']
     merge['capital_per_char_description'].fillna(0, inplace=True)
-    print_step('Basic NLP 10/32')
+    print_step('Basic NLP 10/36')
     merge['capital_per_char_title'] = merge['num_capital_title'] / merge['num_chars_title']
     merge['capital_per_char_title'].fillna(0, inplace=True)
-    print_step('Basic NLP 11/32')
-    merge['num_punctuations'] = merge['description'].apply(lambda x: len([c for c in str(x) if c in string.punctuation]))
-    print_step('Basic NLP 12/32')
-    merge['punctuation_per_char'] = merge['num_punctuations'] / merge['num_chars_description']
-    merge['punctuation_per_char'].fillna(0, inplace=True)
-    print_step('Basic NLP 13/32')
+    print_step('Basic NLP 11/36')
+    russian_punct = string.punctuation + '—»«„'
+    merge['num_punctuations_description'] = merge['description'].apply(lambda x: len([c for c in str(x) if c in russian_punct])) # russian_punct has +0.00001 univariate lift over string.punctuation
+    print_step('Basic NLP 12/36')
+    merge['punctuation_per_char_description'] = merge['num_punctuations_description'] / merge['num_chars_description']
+    merge['punctuation_per_char_description'].fillna(0, inplace=True)
+    print_step('Basic NLP 13/36')
+    merge['num_punctuations_title'] = merge['title'].apply(lambda x: len([c for c in str(x) if c in string.punctuation])) # string.punctuation has +0.0003 univariate lift over russian_punct
+    print_step('Basic NLP 14/36')
+    merge['punctuation_per_char_title'] = merge['num_punctuations_title'] / merge['num_chars_title']
+    merge['punctuation_per_char_title'].fillna(0, inplace=True)
+    print_step('Basic NLP 15/36')
     merge['num_words_upper_description'] = merge['description'].apply(lambda x: len([w for w in str(x).split() if w.isupper()]))
-    print_step('Basic NLP 14/32')
-    merge['num_words_upper_title'] = merge['title'].apply(lambda x: len([w for w in str(x).split() if w.isupper()]))
-    print_step('Basic NLP 15/32')
+    print_step('Basic NLP 16/36')
     merge['num_words_lower_description'] = merge['description'].apply(lambda x: len([w for w in str(x).split() if w.islower()]))
-    print_step('Basic NLP 16/32')
-    merge['num_words_lower_title'] = merge['title'].apply(lambda x: len([w for w in str(x).split() if w.islower()]))
-    print_step('Basic NLP 17/32')
+    print_step('Basic NLP 17/36')
     merge['num_words_entitled_description'] = merge['description'].apply(lambda x: len([w for w in str(x).split() if w.istitle()]))
-    print_step('Basic NLP 18/32')
-    merge['num_words_entitled_title'] = merge['title'].apply(lambda x: len([w for w in str(x).split() if w.istitle()]))
-    print_step('Basic NLP 19/32')
+    print_step('Basic NLP 18/36')
     merge['chars_per_word_description'] = merge['num_chars_description'] / merge['num_words_description']
     merge['chars_per_word_description'].fillna(0, inplace=True)
-    print_step('Basic NLP 20/32')
+    print_step('Basic NLP 19/36')
     merge['chars_per_word_title'] = merge['num_chars_title'] / merge['num_words_title']
     merge['chars_per_word_title'].fillna(0, inplace=True)
-    print_step('Basic NLP 21/32')
+    print_step('Basic NLP 20/36')
     merge['description_words_per_title_words'] = merge['num_words_description'] / merge['num_words_title']
-    print_step('Basic NLP 22/32')
+    print_step('Basic NLP 21/36')
     merge['description_words_per_title_words'].fillna(0, inplace=True)
-    print_step('Basic NLP 23/32')
+    print_step('Basic NLP 22/36')
     merge['description_chars_per_title_chars'] = merge['num_chars_description'] / merge['num_chars_title']
-    print_step('Basic NLP 24/32')
+    print_step('Basic NLP 23/36')
     merge['description_chars_per_title_chars'].fillna(0, inplace=True)
-    print_step('Basic NLP 25/32')
+    print_step('Basic NLP 24/36')
     merge['num_english_chars_description'] = merge['description'].apply(lambda ss: len([s for s in ss.lower() if s in string.ascii_lowercase]))
-    print_step('Basic NLP 26/32')
+    print_step('Basic NLP 25/36')
     merge['num_english_chars_title'] = merge['title'].apply(lambda ss: len([s for s in ss.lower() if s in string.ascii_lowercase]))
-    print_step('Basic NLP 27/32')
+    print_step('Basic NLP 26/36')
     merge['english_chars_per_char_description'] = merge['num_english_chars_description'] / merge['num_chars_description']
     merge['english_chars_per_char_description'].fillna(0, inplace=True)
-    print_step('Basic NLP 28/32')
+    print_step('Basic NLP 27/36')
     merge['english_chars_per_char_title'] = merge['num_english_chars_title'] / merge['num_chars_title']
     merge['english_chars_per_char_title'].fillna(0, inplace=True)
-    print_step('Basic NLP 29/32')
-    merge['num_english_words_description'] = merge['description'].apply(lambda ss: len([w for w in ss.lower().translate(ss.maketrans('', '', string.punctuation)).replace('\n', ' ').split(' ') if all([s in string.ascii_lowercase for s in w]) and len(w) > 0]))
-    print_step('Basic NLP 30/32')
-    merge['num_english_words_title'] = merge['title'].apply(lambda ss: len([w for w in ss.lower().translate(ss.maketrans('', '', string.punctuation)).replace('\n', ' ').split(' ') if all([s in string.ascii_lowercase for s in w]) and len(w) > 0]))
-    print_step('Basic NLP 31/32')
+    print_step('Basic NLP 28/36')
+    merge['num_english_words_description'] = merge['description'].apply(lambda ss: len([w for w in ss.lower().translate(ss.maketrans('', '', russian_punct)).replace('\n', ' ').split(' ') if all([s in string.ascii_lowercase for s in w]) and len(w) > 0]))
+    print_step('Basic NLP 29/36')
     merge['english_words_per_char_description'] = merge['num_english_words_description'] / merge['num_words_description']
     merge['english_words_per_char_description'].fillna(0, inplace=True)
-    print_step('Basic NLP 32/32')
-    merge['english_words_per_char_title'] = merge['num_english_words_title'] / merge['num_words_title']
-    merge['english_words_per_char_title'].fillna(0, inplace=True)
+    print_step('Basic NLP 30/36')
+    merge['max_word_length_description'] = merge['description'].apply(lambda ss: np.max([len(w) for w in ss.split(' ')]))
+    print_step('Basic NLP 31/36')
+    merge['max_word_length_title'] = merge['title'].apply(lambda ss: np.max([len(w) for w in ss.split(' ')]))
+    print_step('Basic NLP 32/36')
+    merge['mean_word_length_description'] = merge['description'].apply(lambda ss: np.mean([len(w) for w in ss.split(' ')]))
+    print_step('Basic NLP 33/36')
+    merge['mean_word_length_title'] = merge['title'].apply(lambda ss: np.mean([len(w) for w in ss.split(' ')]))
+    print_step('Basic NLP 34/36')
+    stop_words = {x: 1 for x in stopwords.words('russian')}
+    merge['num_stopwords_description'] = merge['description'].apply(lambda x: len([w for w in str(x).lower().split() if w in stop_words]))
+    print_step('Basic NLP 35/36')
+    merge['number_count_description'] = merge['description'].str.count('[0-9]')
+    print_step('Basic NLP 36/36')
+    merge['number_count_title'] = merge['title'].str.count('[0-9]')
 
     print('~~~~~~~~~~~~~')
     print_step('Dropping')
@@ -271,6 +279,7 @@ else:
     print_step('Cache Loading')
     train_fe, test_fe = load_cache('data_with_fe')
 
+
 print('~~~~~~~~~~~~~~~~~~~~~~~~~~~')
 print_step('Converting to category')
 train_fe['image_top_1'] = train_fe['image_top_1'].astype('str').fillna('missing')
@@ -331,10 +340,10 @@ print_step('Prepping submission file')
 submission = pd.DataFrame()
 submission['item_id'] = test_id
 submission['deal_probability'] = results['test'].clip(0.0, 1.0)
-submission.to_csv('submit/submit_lgb4.csv', index=False)
+submission.to_csv('submit/submit_lgb5.csv', index=False)
 print_step('Done!')
 
-# LOG (Comp start 25 Apr, merge deadline 20 June @ 7pm EDT, end 27 June @ 7pm EDT) (19/25 submits used as of 30 Apr)
+# LOG (Comp start 25 Apr, merge deadline 20 June @ 7pm EDT, end 27 June @ 7pm EDT) (20/25 submits used as of 30 Apr)
 # LGB: no text, geo, date, image, param data, or item_seq_number                   - Dim 51,    5CV 0.2313, Submit 0.235, Delta -.0037
 # LGB: +missing data, +OHE params (no text, geo, date, image, or item_seq_number)  - Dim 5057,  5CV 0.2269, Submit 0.230, Delta -.0031
 # LGB: +basic NLP (no other text, geo, date, image, or item_seq_number)            - Dim 5078,  5CV 0.2261, Submit 0.229, Delta -.0029  <a9e424c>
@@ -345,47 +354,44 @@ print_step('Done!')
 # LGB: +SelectKBest TFIDF description + text (no image)                            - Dim 54877, 5CV 0.2221, Submit 0.225, Delta -.0029  <7002d68>
 # LGB: +LGB Encoding Categoricals and Ridge Encoding text                          - Dim 51,    5CV 0.2212, Submit 0.224, Delta -.0028  <e1952cf>
 # LGB: -some missing vars, -weekend                                                - Dim 46,    5CV 0.2212, Submit ?
-# LGB: +Ridge Encoding title                                                       - Dim 47,    5CV 0.2205, Submit 0.223, Delta -.0025
-# LGB: +                                                                           - Dim ?, 5CV ?, Submit ?
+# LGB: +Ridge Encoding title                                                       - Dim 47,    5CV 0.2205, Submit 0.223, Delta -.0025  <6a183fb>
+# LGB: -some NLP +some NLP                                                         - Dim 50,    5CV 0.2204, Submit 0.223, Delta -.0026
 
 # CURRENT
-# [2018-04-30 02:30:37.975538] lgb cv scores : [0.2217595472795318, 0.2207746297687226, 0.22111268905727507, 0.2208252851488291, 0.22151688106644432]
-# [2018-04-30 02:30:37.975697] lgb mean cv score : 0.22119780646416057
-# [2018-04-30 02:30:37.976578] lgb std cv score : 0.0003853458094671446
+# [2018-04-30 16:46:47.631051] lgb cv scores : [0.22095567092766674, 0.22005186618262373, 0.2202691930991519, 0.2199997748739072, 0.2207328834141181]
+# [2018-04-30 16:46:47.631874] lgb mean cv score : 0.22040187769949354
+# [2018-04-30 16:46:47.632087] lgb std cv score : 0.0003789595414126527
 
-# [2018-04-30 11:57:26.416590] lgb cv scores : [0.22108413204150598, 0.2200999871461043, 0.2203104547955073, 0.2200721721767574, 0.2207988289043796]
-# [2018-04-30 11:57:26.417441] lgb mean cv score : 0.22047311501285088
-# [2018-04-30 11:57:26.419676] lgb std cv score : 0.00040146463293921745
-
-
-# [100]   training's rmse: 0.223271       valid_1's rmse: 0.225434
-# [200]   training's rmse: 0.220095       valid_1's rmse: 0.223689
-# [300]   training's rmse: 0.218511       valid_1's rmse: 0.223022
-# [400]   training's rmse: 0.217334       valid_1's rmse: 0.222639
-# [500]   training's rmse: 0.216295       valid_1's rmse: 0.222348
-# [600]   training's rmse: 0.215457       valid_1's rmse: 0.222149
-# [700]   training's rmse: 0.214736       valid_1's rmse: 0.222021
-# [800]   training's rmse: 0.2141 valid_1's rmse: 0.221919
-# [900]   training's rmse: 0.213544       valid_1's rmse: 0.221831
-# [1000]  training's rmse: 0.213022       valid_1's rmse: 0.22176
+# [100]   training's rmse: 0.222143       valid_1's rmse: 0.224526
+# [200]   training's rmse: 0.219213       valid_1's rmse: 0.222938
+# [300]   training's rmse: 0.217517       valid_1's rmse: 0.222232
+# [400]   training's rmse: 0.216287       valid_1's rmse: 0.221819
+# [500]   training's rmse: 0.215315       valid_1's rmse: 0.221557
+# [600]   training's rmse: 0.214546       valid_1's rmse: 0.221362
+# [700]   training's rmse: 0.213864       valid_1's rmse: 0.221201
+# [800]   training's rmse: 0.213251       valid_1's rmse: 0.221115
+# [900]   training's rmse: 0.212631       valid_1's rmse: 0.221023
+# [1000]  training's rmse: 0.212035       valid_1's rmse: 0.220956
 
 
 # TODO
-# Ridge encode TFIDF of params + cats + title (careful!)
-# Mean and max length of word
-# Inclusion of numerics
-# Include more punctuation in punctuation
-# adjusted_seq_number (careful!)
-# Include user_id as cat variable (careful!)
-# train['user_count'] = train.groupby('user_id')['user_id'].transform('count') (careful!)
-# train['num_days'] = train.groupby('user_id')['activation_date'].transform('nunique')
-# train['multicat'] = train.groupby('user_id')['category_name'].transform('nunique') > 1
-# train['num_img_cats'] = train.groupby('user_id')['image_top_1'].transform('nunique')
-# tr['date_int'] = tr['activation_date'].astype(int); tr.groupby('user_id')['date_int'].transform('max') - tr.groupby('user_id')['date_int'].transform('min')
-# tr.groupby('user_id')['date_int'].transform('std')
-# tr.groupby('user_id')['date_int'].transform(lambda x: np.max(np.diff(x)) if len(x) > 1 else 0))
+# SUBMIT
+
+# User activity
+	# adjusted_seq_number (careful!)
+	# train['user_count'] = train.groupby('user_id')['user_id'].transform('count') (careful!)
+	# train['user_num_days'] = train.groupby('user_id')['activation_date'].transform('nunique') (careful!)
+	# train['user_is_multicat'] = train.groupby('user_id')['category_name'].transform('nunique') > 1
+	# train['user_num_img_cats'] = train.groupby('user_id')['image_top_1'].transform('nunique')
+	# tr['date_int'] = tr['activation_date'].astype(int); tr['user_days_range'] = tr.groupby('user_id')['date_int'].transform('max') - tr.groupby('user_id')['date_int'].transform('min')
+	# tr['user_activity_sdev'] = tr.groupby('user_id')['date_int'].transform('std').fillna(0)
+	# tr['user_activity_sharpness'] = tr.groupby('user_id')['date_int'].transform(lambda x: np.max(np.diff(x)) if len(x) > 1 else 0)
+
 # Recategorize categories according to english translation (maybe by hand or CountVectorizer)
+
 # Ridges for each parent_category
+# FM model
+# Deep LGB model with TFIDF
 
 # if any lazy people used the same or similar entries for the title/description fields
 
@@ -413,11 +419,11 @@ print_step('Done!')
 # See if SVD + embedding + top 300 words
 
 #get_element = lambda elem, item: elem[item] if len(elem) > item else ''
-#tr['title_first'] = tr['title'].apply(lambda ss: get_element(ss.translate(ss.maketrans('', '', string.punctuation)).replace('\n', ' ').lower().split(' '), 0))
+#tr['title_first'] = tr['title'].apply(lambda ss: get_element(ss.translate(ss.maketrans('', '', russian_punct)).replace('\n', ' ').lower().split(' '), 0))
 # 0.7634060532342571
-#tr['title_second'] = tr['title'].apply(lambda ss: get_element(ss.translate(ss.maketrans('', '', string.punctuation)).replace('\n', ' ').lower().split(' '), 1))
+#tr['title_second'] = tr['title'].apply(lambda ss: get_element(ss.translate(ss.maketrans('', '', russian_punct)).replace('\n', ' ').lower().split(' '), 1))
 # 0.7419195431638979
-#tr['title_last'] = tr['title'].apply(lambda ss: get_element(ss.translate(ss.maketrans('', '', string.punctuation)).replace('\n', ' ').lower().split(' '), -1))
+#tr['title_last'] = tr['title'].apply(lambda ss: get_element(ss.translate(ss.maketrans('', '', russian_punct)).replace('\n', ' ').lower().split(' '), -1))
 # 0.7815870814266627
 
 # Understand and apply https://www.kaggle.com/rdizzl3/stage-2-lgbm-stacker-8th-place-solution/code
