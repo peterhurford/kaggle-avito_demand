@@ -68,25 +68,21 @@ if not is_in_cache('data_with_fe'):
     merge = pd.concat([train, test])
 
     print('~~~~~~~~~~~~~~~')
-    print_step('Impute 1/6')
-    merge['param_1_missing'] = merge['param_1'].isna().astype(int)
+    print_step('Imputation')
     merge['param_1'].fillna('missing', inplace=True)
-    print_step('Impute 2/6')
-    merge['param_2_missing'] = merge['param_2'].isna().astype(int)
     merge['param_2'].fillna('missing', inplace=True)
-    print_step('Impute 3/6')
-    merge['param_3_missing'] = merge['param_3'].isna().astype(int)
     merge['param_3'].fillna('missing', inplace=True)
-    print_step('Impute 4/6')
     merge['price_missing'] = merge['price'].isna().astype(int)
     merge['price'].fillna(merge['price'].median(), inplace=True)
     merge['has_price'] = (merge['price'] > 0).astype(int)
-    print_step('Impute 5/6')
-    merge['description_missing'] = merge['description'].isna().astype(int)
-    merge['description'].fillna('', inplace=True)
-    print_step('Impute 6/6')
     merge['image_missing'] = merge['image'].isna().astype(int)
     merge['image_top_1'] = merge['image_top_1'].astype('str').fillna('missing')
+    merge['description'].fillna('', inplace=True)
+
+    print('~~~~~~~~~~~~~~~~~~~~')
+    print_step('Activation Date')
+    merge['activation_date'] = pd.to_datetime(merge['activation_date'])
+    merge['day_of_week'] = merge['activation_date'].dt.weekday
 
     print('~~~~~~~~~~~~~~~~~~~')
     print_step('Basic NLP 1/32')
@@ -163,15 +159,9 @@ if not is_in_cache('data_with_fe'):
     merge['english_words_per_char_title'] = merge['num_english_words_title'] / merge['num_words_title']
     merge['english_words_per_char_title'].fillna(0, inplace=True)
 
-    print('~~~~~~~~~~~~~~~~~~~~')
-    print_step('Activation Date')
-    merge['activation_date'] = pd.to_datetime(merge['activation_date'])
-    merge['day_of_week'] = merge['activation_date'].dt.weekday
-    merge['weekend'] = ((merge['day_of_week'] == 5) | (merge['day_of_week'] == 6)).astype(int)
-
     print('~~~~~~~~~~~~~')
     print_step('Dropping')
-    drops = ['activation_date', 'title', 'description']
+    drops = ['activation_date', 'description', 'title']
     merge.drop(drops, axis=1, inplace=True)
     currently_unused = ['user_id', 'image']
     merge.drop(currently_unused, axis=1, inplace=True)
@@ -184,6 +174,53 @@ if not is_in_cache('data_with_fe'):
     print(train_fe.shape)
     print(test_fe.shape)
 
+    print('~~~~~~~~~~~~~~')
+    print_step('TFIDF 1/3')
+    train_fe['text'] = train['title'] + ' ' + train['description'].fillna('')
+    test_fe['text'] = test['title'] + ' ' + test['description'].fillna('')
+    print_step('TFIDF 2/3')
+    tfidf = TfidfVectorizer(ngram_range=(1, 2),
+                            max_features=100000,
+                            min_df=2,
+                            max_df=0.8,
+                            binary=True,
+                            encoding='KOI8-R')
+    tfidf_train = tfidf.fit_transform(train_fe['text'])
+    print(tfidf_train.shape)
+    print_step('TFIDF 3/3')
+    tfidf_test = tfidf.transform(test_fe['text'])
+    print(tfidf_test.shape)
+
+    print_step('TFIDF Ridge 1/6')
+    X_train_1, X_train_2, y_train_1, y_train_2 = train_test_split(tfidf_train, target, test_size = 0.5, shuffle = False)
+    model = Ridge()
+    print_step('TFIDF Ridge 2/6 1/3')
+    model.fit(X_train_1, y_train_1)
+    print_step('TFIDF Ridge 2/6 2/3')
+    ridge_preds1 = model.predict(X_train_2)
+    print_step('TFIDF Ridge 2/6 3/3')
+    ridge_preds1f = model.predict(tfidf_test)
+    model = Ridge()
+    print_step('TFIDF Ridge 3/6 1/3')
+    model.fit(X_train_2, y_train_2)
+    print_step('TFIDF Ridge 3/6 2/3')
+    ridge_preds2 = model.predict(X_train_1)
+    print_step('TFIDF Ridge 3/6 3/3')
+    ridge_preds2f = model.predict(tfidf_test)
+    print_step('TFIDF Ridge 4/6')
+    ridge_preds_oof = np.concatenate((ridge_preds2, ridge_preds1), axis=0)
+    print_step('TFIDF Ridge 5/6')
+    ridge_preds_test = (ridge_preds1f + ridge_preds2f) / 2.0
+    print_step('RMSLE OOF: {}'.format(rmse(ridge_preds_oof, target)))
+    print_step('TFIDF Ridge 6/6')
+    train_fe['ridge'] = ridge_preds_oof
+    test_fe['ridge'] = ridge_preds_test
+
+    print('~~~~~~~~~~~~~')
+    print_step('Dropping')
+    train_fe.drop('text', axis=1, inplace=True)
+    test_fe.drop('text', axis=1, inplace=True)
+
     print('~~~~~~~~~~~~')
     print_step('Caching')
     save_in_cache('data_with_fe', train_fe, test_fe)
@@ -192,75 +229,39 @@ else:
     print_step('Cache Loading')
     train_fe, test_fe = load_cache('data_with_fe')
 
-
-print('~~~~~~~~~~~~~~')
-print_step('TFIDF 1/3')
-train_fe['text'] = train['title'] + ' ' + train['description'].fillna('')
-test_fe['text'] = test['title'] + ' ' + test['description'].fillna('')
-print_step('TFIDF 2/3')
-tfidf = TfidfVectorizer(ngram_range=(1, 2),
-                        max_features=100000,
-                        min_df=2,
-                        max_df=0.8,
-                        binary=True,
-                        encoding='KOI8-R')
-tfidf_train = tfidf.fit_transform(train_fe['text'])
-print(tfidf_train.shape)
-print_step('TFIDF 3/3')
-tfidf_test = tfidf.transform(test_fe['text'])
-print(tfidf_test.shape)
-
-print_step('TFIDF Ridge 1/6')
-X_train_1, X_train_2, y_train_1, y_train_2 = train_test_split(tfidf_train, target, test_size = 0.5, shuffle = False)
-model = Ridge()
-print_step('TFIDF Ridge 2/6 1/3')
-model.fit(X_train_1, y_train_1)
-print_step('TFIDF Ridge 2/6 2/3')
-ridge_preds1 = model.predict(X_train_2)
-print_step('TFIDF Ridge 2/6 3/3')
-ridge_preds1f = model.predict(tfidf_test)
-model = Ridge()
-print_step('TFIDF Ridge 3/6 1/3')
-model.fit(X_train_2, y_train_2)
-print_step('TFIDF Ridge 3/6 2/3')
-ridge_preds2 = model.predict(X_train_1)
-print_step('TFIDF Ridge 3/6 3/3')
-ridge_preds2f = model.predict(tfidf_test)
-print_step('TFIDF Ridge 4/6')
-ridge_preds_oof = np.concatenate((ridge_preds2, ridge_preds1), axis=0)
-print_step('TFIDF Ridge 5/6')
-ridge_preds_test = (ridge_preds1f + ridge_preds2f) / 2.0
-print_step('RMSLE OOF: {}'.format(rmse(ridge_preds_oof, target)))
-print_step('TFIDF Ridge 6/6')
-train_fe['ridge'] = ridge_preds_oof
-test_fe['ridge'] = ridge_preds_test
-
-
-print('~~~~~~~~~~~~~')
-print_step('Dropping')
-train_fe['image_top_1'] = train_fe['image_top_1'].astype('str').fillna('missing')
-test_fe['image_top_1'] = test_fe['image_top_1'].astype('str').fillna('missing')
-train_fe.drop('text', axis=1, inplace=True)
-test_fe.drop('text', axis=1, inplace=True)
-
 print('~~~~~~~~~~~~~~~~~~~~~~~~~~~')
 print_step('Converting to category')
+train_fe['image_top_1'] = train_fe['image_top_1'].astype('str').fillna('missing')
+test_fe['image_top_1'] = test_fe['image_top_1'].astype('str').fillna('missing')
 cat_cols = ['region', 'city', 'parent_category_name', 'category_name',
-			'param_1', 'param_2', 'param_3', 'user_type', 'image_top_1',
-			'day_of_week']
-for col in cat_cols:
-    print(col)
-    train_fe[col] = train_fe[col].astype('category')
-    test_fe[col] = test_fe[col].astype('category')
+			'param_1', 'param_2', 'param_3', 'user_type', 'image_top_1', 'day_of_week']
+for col in train_fe.columns:
+	print(col)
+	if col in cat_cols:
+		train_fe[col] = train_fe[col].astype('category')
+		test_fe[col] = test_fe[col].astype('category')
+	else:
+		train_fe[col] = train_fe[col].astype(np.float64)
+		test_fe[col] = test_fe[col].astype(np.float64)
+
 
 print('~~~~~~~~~~~~~~~~~~~~~~')
 print_step('Pre-flight checks')
 print('-')
 print(train_fe.shape)
-print(train_fe.columns)
-print('-')
 print(test_fe.shape)
+print('-')
+print(train_fe.columns)
 print(test_fe.columns)
+print('-')
+print(train_fe.dtypes)
+print(test_fe.dtypes)
+print('-')
+print(train_fe.isna().sum())
+print(test_fe.isna().sum())
+print('-')
+print(train_fe.apply(lambda c: c.nunique()))
+print(test_fe.apply(lambda c: c.nunique()))
 print('-')
 for col in train_fe.columns:
     print('##')
@@ -269,17 +270,6 @@ for col in train_fe.columns:
     print(train_fe[col].values)
     print('-')
     print(test_fe[col].values)
-    print('-')
-    print(train_fe[col].value_counts())
-    print('-')
-    print(test_fe[col].value_counts())
-    print('-')
-    print(train_fe[col].dtype)
-    print(test_fe[col].dtype)
-    print(train_fe[col].isna().sum())
-    print(test_fe[col].isna().sum())
-    print(train_fe[col].nunique())
-    print(test_fe[col].nunique())
     print('-')
 print('-')
 
@@ -302,7 +292,7 @@ submission['deal_probability'] = results['test'].clip(0.0, 1.0)
 submission.to_csv('submit/submit_lgb3.csv', index=False)
 print_step('Done!')
 
-# LOG (Comp start 25 Apr, merge deadline 20 June @ 7pm EDT, end 27 June @ 7pm EDT) (17/25 submits used as of 30 Apr)
+# LOG (Comp start 25 Apr, merge deadline 20 June @ 7pm EDT, end 27 June @ 7pm EDT) (19/25 submits used as of 30 Apr)
 # LGB: no text, geo, date, image, param data, or item_seq_number                   - Dim 51,    5CV 0.2313, Submit 0.235, Delta -.0037
 # LGB: +missing data, +OHE params (no text, geo, date, image, or item_seq_number)  - Dim 5057,  5CV 0.2269, Submit 0.230, Delta -.0031
 # LGB: +basic NLP (no other text, geo, date, image, or item_seq_number)            - Dim 5078,  5CV 0.2261, Submit 0.229, Delta -.0029  <a9e424c>
@@ -311,33 +301,46 @@ print_step('Done!')
 # LGB: +item_seq_number (no other text or image)                                   - Dim 6867,  5CV 0.2252, Submit ?                    <624f1a4>
 # LGB: +more basic NLP (no other text or image)                                    - Dim 6877,  5CV 0.2251, Submit 0.229, Delta -.0039  <f47d17d>
 # LGB: +SelectKBest TFIDF description + text (no image)                            - Dim 54877, 5CV 0.2221, Submit 0.225, Delta -.0029  <7002d68>
-# LGB: +LGB Encoding Categoricals and Ridge Encoding text                          - Dim 51,    5CV 0.2212, Submit 0.224, Delta -.0028 
+# LGB: +LGB Encoding Categoricals and Ridge Encoding text                          - Dim 51,    5CV 0.2212, Submit 0.224, Delta -.0028  <e1952cf>
+# LGB: -some missing vars, -weekend                                                - Dim 46,    5CV 0.2212, Submit ?
 # LGB: +                                                                           - Dim ?, 5CV ?, Submit ?
 
 # CURRENT
-# [2018-04-29 22:49:35.691775] lgb cv scores : [0.22178057691172565, 0.22079472744253817, 0.2210863429651003, 0.22089765361710792, 0.22155896321450402]
-# [2018-04-29 22:49:35.692592] lgb mean cv score : 0.22122365283019524
-# [2018-04-29 22:49:35.693448] lgb std cv score : 0.0003825451504271106
+# [2018-04-30 02:30:37.975538] lgb cv scores : [0.2217595472795318, 0.2207746297687226, 0.22111268905727507, 0.2208252851488291, 0.22151688106644432]
+# [2018-04-30 02:30:37.975697] lgb mean cv score : 0.22119780646416057
+# [2018-04-30 02:30:37.976578] lgb std cv score : 0.0003853458094671446
 
-# [2018-04-26 21:46:32.974844] lgb cv scores : [0.22256053295460215, 0.22160517248374503, 0.22192232562406788, 0.22177930697296735, 0.22242885702632134]
-# [2018-04-26 21:46:32.976301] lgb mean cv score : 0.22205923901234076
-# [2018-04-26 21:46:32.979111] lgb std cv score : 0.00037180552114082565
+# [100]   training's rmse: 0.223271       valid_1's rmse: 0.225434
+# [200]   training's rmse: 0.220095       valid_1's rmse: 0.223689
+# [300]   training's rmse: 0.218511       valid_1's rmse: 0.223022
+# [400]   training's rmse: 0.217334       valid_1's rmse: 0.222639
+# [500]   training's rmse: 0.216295       valid_1's rmse: 0.222348
+# [600]   training's rmse: 0.215457       valid_1's rmse: 0.222149
+# [700]   training's rmse: 0.214736       valid_1's rmse: 0.222021
+# [800]   training's rmse: 0.2141 valid_1's rmse: 0.221919
+# [900]   training's rmse: 0.213544       valid_1's rmse: 0.221831
+# [1000]  training's rmse: 0.213022       valid_1's rmse: 0.22176
+
 
 
 
 # TODO
-# Are params subcategories? Are they entirely missing for some categories? Are they partially missing in any categories? Fix imputation?
-# Do image and image_top_1 match?
-# Compare adjusted sequence number to user_id ordered by date
-# Are there users in multiple regions? Multiple cities?
-# Recategorize categories according to english translation (maybe by hand or CountVectorizer)
-# Are there users in multiple parent categories? Regular categories? Recategorized categories?
-
-# Drop description missing (not in test set)
-# Total missing
+# Ridge encode TFIDF of params + cats + title (careful!)
+# adjusted_seq_number (careful!)
 # Mean and max length of word
 # Inclusion of numerics
 # Include more punctuation in punctuation
+# Include user_id as cat variable (careful!)
+# train['user_count'] = train.groupby('user_id')['user_id'].transform('count') (careful!)
+# train['num_days'] = train.groupby('user_id')['activation_date'].transform('nunique')
+# train['multicat'] = train.groupby('user_id')['category_name'].transform('nunique') > 1
+# train['num_img_cats'] = train.groupby('user_id')['image_top_1'].transform('nunique')
+# tr['date_int'] = tr['activation_date'].astype(int); tr.groupby('user_id')['date_int'].transform('max') - tr.groupby('user_id')['date_int'].transform('min')
+# tr.groupby('user_id')['date_int'].transform('std')
+# tr.groupby('user_id')['date_int'].transform(lambda x: np.max(np.diff(x)) if len(x) > 1 else 0))
+# Recategorize categories according to english translation (maybe by hand or CountVectorizer)
+# Ridges for each parent_category
+
 # if any lazy people used the same or similar entries for the title/description fields
 
 # Handle time features
@@ -348,19 +351,12 @@ print_step('Done!')
 
 # Look for covariate shifts
 
-# Fix categorical encoding (frequency encode / LGB encode / one-hot encode / SelectKBest encode / SVD encode / Ridge encode) (careful!)
-    # https://www.kaggle.com/peterhurford/beep-beep-2-lgb-encode/edit
-    # https://www.kaggle.com/peterhurford/beep-beep-2
-    # https://www.kaggle.com/the1owl/beep-beep?scriptVersionId=3404599
-# Predict log price to impute missing, also look at difference between predicted and actual price
 # Population encode region/city? (careful!)
 # Geo encode region/city? (careful!)
-# Fix target encoding (ridge encode / target mean-encode / target KFold-mean encode) (careful!)
-    # https://www.kaggle.com/peterhurford/ridge-encoding
-    # https://www.kaggle.com/tnarik/likelihood-encoding-of-categorical-features
+
 # Handle price outliers
-# Encode mean price by category (careful!)
-# User attempt by category (group by category / user, order by date, number) (careful!)
+# Look at difference between log price and log mean price by category, user, region, category X region (careful!)
+# Predict log price to impute missing, also look at difference between predicted and actual price (careful!)
 
 # Handle russian inflectional structure <https://www.kaggle.com/iggisv9t/handling-russian-language-inflectional-structure>
 # Russian NLP http://www.redhenlab.org/home/the-cognitive-core-research-topics-in-red-hen/the-barnyard/russian-nlp
