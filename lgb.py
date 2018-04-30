@@ -1,5 +1,7 @@
 import string
 
+from pprint import pprint
+
 import pandas as pd
 import numpy as np
 
@@ -8,7 +10,9 @@ from scipy.sparse import hstack
 from sklearn.preprocessing import OneHotEncoder, LabelEncoder
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.feature_selection.univariate_selection import SelectKBest, f_regression
+from sklearn.model_selection import train_test_split
 
+from sklearn.linear_model import Ridge
 import lightgbm as lgb
 
 from cv import run_cv_model
@@ -27,16 +31,18 @@ def runLGB(train_X, train_y, test_X, test_y, test_X2):
               'verbosity': -1,
               'metric': 'rmse',
               'data_random_seed': 3,
-              'bagging_fraction': 0.8,
-              'feature_fraction': 0.8,
+              'bagging_fraction': 0.9,
+              'feature_fraction': 0.4,
               'nthread': 3,
               'lambda_l1': 1,
               'lambda_l2': 1}
     model = lgb.train(params,
                       train_set=d_train,
-                      num_boost_round=2000,
+                      num_boost_round=1000,
                       valid_sets=watchlist,
                       verbose_eval=100)
+    print_step('Feature importance')
+    pprint(sorted(list(zip(model.feature_importance(), train_X.columns)), reverse=True))
     print_step('Predict 1/2')
     pred_test_y = model.predict(test_X)
     print_step('Predict 2/2')
@@ -187,92 +193,100 @@ else:
     train_fe, test_fe = load_cache('data_with_fe')
 
 
-print('~~~~~~~~~~~~~~~~')
-print_step('Merging 1/2')
+print('~~~~~~~~~~~~~~')
+print_step('TFIDF 1/3')
 train_fe['text'] = train['title'] + ' ' + train['description'].fillna('')
 test_fe['text'] = test['title'] + ' ' + test['description'].fillna('')
-print_step('Merging 2/2')
-merge = pd.concat([train_fe, test_fe])
-print(merge.shape)
-
-
-print('~~~~~~~~~~~~~~')
-print_step('TFIDF 1/4')
+print_step('TFIDF 2/3')
 tfidf = TfidfVectorizer(ngram_range=(1, 2),
                         max_features=100000,
                         min_df=2,
                         max_df=0.8,
                         binary=True,
                         encoding='KOI8-R')
-tfidf_merge = tfidf.fit_transform(merge['text'])
-print(tfidf_merge.shape)
-print_step('TFIDF 2/4')
-dim = train.shape[0]
-tfidf_train = tfidf_merge[:dim]
-tfidf_test = tfidf_merge[dim:]
+tfidf_train = tfidf.fit_transform(train_fe['text'])
 print(tfidf_train.shape)
-print(tfidf_test.shape)
-print_step('TFIDF 3/4')
-fselect = SelectKBest(f_regression, k=48000)
-tfidf_train = fselect.fit_transform(tfidf_train, target)
-tfidf_test = fselect.transform(tfidf_test)
-print_step('TFIDF 4/4')
-merge.drop('text', axis=1, inplace=True)
-print(tfidf_train.shape)
+print_step('TFIDF 3/3')
+tfidf_test = tfidf.transform(test_fe['text'])
 print(tfidf_test.shape)
 
+print_step('TFIDF Ridge 1/6')
+X_train_1, X_train_2, y_train_1, y_train_2 = train_test_split(tfidf_train, target, test_size = 0.5, shuffle = False)
+model = Ridge()
+print_step('TFIDF Ridge 2/6 1/3')
+model.fit(X_train_1, y_train_1)
+print_step('TFIDF Ridge 2/6 2/3')
+ridge_preds1 = model.predict(X_train_2)
+print_step('TFIDF Ridge 2/6 3/3')
+ridge_preds1f = model.predict(tfidf_test)
+model = Ridge()
+print_step('TFIDF Ridge 3/6 1/3')
+model.fit(X_train_2, y_train_2)
+print_step('TFIDF Ridge 3/6 2/3')
+ridge_preds2 = model.predict(X_train_1)
+print_step('TFIDF Ridge 3/6 3/3')
+ridge_preds2f = model.predict(tfidf_test)
+print_step('TFIDF Ridge 4/6')
+ridge_preds_oof = np.concatenate((ridge_preds2, ridge_preds1), axis=0)
+print_step('TFIDF Ridge 5/6')
+ridge_preds_test = (ridge_preds1f + ridge_preds2f) / 2.0
+print_step('RMSLE OOF: {}'.format(rmse(ridge_preds_oof, target)))
+print_step('TFIDF Ridge 6/6')
+train_fe['ridge'] = ridge_preds_oof
+test_fe['ridge'] = ridge_preds_test
 
-print('~~~~~~~~~~~~~~~~~')
-print('Pre-flight checks')
-merge['image_top_1'] = merge['image_top_1'].astype('str').fillna('missing')
+
+print('~~~~~~~~~~~~~')
+print_step('Dropping')
+train_fe['image_top_1'] = train_fe['image_top_1'].astype('str').fillna('missing')
+test_fe['image_top_1'] = test_fe['image_top_1'].astype('str').fillna('missing')
+train_fe.drop('text', axis=1, inplace=True)
+test_fe.drop('text', axis=1, inplace=True)
+
+print('~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+print_step('Converting to category')
+cat_cols = ['region', 'city', 'parent_category_name', 'category_name',
+			'param_1', 'param_2', 'param_3', 'user_type', 'image_top_1',
+			'day_of_week']
+for col in cat_cols:
+    print(col)
+    train_fe[col] = train_fe[col].astype('category')
+    test_fe[col] = test_fe[col].astype('category')
+
+print('~~~~~~~~~~~~~~~~~~~~~~')
+print_step('Pre-flight checks')
 print('-')
-print(merge.shape)
+print(train_fe.shape)
+print(train_fe.columns)
 print('-')
-for col in merge.columns:
-	print('##')
-	print(col)
-	print('-')
-	print(merge[col].values)
-	print('-')
-	print(merge[col].value_counts())
-	print('-')
-	print(merge[col].dtype)
-	print(merge[col].isna().sum())
-	print(merge[col].nunique())
-	print('-')
+print(test_fe.shape)
+print(test_fe.columns)
+print('-')
+for col in train_fe.columns:
+    print('##')
+    print(col)
+    print('-')
+    print(train_fe[col].values)
+    print('-')
+    print(test_fe[col].values)
+    print('-')
+    print(train_fe[col].value_counts())
+    print('-')
+    print(test_fe[col].value_counts())
+    print('-')
+    print(train_fe[col].dtype)
+    print(test_fe[col].dtype)
+    print(train_fe[col].isna().sum())
+    print(test_fe[col].isna().sum())
+    print(train_fe[col].nunique())
+    print(test_fe[col].nunique())
+    print('-')
 print('-')
 
-print('~~~~~~~~~~~~~~~~')
-print_step('Dummies 1/2')
-dummy_cols = ['parent_category_name', 'category_name', 'user_type', 'param_1',
-              'param_2', 'param_3', 'image_top_1', 'day_of_week', 'region', 'city']
-for col in dummy_cols:
-    le = LabelEncoder()
-    merge[col] = le.fit_transform(merge[col])
-print_step('Dummies 2/2')
-ohe = OneHotEncoder(categorical_features=[merge.columns.get_loc(c) for c in dummy_cols])
-merge = ohe.fit_transform(merge)
-print(merge.shape)
-
-print('~~~~~~~~~~~~')
-print_step('Unmerge')
-merge = merge.tocsr()
-dim = train.shape[0]
-train = merge[:dim]
-test = merge[dim:]
-print(train.shape)
-print(test.shape)
-
-print('~~~~~~~~~~~~')
-print_step('Combine')
-train = hstack((train, tfidf_train)).tocsr()
-test = hstack((test, tfidf_test)).tocsr()
-print(train.shape)
-print(test.shape)
 
 print('~~~~~~~~~~~~')
 print_step('Run LGB')
-results = run_cv_model(train, test, target, runLGB, rmse, 'lgb')
+results = run_cv_model(train_fe, test_fe, target, runLGB, rmse, 'lgb')
 import pdb
 pdb.set_trace()
 
@@ -285,21 +299,26 @@ print_step('Prepping submission file')
 submission = pd.DataFrame()
 submission['item_id'] = test_id
 submission['deal_probability'] = results['test'].clip(0.0, 1.0)
-submission.to_csv('submit/submit_lgb.csv', index=False)
+submission.to_csv('submit/submit_lgb3.csv', index=False)
 print_step('Done!')
 
 # LOG (Comp start 25 Apr, merge deadline 20 June @ 7pm EDT, end 27 June @ 7pm EDT) (17/25 submits used as of 30 Apr)
-# LGB: no text, geo, date, image, param data, or item_seq_number                   - Dim 51,    5CV 0.2313, Submit 0.235, Delta -.00371
-# LGB: +missing data, +OHE params (no text, geo, date, image, or item_seq_number)  - Dim 5057,  5CV 0.2269, Submit 0.230, Delta -.00306
-# LGB: +basic NLP (no other text, geo, date, image, or item_seq_number)            - Dim 5078,  5CV 0.2261, Submit 0.229, Delta -.00293  <a9e424c>
-# LGB: +date (no other text, geo, image, or item_seq_number)                       - Dim 5086,  5CV 0.2261, Submit ?                     <f6c28f2>
-# LGB: +OHE city and region (no other text, image, or item_seq_number)             - Dim 6866,  5CV 0.2254, Submit ?                     <531df17>
-# LGB: +item_seq_number (no other text or image)                                   - Dim 6867,  5CV 0.2252, Submit ?                     <624f1a4>
-# LGB: +more basic NLP (no other text or image)                                    - Dim 6877,  5CV 0.2251, Submit 0.229, Delta -.00390  <f47d17d>
-# LGB: +SelectKBest TFIDF description + text (no image)                            - Dim 54877, 5CV 0.2221, Submit 0.225, Delta -.00290  <5e4f5be>
+# LGB: no text, geo, date, image, param data, or item_seq_number                   - Dim 51,    5CV 0.2313, Submit 0.235, Delta -.0037
+# LGB: +missing data, +OHE params (no text, geo, date, image, or item_seq_number)  - Dim 5057,  5CV 0.2269, Submit 0.230, Delta -.0031
+# LGB: +basic NLP (no other text, geo, date, image, or item_seq_number)            - Dim 5078,  5CV 0.2261, Submit 0.229, Delta -.0029  <a9e424c>
+# LGB: +date (no other text, geo, image, or item_seq_number)                       - Dim 5086,  5CV 0.2261, Submit ?                    <f6c28f2>
+# LGB: +OHE city and region (no other text, image, or item_seq_number)             - Dim 6866,  5CV 0.2254, Submit ?                    <531df17>
+# LGB: +item_seq_number (no other text or image)                                   - Dim 6867,  5CV 0.2252, Submit ?                    <624f1a4>
+# LGB: +more basic NLP (no other text or image)                                    - Dim 6877,  5CV 0.2251, Submit 0.229, Delta -.0039  <f47d17d>
+# LGB: +SelectKBest TFIDF description + text (no image)                            - Dim 54877, 5CV 0.2221, Submit 0.225, Delta -.0029  <7002d68>
+# LGB: +LGB Encoding Categoricals and Ridge Encoding text                          - Dim 51,    5CV 0.2212, Submit 0.224, Delta -.0028 
 # LGB: +                                                                           - Dim ?, 5CV ?, Submit ?
 
 # CURRENT
+# [2018-04-29 22:49:35.691775] lgb cv scores : [0.22178057691172565, 0.22079472744253817, 0.2210863429651003, 0.22089765361710792, 0.22155896321450402]
+# [2018-04-29 22:49:35.692592] lgb mean cv score : 0.22122365283019524
+# [2018-04-29 22:49:35.693448] lgb std cv score : 0.0003825451504271106
+
 # [2018-04-26 21:46:32.974844] lgb cv scores : [0.22256053295460215, 0.22160517248374503, 0.22192232562406788, 0.22177930697296735, 0.22242885702632134]
 # [2018-04-26 21:46:32.976301] lgb mean cv score : 0.22205923901234076
 # [2018-04-26 21:46:32.979111] lgb std cv score : 0.00037180552114082565
@@ -314,6 +333,7 @@ print_step('Done!')
 # Recategorize categories according to english translation (maybe by hand or CountVectorizer)
 # Are there users in multiple parent categories? Regular categories? Recategorized categories?
 
+# Drop description missing (not in test set)
 # Total missing
 # Mean and max length of word
 # Inclusion of numerics
@@ -329,15 +349,15 @@ print_step('Done!')
 # Look for covariate shifts
 
 # Fix categorical encoding (frequency encode / LGB encode / one-hot encode / SelectKBest encode / SVD encode / Ridge encode) (careful!)
-	# https://www.kaggle.com/peterhurford/beep-beep-2-lgb-encode/edit
-	# https://www.kaggle.com/peterhurford/beep-beep-2
-	# https://www.kaggle.com/the1owl/beep-beep?scriptVersionId=3404599
-	# Predict log price to impute missing, also look at difference between predicted and actual price
+    # https://www.kaggle.com/peterhurford/beep-beep-2-lgb-encode/edit
+    # https://www.kaggle.com/peterhurford/beep-beep-2
+    # https://www.kaggle.com/the1owl/beep-beep?scriptVersionId=3404599
+# Predict log price to impute missing, also look at difference between predicted and actual price
 # Population encode region/city? (careful!)
 # Geo encode region/city? (careful!)
 # Fix target encoding (ridge encode / target mean-encode / target KFold-mean encode) (careful!)
-	# https://www.kaggle.com/peterhurford/ridge-encoding
-	# https://www.kaggle.com/tnarik/likelihood-encoding-of-categorical-features
+    # https://www.kaggle.com/peterhurford/ridge-encoding
+    # https://www.kaggle.com/tnarik/likelihood-encoding-of-categorical-features
 # Handle price outliers
 # Encode mean price by category (careful!)
 # User attempt by category (group by category / user, order by date, number) (careful!)
@@ -368,10 +388,11 @@ print_step('Done!')
 # Words in other words (e.g., param_1 or title in descripton)?
 
 # Image analysis
-	# https://www.kaggle.com/wesamelshamy/image-classification-and-quality-score-w-resnet50
+    # https://www.kaggle.com/wesamelshamy/image-classification-and-quality-score-w-resnet50
     # pic2vec
     # img_hash.py?
     # https://www.kaggle.com/classtag/extract-avito-image-features-via-keras-vgg16
+    # https://www.kaggle.com/bguberfain/vgg16-train-features/code
     # Contrast? https://dsp.stackexchange.com/questions/3309/measuring-the-contrast-of-an-image
     # https://www.pyimagesearch.com/2014/03/03/charizard-explains-describe-quantify-image-using-feature-vectors/
     # NNs?
@@ -398,7 +419,7 @@ print_step('Done!')
     # https://www.kaggle.com/jagangupta/understanding-approval-donorschoose-eda-fe-eli5
     # https://www.kaggle.com/fizzbuzz/beginner-s-guide-to-capsule-networks
     # https://www.kaggle.com/nicapotato/abc-s-of-tf-idf-boosting-0-798
-	# https://www.kaggle.com/shadowwarrior/1st-place-solution
+    # https://www.kaggle.com/shadowwarrior/1st-place-solution
 
 # https://www.kaggle.com/c/avito-duplicate-ads-detection/discussion
 # https://www.kaggle.com/c/two-sigma-connect-rental-listing-inquiries/discussion
