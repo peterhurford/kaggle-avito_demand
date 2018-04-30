@@ -174,52 +174,94 @@ if not is_in_cache('data_with_fe'):
     print(train_fe.shape)
     print(test_fe.shape)
 
-    print('~~~~~~~~~~~~~~')
-    print_step('TFIDF 1/3')
-    train_fe['text'] = train['title'] + ' ' + train['description'].fillna('')
-    test_fe['text'] = test['title'] + ' ' + test['description'].fillna('')
-    print_step('TFIDF 2/3')
+    print('~~~~~~~~~~~~~~~~~~~')
+    print_step('Title TFIDF 1/3')
+    train_fe['titlecat'] = train_fe['parent_category_name'] + ' ' + train_fe['category_name'] + ' ' + train_fe['param_1'] + ' ' + train_fe['param_2'] + ' ' + train_fe['param_3'] + ' ' + train['title']
+    test_fe['titlecat'] = test_fe['parent_category_name'] + ' ' + test_fe['category_name'] + ' ' + test_fe['param_1'] + ' ' + test_fe['param_2'] + ' ' + test_fe['param_3'] + ' ' + test['title']
+    print_step('Title TFIDF 2/3')
+    tfidf = TfidfVectorizer(ngram_range=(1, 1),
+                            max_features=100000,
+                            min_df=2,
+                            max_df=0.8,
+                            binary=True,
+                            encoding='KOI8-R')
+    tfidf_train = tfidf.fit_transform(train_fe['titlecat'])
+    print(tfidf_train.shape)
+    print_step('Title TFIDF 3/3')
+    tfidf_test = tfidf.transform(test_fe['titlecat'])
+    print(tfidf_test.shape)
+
+    print_step('Title TFIDF Ridge 1/6')
+    X_train_1, X_train_2, y_train_1, y_train_2 = train_test_split(tfidf_train, target, test_size = 0.5, shuffle = False)
+    model = Ridge()
+    print_step('Title TFIDF Ridge 2/6 1/3')
+    model.fit(X_train_1, y_train_1)
+    print_step('Title TFIDF Ridge 2/6 2/3')
+    ridge_preds1 = model.predict(X_train_2)
+    print_step('Title TFIDF Ridge 2/6 3/3')
+    ridge_preds1f = model.predict(tfidf_test)
+    model = Ridge()
+    print_step('Title TFIDF Ridge 3/6 1/3')
+    model.fit(X_train_2, y_train_2)
+    print_step('Title TFIDF Ridge 3/6 2/3')
+    ridge_preds2 = model.predict(X_train_1)
+    print_step('Title TFIDF Ridge 3/6 3/3')
+    ridge_preds2f = model.predict(tfidf_test)
+    print_step('Title TFIDF Ridge 4/6')
+    ridge_preds_oof = np.concatenate((ridge_preds2, ridge_preds1), axis=0)
+    print_step('Title TFIDF Ridge 5/6')
+    ridge_preds_test = (ridge_preds1f + ridge_preds2f) / 2.0
+    print_step('RMSLE OOF: {}'.format(rmse(ridge_preds_oof, target)))
+    print_step('Title TFIDF Ridge 6/6')
+    train_fe['title_ridge'] = ridge_preds_oof
+    test_fe['title_ridge'] = ridge_preds_test
+
+    print('~~~~~~~~~~~~~~~~~~~')
+    print_step('Text TFIDF 1/3')
+    train_fe['desc'] = train['title'] + ' ' + train['description'].fillna('')
+    test_fe['desc'] = test['title'] + ' ' + test['description'].fillna('')
+    print_step('Text TFIDF 2/3')
     tfidf = TfidfVectorizer(ngram_range=(1, 2),
                             max_features=100000,
                             min_df=2,
                             max_df=0.8,
                             binary=True,
                             encoding='KOI8-R')
-    tfidf_train = tfidf.fit_transform(train_fe['text'])
+    tfidf_train = tfidf.fit_transform(train_fe['desc'])
     print(tfidf_train.shape)
-    print_step('TFIDF 3/3')
-    tfidf_test = tfidf.transform(test_fe['text'])
+    print_step('Text TFIDF 3/3')
+    tfidf_test = tfidf.transform(test_fe['desc'])
     print(tfidf_test.shape)
 
-    print_step('TFIDF Ridge 1/6')
+    print_step('Text TFIDF Ridge 1/6')
     X_train_1, X_train_2, y_train_1, y_train_2 = train_test_split(tfidf_train, target, test_size = 0.5, shuffle = False)
     model = Ridge()
-    print_step('TFIDF Ridge 2/6 1/3')
+    print_step('Text TFIDF Ridge 2/6 1/3')
     model.fit(X_train_1, y_train_1)
-    print_step('TFIDF Ridge 2/6 2/3')
+    print_step('Text TFIDF Ridge 2/6 2/3')
     ridge_preds1 = model.predict(X_train_2)
-    print_step('TFIDF Ridge 2/6 3/3')
+    print_step('Text TFIDF Ridge 2/6 3/3')
     ridge_preds1f = model.predict(tfidf_test)
     model = Ridge()
-    print_step('TFIDF Ridge 3/6 1/3')
+    print_step('Text TFIDF Ridge 3/6 1/3')
     model.fit(X_train_2, y_train_2)
-    print_step('TFIDF Ridge 3/6 2/3')
+    print_step('Text TFIDF Ridge 3/6 2/3')
     ridge_preds2 = model.predict(X_train_1)
-    print_step('TFIDF Ridge 3/6 3/3')
+    print_step('Text TFIDF Ridge 3/6 3/3')
     ridge_preds2f = model.predict(tfidf_test)
-    print_step('TFIDF Ridge 4/6')
+    print_step('Text TFIDF Ridge 4/6')
     ridge_preds_oof = np.concatenate((ridge_preds2, ridge_preds1), axis=0)
-    print_step('TFIDF Ridge 5/6')
+    print_step('Text TFIDF Ridge 5/6')
     ridge_preds_test = (ridge_preds1f + ridge_preds2f) / 2.0
     print_step('RMSLE OOF: {}'.format(rmse(ridge_preds_oof, target)))
-    print_step('TFIDF Ridge 6/6')
-    train_fe['ridge'] = ridge_preds_oof
-    test_fe['ridge'] = ridge_preds_test
+    print_step('Text TFIDF Ridge 6/6')
+    train_fe['desc_ridge'] = ridge_preds_oof
+    test_fe['desc_ridge'] = ridge_preds_test
 
     print('~~~~~~~~~~~~~')
     print_step('Dropping')
-    train_fe.drop('text', axis=1, inplace=True)
-    test_fe.drop('text', axis=1, inplace=True)
+    train_fe.drop(['desc', 'titlecat'], axis=1, inplace=True)
+    test_fe.drop(['desc', 'titlecat'], axis=1, inplace=True)
 
     print('~~~~~~~~~~~~')
     print_step('Caching')
@@ -234,15 +276,15 @@ print_step('Converting to category')
 train_fe['image_top_1'] = train_fe['image_top_1'].astype('str').fillna('missing')
 test_fe['image_top_1'] = test_fe['image_top_1'].astype('str').fillna('missing')
 cat_cols = ['region', 'city', 'parent_category_name', 'category_name',
-			'param_1', 'param_2', 'param_3', 'user_type', 'image_top_1', 'day_of_week']
+            'param_1', 'param_2', 'param_3', 'user_type', 'image_top_1', 'day_of_week']
 for col in train_fe.columns:
-	print(col)
-	if col in cat_cols:
-		train_fe[col] = train_fe[col].astype('category')
-		test_fe[col] = test_fe[col].astype('category')
-	else:
-		train_fe[col] = train_fe[col].astype(np.float64)
-		test_fe[col] = test_fe[col].astype(np.float64)
+    print(col)
+    if col in cat_cols:
+        train_fe[col] = train_fe[col].astype('category')
+        test_fe[col] = test_fe[col].astype('category')
+    else:
+        train_fe[col] = train_fe[col].astype(np.float64)
+        test_fe[col] = test_fe[col].astype(np.float64)
 
 
 print('~~~~~~~~~~~~~~~~~~~~~~')
@@ -289,7 +331,7 @@ print_step('Prepping submission file')
 submission = pd.DataFrame()
 submission['item_id'] = test_id
 submission['deal_probability'] = results['test'].clip(0.0, 1.0)
-submission.to_csv('submit/submit_lgb3.csv', index=False)
+submission.to_csv('submit/submit_lgb4.csv', index=False)
 print_step('Done!')
 
 # LOG (Comp start 25 Apr, merge deadline 20 June @ 7pm EDT, end 27 June @ 7pm EDT) (19/25 submits used as of 30 Apr)
@@ -303,12 +345,18 @@ print_step('Done!')
 # LGB: +SelectKBest TFIDF description + text (no image)                            - Dim 54877, 5CV 0.2221, Submit 0.225, Delta -.0029  <7002d68>
 # LGB: +LGB Encoding Categoricals and Ridge Encoding text                          - Dim 51,    5CV 0.2212, Submit 0.224, Delta -.0028  <e1952cf>
 # LGB: -some missing vars, -weekend                                                - Dim 46,    5CV 0.2212, Submit ?
+# LGB: +Ridge Encoding title                                                       - Dim 47,    5CV 0.2205, Submit 0.223, Delta -.0025
 # LGB: +                                                                           - Dim ?, 5CV ?, Submit ?
 
 # CURRENT
 # [2018-04-30 02:30:37.975538] lgb cv scores : [0.2217595472795318, 0.2207746297687226, 0.22111268905727507, 0.2208252851488291, 0.22151688106644432]
 # [2018-04-30 02:30:37.975697] lgb mean cv score : 0.22119780646416057
 # [2018-04-30 02:30:37.976578] lgb std cv score : 0.0003853458094671446
+
+# [2018-04-30 11:57:26.416590] lgb cv scores : [0.22108413204150598, 0.2200999871461043, 0.2203104547955073, 0.2200721721767574, 0.2207988289043796]
+# [2018-04-30 11:57:26.417441] lgb mean cv score : 0.22047311501285088
+# [2018-04-30 11:57:26.419676] lgb std cv score : 0.00040146463293921745
+
 
 # [100]   training's rmse: 0.223271       valid_1's rmse: 0.225434
 # [200]   training's rmse: 0.220095       valid_1's rmse: 0.223689
@@ -322,14 +370,12 @@ print_step('Done!')
 # [1000]  training's rmse: 0.213022       valid_1's rmse: 0.22176
 
 
-
-
 # TODO
 # Ridge encode TFIDF of params + cats + title (careful!)
-# adjusted_seq_number (careful!)
 # Mean and max length of word
 # Inclusion of numerics
 # Include more punctuation in punctuation
+# adjusted_seq_number (careful!)
 # Include user_id as cat variable (careful!)
 # train['user_count'] = train.groupby('user_id')['user_id'].transform('count') (careful!)
 # train['num_days'] = train.groupby('user_id')['activation_date'].transform('nunique')
