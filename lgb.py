@@ -66,16 +66,23 @@ if not is_in_cache('data_with_fe'):
     print_step('Merging')
     merge = pd.concat([train, test])
 
-    print('~~~~~~~~~~~~~~~')
-    print_step('Imputation')
+    print('~~~~~~~~~~~~~~~~~~~')
+    print_step('Imputation 1/7')
     merge['param_1'].fillna('missing', inplace=True)
+    print_step('Imputation 2/7')
     merge['param_2'].fillna('missing', inplace=True)
+    print_step('Imputation 3/7')
     merge['param_3'].fillna('missing', inplace=True)
+    print_step('Imputation 4/7')
     merge['price_missing'] = merge['price'].isna().astype(int)
     merge['price'].fillna(merge['price'].median(), inplace=True)
+    print_step('Imputation 5/7')
     merge['image_missing'] = merge['image'].isna().astype(int)
     merge['image_top_1'] = merge['image_top_1'].astype('str').fillna('missing')
+    print_step('Imputation 6/7')
     merge['description'].fillna('', inplace=True)
+    print_step('Imputation 7/7')
+    merge['city'] = merge['city'] + '_' + merge['region']
 
     print('~~~~~~~~~~~~~~~~~~~~')
     print_step('Activation Date')
@@ -175,19 +182,25 @@ if not is_in_cache('data_with_fe'):
     print(train_fe.shape)
     print(test_fe.shape)
 
-    print('~~~~~~~~~~~~~~~~~~~')
-    print_step('User stats 1/2')
+    print('~~~~~~~~~~~~~~~~~~~~~~~')
+    print_step('User stats 1/3 1/2')
     train_fe['adjusted_seq_num'] = train_fe['item_seq_number'] - train_fe.groupby('user_id')['item_seq_number'].transform('min')
+    print_step('User stats 1/3 2/2')
     test_fe['adjusted_seq_num'] = test_fe['item_seq_number'] - test_fe.groupby('user_id')['item_seq_number'].transform('min')
-    print_step('User stats 2/2')
+    print_step('User stats 2/3 1/2')
     train_fe['user_num_days'] = train_fe.groupby('user_id')['activation_date'].transform('nunique').astype(int)
+    print_step('User stats 2/3 2/2')
     test_fe['user_num_days'] = test_fe.groupby('user_id')['activation_date'].transform('nunique').astype(int)
-    print_step('User stats 3/3')
+    print_step('User stats 3/3 1/5')
     train_fe['date_int'] = pd.to_datetime(train_fe['activation_date']).astype(int)
     test_fe['date_int'] = pd.to_datetime(test_fe['activation_date']).astype(int)
+    print_step('User stats 3/3 2/5')
     train_fe['user_days_range'] = train_fe.groupby('user_id')['date_int'].transform('max').astype(int) - train_fe.groupby('user_id')['date_int'].transform('min').astype(int)
+    print_step('User stats 3/3 3/5')
     test_fe['user_days_range'] = test_fe.groupby('user_id')['date_int'].transform('max').astype(int) - test_fe.groupby('user_id')['date_int'].transform('min').astype(int)
+    print_step('User stats 3/3 4/5')
     train_fe['user_days_range'] = train_fe['user_days_range'].fillna(0).apply(lambda x: round(x / 10**11))
+    print_step('User stats 3/3 5/5')
     test_fe['user_days_range'] = test_fe['user_days_range'].fillna(0).apply(lambda x: round(x / 10**11))
 
 
@@ -228,7 +241,7 @@ if not is_in_cache('data_with_fe'):
     ridge_preds_oof = np.concatenate((ridge_preds2, ridge_preds1), axis=0)
     print_step('Title TFIDF Ridge 5/6')
     ridge_preds_test = (ridge_preds1f + ridge_preds2f) / 2.0
-    print_step('RMSLE OOF: {}'.format(rmse(ridge_preds_oof, target)))
+    print_step('Title Ridge RMSE OOF: {}'.format(rmse(ridge_preds_oof, target)))
     print_step('Title TFIDF Ridge 6/6')
     train_fe['title_ridge'] = ridge_preds_oof
     test_fe['title_ridge'] = ridge_preds_test
@@ -270,7 +283,7 @@ if not is_in_cache('data_with_fe'):
     ridge_preds_oof = np.concatenate((ridge_preds2, ridge_preds1), axis=0)
     print_step('Text TFIDF Ridge 5/6')
     ridge_preds_test = (ridge_preds1f + ridge_preds2f) / 2.0
-    print_step('RMSLE OOF: {}'.format(rmse(ridge_preds_oof, target)))
+    print_step('Text Ridge RMSE OOF: {}'.format(rmse(ridge_preds_oof, target)))
     print_step('Text TFIDF Ridge 6/6')
     train_fe['desc_ridge'] = ridge_preds_oof
     test_fe['desc_ridge'] = ridge_preds_test
@@ -311,9 +324,6 @@ print_step('Pre-flight checks')
 print('-')
 print(train_fe.shape)
 print(test_fe.shape)
-print('-')
-print(train_fe.columns)
-print(test_fe.columns)
 print('-')
 print(train_fe.dtypes)
 print(test_fe.dtypes)
@@ -359,7 +369,7 @@ print_step('Done!')
 # LGB: +basic NLP (no other text, geo, date, image, or item_seq_number)            - Dim 5078,  5CV 0.2261, Submit 0.229, Delta -.0029  <a9e424c>
 # LGB: +date (no other text, geo, image, or item_seq_number)                       - Dim 5086,  5CV 0.2261, Submit ?                    <f6c28f2>
 # LGB: +OHE city and region (no other text, image, or item_seq_number)             - Dim 6866,  5CV 0.2254, Submit ?                    <531df17>
-# LGB: +item_seq_number (no other text or image)                                   - Dim 6867,  5CV 0.2252, Submit ?                    <624f1a4>
+# LGB: +item_seq_numbur (no other text or image)                                   - Dim 6867,  5CV 0.2252, Submit ?                    <624f1a4>
 # LGB: +more basic NLP (no other text or image)                                    - Dim 6877,  5CV 0.2251, Submit 0.229, Delta -.0039  <f47d17d>
 # LGB: +SelectKBest TFIDF description + text (no image)                            - Dim 54877, 5CV 0.2221, Submit 0.225, Delta -.0029  <7002d68>
 # LGB: +LGB Encoding Categoricals and Ridge Encoding text                          - Dim 51,    5CV 0.2212, Submit 0.224, Delta -.0028  <e1952cf>
@@ -367,13 +377,16 @@ print_step('Done!')
 # LGB: +Ridge Encoding title                                                       - Dim 47,    5CV 0.2205, Submit 0.223, Delta -.0025  <6a183fb>
 # LGB: -some NLP +some NLP                                                         - Dim 50,    5CV 0.2204, Submit 0.223, Delta -.0026  <954e3ad>
 # LGB: +adjusted_seq_num                                                           - Dim 51,    5CV 0.2204, Submit 0.223, Delta -.0026
-# LGB: +user_num_days, +user_days_range                                            - Dim 53,    5CV 0.2201, Submit 0.223, Delta -.0029
+# LGB: +user_num_days, +user_days_range                                            - Dim 53,    5CV 0.2201, Submit 0.223, Delta -.0029  <e7ea303>
+# LGB: +recode city                                                                - Dim 53,    5CV 0.2201, Submit ?
 
 # CURRENT
-# [2018-05-01 00:27:20.887344] lgb cv scores : [0.22056615350576797, 0.21973502608922202, 0.2199345256183117, 0.2196796908680229, 0.2203798293579068]
-# [2018-05-01 00:27:20.890142] lgb mean cv score : 0.22005904508784627
-# [2018-05-01 00:27:20.892303] lgb std cv score : 0.00035340190415608956
+# [2018-05-01 17:38:18.543311] lgb cv scores : [0.22065591488917718, 0.2197020419729133, 0.21994642049481802, 0.21966517425333254, 0.22037774828325576]
+# [2018-05-01 17:38:18.543448] lgb mean cv score : 0.22006945997869937
+# [2018-05-01 17:38:18.549760] lgb std cv score : 0.0003879568775147022
 
+# Title Ridge OOF 0.2337
+# Text Ridge OOF 0.2361
 
 # [100]   training's rmse: 0.222022       valid_1's rmse: 0.224351
 # [200]   training's rmse: 0.219022       valid_1's rmse: 0.222628
@@ -388,29 +401,6 @@ print_step('Done!')
 
 
 # TODO
-# Recategorize categories according to english translation (maybe by hand or CountVectorizer)
-
-# Ridges for each parent_category
-# FM model
-# Deep LGB model with TFIDF
-
-# if any lazy people used the same or similar entries for the title/description fields
-
-# Handle time features
-       # https://github.com/mxbi/ftim
-       # Try OTV validation
-    # Include date as a feature
-    # Days since user last posted and such
-
-# Look for covariate shifts
-
-# Population encode region/city? (careful!)
-# Geo encode region/city? (careful!)
-
-# Handle price outliers
-# Look at difference between log price and log mean price by category, user, region, category X region (careful!)
-# Predict log price to impute missing, also look at difference between predicted and actual price (careful!)
-
 # Handle russian inflectional structure <https://www.kaggle.com/iggisv9t/handling-russian-language-inflectional-structure>
 # Russian NLP http://www.redhenlab.org/home/the-cognitive-core-research-topics-in-red-hen/the-barnyard/russian-nlp
 
@@ -427,14 +417,28 @@ print_step('Done!')
 #tr['title_last'] = tr['title'].apply(lambda ss: get_element(ss.translate(ss.maketrans('', '', russian_punct)).replace('\n', ' ').lower().split(' '), -1))
 # 0.7815870814266627
 
-# Understand and apply https://www.kaggle.com/rdizzl3/stage-2-lgbm-stacker-8th-place-solution/code
+# if any lazy people used the same or similar entries for the title/description fields
+
+# Recategorize categories according to english translation (maybe by hand or CountVectorizer)
+# Population encode region/city? (careful!)
+# Geo encode region/city? (careful!)
 
 # Category - region interaction?
-# Look at user_ids that are in both train and test (careful!)
-# Delta between price and price of category (careful!)
+
+# Handle time features
+       # https://github.com/mxbi/ftim
+       # Try OTV validation
+    # Include date as a feature
+    # Days since user last posted and such
+
+# Handle price outliers
+# Look at difference between log price and log mean price by category, user, region, category X region (careful!)
+# Predict log price to impute missing, also look at difference between predicted and actual price (careful!)
+
+# Understand and apply https://www.kaggle.com/rdizzl3/stage-2-lgbm-stacker-8th-place-solution/code
+# Words in other words (e.g., param_1 or title in descripton)?
 
 # Translate to english?
-# Words in other words (e.g., param_1 or title in descripton)?
 
 # Image analysis
     # https://www.kaggle.com/wesamelshamy/image-classification-and-quality-score-w-resnet50
@@ -453,6 +457,7 @@ print_step('Done!')
 # Check feature impact and tuning in DR
 # Tune models some
 # Train more models (Ridge, FM, MNB, Deep LGB, KNN, NNs)
+# Ridges for each parent_category
 # Vary model
     # Train Ridge on text, include into as-is LGB
     # Take LGB, add text with Ridge / SelectKBest
