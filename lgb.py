@@ -167,13 +167,6 @@ if not is_in_cache('data_with_fe'):
     print_step('Basic NLP 36/36')
     merge['number_count_title'] = merge['title'].str.count('[0-9]')
 
-    print('~~~~~~~~~~~~~')
-    print_step('Dropping')
-    drops = ['activation_date', 'description', 'title']
-    merge.drop(drops, axis=1, inplace=True)
-    currently_unused = ['user_id', 'image']
-    merge.drop(currently_unused, axis=1, inplace=True)
-
     print('~~~~~~~~~~~~')
     print_step('Unmerge')
     dim = train.shape[0]
@@ -183,9 +176,25 @@ if not is_in_cache('data_with_fe'):
     print(test_fe.shape)
 
     print('~~~~~~~~~~~~~~~~~~~')
+    print_step('User stats 1/2')
+    train_fe['adjusted_seq_num'] = train_fe['item_seq_number'] - train_fe.groupby('user_id')['item_seq_number'].transform('min')
+    test_fe['adjusted_seq_num'] = test_fe['item_seq_number'] - test_fe.groupby('user_id')['item_seq_number'].transform('min')
+    print_step('User stats 2/2')
+    train_fe['user_num_days'] = train_fe.groupby('user_id')['activation_date'].transform('nunique').astype(int)
+    test_fe['user_num_days'] = test_fe.groupby('user_id')['activation_date'].transform('nunique').astype(int)
+    print_step('User stats 3/3')
+    train_fe['date_int'] = pd.to_datetime(train_fe['activation_date']).astype(int)
+    test_fe['date_int'] = pd.to_datetime(test_fe['activation_date']).astype(int)
+    train_fe['user_days_range'] = train_fe.groupby('user_id')['date_int'].transform('max').astype(int) - train_fe.groupby('user_id')['date_int'].transform('min').astype(int)
+    test_fe['user_days_range'] = test_fe.groupby('user_id')['date_int'].transform('max').astype(int) - test_fe.groupby('user_id')['date_int'].transform('min').astype(int)
+    train_fe['user_days_range'] = train_fe['user_days_range'].fillna(0).apply(lambda x: round(x / 10**11))
+    test_fe['user_days_range'] = test_fe['user_days_range'].fillna(0).apply(lambda x: round(x / 10**11))
+
+
+    print('~~~~~~~~~~~~~~~~~~~')
     print_step('Title TFIDF 1/3')
-    train_fe['titlecat'] = train_fe['parent_category_name'] + ' ' + train_fe['category_name'] + ' ' + train_fe['param_1'] + ' ' + train_fe['param_2'] + ' ' + train_fe['param_3'] + ' ' + train['title']
-    test_fe['titlecat'] = test_fe['parent_category_name'] + ' ' + test_fe['category_name'] + ' ' + test_fe['param_1'] + ' ' + test_fe['param_2'] + ' ' + test_fe['param_3'] + ' ' + test['title']
+    train_fe['titlecat'] = train_fe['parent_category_name'] + ' ' + train_fe['category_name'] + ' ' + train_fe['param_1'] + ' ' + train_fe['param_2'] + ' ' + train_fe['param_3'] + ' ' + train_fe['title']
+    test_fe['titlecat'] = test_fe['parent_category_name'] + ' ' + test_fe['category_name'] + ' ' + test_fe['param_1'] + ' ' + test_fe['param_2'] + ' ' + test_fe['param_3'] + ' ' + test_fe['title']
     print_step('Title TFIDF 2/3')
     tfidf = TfidfVectorizer(ngram_range=(1, 1),
                             max_features=100000,
@@ -226,8 +235,8 @@ if not is_in_cache('data_with_fe'):
 
     print('~~~~~~~~~~~~~~~~~~~')
     print_step('Text TFIDF 1/3')
-    train_fe['desc'] = train['title'] + ' ' + train['description'].fillna('')
-    test_fe['desc'] = test['title'] + ' ' + test['description'].fillna('')
+    train_fe['desc'] = train_fe['title'] + ' ' + train_fe['description'].fillna('')
+    test_fe['desc'] = test_fe['title'] + ' ' + test_fe['description'].fillna('')
     print_step('Text TFIDF 2/3')
     tfidf = TfidfVectorizer(ngram_range=(1, 2),
                             max_features=100000,
@@ -268,8 +277,9 @@ if not is_in_cache('data_with_fe'):
 
     print('~~~~~~~~~~~~~')
     print_step('Dropping')
-    train_fe.drop(['desc', 'titlecat'], axis=1, inplace=True)
-    test_fe.drop(['desc', 'titlecat'], axis=1, inplace=True)
+    drops = ['activation_date', 'description', 'title', 'desc', 'titlecat', 'image', 'user_id', 'date_int']
+    train_fe.drop(drops, axis=1, inplace=True)
+    test_fe.drop(drops, axis=1, inplace=True)
 
     print('~~~~~~~~~~~~')
     print_step('Caching')
@@ -340,10 +350,10 @@ print_step('Prepping submission file')
 submission = pd.DataFrame()
 submission['item_id'] = test_id
 submission['deal_probability'] = results['test'].clip(0.0, 1.0)
-submission.to_csv('submit/submit_lgb5.csv', index=False)
+submission.to_csv('submit/submit_lgb6.csv', index=False)
 print_step('Done!')
 
-# LOG (Comp start 25 Apr, merge deadline 20 June @ 7pm EDT, end 27 June @ 7pm EDT) (20/25 submits used as of 30 Apr)
+# LOG (Comp start 25 Apr, merge deadline 20 June @ 7pm EDT, end 27 June @ 7pm EDT) (23/30 submits used as of 1 May UTC)
 # LGB: no text, geo, date, image, param data, or item_seq_number                   - Dim 51,    5CV 0.2313, Submit 0.235, Delta -.0037
 # LGB: +missing data, +OHE params (no text, geo, date, image, or item_seq_number)  - Dim 5057,  5CV 0.2269, Submit 0.230, Delta -.0031
 # LGB: +basic NLP (no other text, geo, date, image, or item_seq_number)            - Dim 5078,  5CV 0.2261, Submit 0.229, Delta -.0029  <a9e424c>
@@ -355,38 +365,29 @@ print_step('Done!')
 # LGB: +LGB Encoding Categoricals and Ridge Encoding text                          - Dim 51,    5CV 0.2212, Submit 0.224, Delta -.0028  <e1952cf>
 # LGB: -some missing vars, -weekend                                                - Dim 46,    5CV 0.2212, Submit ?
 # LGB: +Ridge Encoding title                                                       - Dim 47,    5CV 0.2205, Submit 0.223, Delta -.0025  <6a183fb>
-# LGB: -some NLP +some NLP                                                         - Dim 50,    5CV 0.2204, Submit 0.223, Delta -.0026
+# LGB: -some NLP +some NLP                                                         - Dim 50,    5CV 0.2204, Submit 0.223, Delta -.0026  <954e3ad>
+# LGB: +adjusted_seq_num                                                           - Dim 51,    5CV 0.2204, Submit 0.223, Delta -.0026
+# LGB: +user_num_days, +user_days_range                                            - Dim 53,    5CV 0.2201, Submit 0.223, Delta -.0029
 
 # CURRENT
-# [2018-04-30 16:46:47.631051] lgb cv scores : [0.22095567092766674, 0.22005186618262373, 0.2202691930991519, 0.2199997748739072, 0.2207328834141181]
-# [2018-04-30 16:46:47.631874] lgb mean cv score : 0.22040187769949354
-# [2018-04-30 16:46:47.632087] lgb std cv score : 0.0003789595414126527
+# [2018-05-01 00:27:20.887344] lgb cv scores : [0.22056615350576797, 0.21973502608922202, 0.2199345256183117, 0.2196796908680229, 0.2203798293579068]
+# [2018-05-01 00:27:20.890142] lgb mean cv score : 0.22005904508784627
+# [2018-05-01 00:27:20.892303] lgb std cv score : 0.00035340190415608956
 
-# [100]   training's rmse: 0.222143       valid_1's rmse: 0.224526
-# [200]   training's rmse: 0.219213       valid_1's rmse: 0.222938
-# [300]   training's rmse: 0.217517       valid_1's rmse: 0.222232
-# [400]   training's rmse: 0.216287       valid_1's rmse: 0.221819
-# [500]   training's rmse: 0.215315       valid_1's rmse: 0.221557
-# [600]   training's rmse: 0.214546       valid_1's rmse: 0.221362
-# [700]   training's rmse: 0.213864       valid_1's rmse: 0.221201
-# [800]   training's rmse: 0.213251       valid_1's rmse: 0.221115
-# [900]   training's rmse: 0.212631       valid_1's rmse: 0.221023
-# [1000]  training's rmse: 0.212035       valid_1's rmse: 0.220956
+
+# [100]   training's rmse: 0.222022       valid_1's rmse: 0.224351
+# [200]   training's rmse: 0.219022       valid_1's rmse: 0.222628
+# [300]   training's rmse: 0.217297       valid_1's rmse: 0.221893
+# [400]   training's rmse: 0.216177       valid_1's rmse: 0.221501
+# [500]   training's rmse: 0.215132       valid_1's rmse: 0.221232
+# [600]   training's rmse: 0.214295       valid_1's rmse: 0.221033
+# [700]   training's rmse: 0.213495       valid_1's rmse: 0.220901
+# [800]   training's rmse: 0.212805       valid_1's rmse: 0.220777
+# [900]   training's rmse: 0.212164       valid_1's rmse: 0.220668
+# [1000]  training's rmse: 0.211577       valid_1's rmse: 0.220566
 
 
 # TODO
-# SUBMIT
-
-# User activity
-	# adjusted_seq_number (careful!)
-	# train['user_count'] = train.groupby('user_id')['user_id'].transform('count') (careful!)
-	# train['user_num_days'] = train.groupby('user_id')['activation_date'].transform('nunique') (careful!)
-	# train['user_is_multicat'] = train.groupby('user_id')['category_name'].transform('nunique') > 1
-	# train['user_num_img_cats'] = train.groupby('user_id')['image_top_1'].transform('nunique')
-	# tr['date_int'] = tr['activation_date'].astype(int); tr['user_days_range'] = tr.groupby('user_id')['date_int'].transform('max') - tr.groupby('user_id')['date_int'].transform('min')
-	# tr['user_activity_sdev'] = tr.groupby('user_id')['date_int'].transform('std').fillna(0)
-	# tr['user_activity_sharpness'] = tr.groupby('user_id')['date_int'].transform(lambda x: np.max(np.diff(x)) if len(x) > 1 else 0)
-
 # Recategorize categories according to english translation (maybe by hand or CountVectorizer)
 
 # Ridges for each parent_category
@@ -451,6 +452,7 @@ print_step('Done!')
 
 # Check feature impact and tuning in DR
 # Tune models some
+# Train more models (Ridge, FM, MNB, Deep LGB, KNN, NNs)
 # Vary model
     # Train Ridge on text, include into as-is LGB
     # Take LGB, add text with Ridge / SelectKBest
@@ -459,7 +461,6 @@ print_step('Done!')
     # Take LGB, add text OHE with SVD + embedding
     # OHE everything into Ridge and then take just encoded categorical and numeric into LGB and boost with LGB
     # OHE everything into LGB except text, then use text and residuals and boost with Ridge
-# Train more models (Ridge, FM, Ridge, NNs)
 
 # Look to DonorsChoose
     # https://www.kaggle.com/qinhui1999/deep-learning-is-all-you-need-lb-0-80x/code
