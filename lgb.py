@@ -437,7 +437,7 @@ print_step('Done!')
 # LGB: +user_num_days, +user_days_range                                            - Dim 53,    5CV 0.2201, Submit 0.223, Delta -.0029  <e7ea303>
 # LGB: +recode city                                                                - Dim 53,    5CV 0.2201, Submit ?                    <2054ce2>
 # LGB: +normalize desc                                                             - Dim 53,    5CV 0.2200, Submit ?                    <87b52f7>
-# LGB: +text/title ridge                                                           - Dim 54?,   5CV 0.2199, Submit ? 
+# LGB: +text/title ridge                                                           - Dim 54,    5CV 0.2199, Submit ? 
 
 # CURRENT
 # [2018-05-02 01:46:27.995876] lgb cv scores : [0.22053254095170405, 0.21948387767933858, 0.21974512233847293, 0.21951250378264517, 0.22025539974612995]
@@ -448,16 +448,16 @@ print_step('Done!')
 # Text Ridge OOF 0.2360
 # Title-Text Ridge OOF 0.2340
 
-# [100]   training's rmse: 0.221998       valid_1's rmse: 0.224382
-# [200]   training's rmse: 0.218931       valid_1's rmse: 0.222642
-# [300]   training's rmse: 0.217188       valid_1's rmse: 0.221919
-# [400]   training's rmse: 0.216049       valid_1's rmse: 0.221529
-# [500]   training's rmse: 0.215026       valid_1's rmse: 0.22126
-# [600]   training's rmse: 0.214168       valid_1's rmse: 0.221072
-# [700]   training's rmse: 0.213378       valid_1's rmse: 0.220929
-# [800]   training's rmse: 0.212654       valid_1's rmse: 0.220786
-# [900]   training's rmse: 0.211942       valid_1's rmse: 0.22066
-# [1000]  training's rmse: 0.211416       valid_1's rmse: 0.220572
+# [100]   training's rmse: 0.221656       valid_1's rmse: 0.224164
+# [200]   training's rmse: 0.218858       valid_1's rmse: 0.222624
+# [300]   training's rmse: 0.217013       valid_1's rmse: 0.221905
+# [400]   training's rmse: 0.215747       valid_1's rmse: 0.221499
+# [500]   training's rmse: 0.214678       valid_1's rmse: 0.221193
+# [600]   training's rmse: 0.21386        valid_1's rmse: 0.220997
+# [700]   training's rmse: 0.213097       valid_1's rmse: 0.220861
+# [800]   training's rmse: 0.212381       valid_1's rmse: 0.220726
+# [900]   training's rmse: 0.211782       valid_1's rmse: 0.220621
+# [1000]  training's rmse: 0.21124        valid_1's rmse: 0.220533
 
 
 # TODO
