@@ -248,22 +248,23 @@ if not is_in_cache('data_with_fe'):
     test_fe['title_ridge'] = ridge_preds_test
 
     print('~~~~~~~~~~~~~~~~~~~~~~~')
-	if not is_in_cache('normalized_desc'):
-		print_step('Normalize text 1/2')
-		# HT @IggiSv9t https://www.kaggle.com/iggisv9t/handling-russian-language-inflectional-structure
-		train_fe['desc'] = train_fe['desc'].astype(str).apply(normalize_text)
-		print_step('Normalize text 2/2')
-		test_fe['desc'] = test_fe['desc'].astype(str).apply(normalize_text)
-	else:
+    if not is_in_cache('normalized_desc'):
+        print_step('Normalize text 1/3')
+        train_fe['desc'] = train_fe['title'] + ' ' + train_fe['description'].fillna('')
+        test_fe['desc'] = test_fe['title'] + ' ' + test_fe['description'].fillna('')
+        print_step('Normalize text 2/3')
+        # HT @IggiSv9t https://www.kaggle.com/iggisv9t/handling-russian-language-inflectional-structure
+        train_fe['desc'] = train_fe['desc'].astype(str).apply(normalize_text)
+        print_step('Normalize text 3/3')
+        test_fe['desc'] = test_fe['desc'].astype(str).apply(normalize_text)
+    else:
         print_step('Loading normalized data from cache')
-		normalized_desc_train, normalized_desc_test = load_cache('normalized_desc')
-        train_fe['desc'] = normalized_desc_train['desc']
-        test_fe['desc'] = normalized_desc_test['desc']
+        normalized_desc_train, normalized_desc_test = load_cache('normalized_desc')
+        train_fe['desc'] = normalized_desc_train['desc'].fillna('')
+        test_fe['desc'] = normalized_desc_test['desc'].fillna('')
 
     print('~~~~~~~~~~~~~~~~~~~')
     print_step('Text TFIDF 1/3')
-    train_fe['desc'] = train_fe['title'] + ' ' + train_fe['description'].fillna('')
-    test_fe['desc'] = test_fe['title'] + ' ' + test_fe['description'].fillna('')
     print_step('Text TFIDF 2/3')
     tfidf = TfidfVectorizer(ngram_range=(1, 2),
                             max_features=100000,
@@ -302,9 +303,51 @@ if not is_in_cache('data_with_fe'):
     train_fe['desc_ridge'] = ridge_preds_oof
     test_fe['desc_ridge'] = ridge_preds_test
 
+    print('~~~~~~~~~~~~~~~~~~~~~~~~')
+    print_step('Title/Text TFIDF 1/3')
+    train_fe['title_and_desc'] = train_fe['titlecat'] + ' ' + train_fe['description'].fillna('')
+    test_fe['title_and_desc'] = test_fe['titlecat'] + ' ' + test_fe['description'].fillna('')
+    print_step('Title/Text TFIDF 2/3')
+    tfidf = TfidfVectorizer(ngram_range=(1, 1),
+                            max_features=100000,
+                            min_df=2,
+                            max_df=0.8,
+                            binary=True,
+                            encoding='KOI8-R')
+    tfidf_train = tfidf.fit_transform(train_fe['title_and_desc'])
+    print(tfidf_train.shape)
+    print_step('Title/Text TFIDF 3/3')
+    tfidf_test = tfidf.transform(test_fe['title_and_desc'])
+    print(tfidf_test.shape)
+
+    print_step('Title/Text TFIDF Ridge 1/6')
+    X_train_1, X_train_2, y_train_1, y_train_2 = train_test_split(tfidf_train, target, test_size = 0.5, shuffle = False)
+    model = Ridge()
+    print_step('Title/Text TFIDF Ridge 2/6 1/3')
+    model.fit(X_train_1, y_train_1)
+    print_step('Title/Text TFIDF Ridge 2/6 2/3')
+    ridge_preds1 = model.predict(X_train_2)
+    print_step('Title/Text TFIDF Ridge 2/6 3/3')
+    ridge_preds1f = model.predict(tfidf_test)
+    model = Ridge()
+    print_step('Title/Text TFIDF Ridge 3/6 1/3')
+    model.fit(X_train_2, y_train_2)
+    print_step('Title/Text TFIDF Ridge 3/6 2/3')
+    ridge_preds2 = model.predict(X_train_1)
+    print_step('Title/Text TFIDF Ridge 3/6 3/3')
+    ridge_preds2f = model.predict(tfidf_test)
+    print_step('Title/Text TFIDF Ridge 4/6')
+    ridge_preds_oof = np.concatenate((ridge_preds2, ridge_preds1), axis=0)
+    print_step('Title/Text TFIDF Ridge 5/6')
+    ridge_preds_test = (ridge_preds1f + ridge_preds2f) / 2.0
+    print_step('Title/Text Ridge RMSE OOF: {}'.format(rmse(ridge_preds_oof, target)))
+    print_step('Title/Text TFIDF Ridge 6/6')
+    train_fe['title_text_ridge'] = ridge_preds_oof
+    test_fe['title_text_ridge'] = ridge_preds_test
+
     print('~~~~~~~~~~~~~')
     print_step('Dropping')
-    drops = ['activation_date', 'description', 'title', 'desc', 'titlecat', 'image', 'user_id', 'date_int']
+    drops = ['activation_date', 'description', 'title', 'desc', 'titlecat', 'title_and_desc', 'image', 'user_id', 'date_int']
     train_fe.drop(drops, axis=1, inplace=True)
     test_fe.drop(drops, axis=1, inplace=True)
 
@@ -393,15 +436,17 @@ print_step('Done!')
 # LGB: +adjusted_seq_num                                                           - Dim 51,    5CV 0.2204, Submit 0.223, Delta -.0026
 # LGB: +user_num_days, +user_days_range                                            - Dim 53,    5CV 0.2201, Submit 0.223, Delta -.0029  <e7ea303>
 # LGB: +recode city                                                                - Dim 53,    5CV 0.2201, Submit ?                    <2054ce2>
-# LGB: +normalize desc                                                             - Dim 53,    5CV 0.2200, Submit ?
+# LGB: +normalize desc                                                             - Dim 53,    5CV 0.2200, Submit ?                    <87b52f7>
+# LGB: +text/title ridge                                                           - Dim 54?,   5CV 0.2199, Submit ? 
 
 # CURRENT
-# [2018-05-01 23:45:03.163244] lgb cv scores : [0.22057170421419972, 0.21963137531279636, 0.21988575584054534, 0.2196600134193972, 0.2203956428481082]
-# [2018-05-01 23:45:03.164198] lgb mean cv score : 0.2200288983270094
-# [2018-05-01 23:45:03.165246] lgb std cv score : 0.0003856760734732326
+# [2018-05-02 01:46:27.995876] lgb cv scores : [0.22053254095170405, 0.21948387767933858, 0.21974512233847293, 0.21951250378264517, 0.22025539974612995]
+# [2018-05-02 01:46:27.997492] lgb mean cv score : 0.21990588889965812
+# [2018-05-02 01:46:27.998985] lgb std cv score : 0.00041798129950824903
 
 # Title Ridge OOF 0.2337
 # Text Ridge OOF 0.2360
+# Title-Text Ridge OOF 0.2340
 
 # [100]   training's rmse: 0.221998       valid_1's rmse: 0.224382
 # [200]   training's rmse: 0.218931       valid_1's rmse: 0.222642
