@@ -1,5 +1,11 @@
-from datetime import datetime
+import re
+import pymorphy2
+
 from math import sqrt
+from datetime import datetime
+
+from multiprocessing import Pool
+import pathos.multiprocessing as mp
 
 import pandas as pd
 import numpy as np
@@ -18,6 +24,17 @@ def rmse(actual, predicted):
 def univariate_analysis(target, feature):
     score = roc_auc_score(target > 0, feature)
     return 1 - score if score < 0.5 else score
+
+
+# Normalize Russian Morphology
+# HT @IggiSv9t https://www.kaggle.com/iggisv9t/handling-russian-language-inflectional-structure
+morph = pymorphy2.MorphAnalyzer()
+retoken = re.compile(r'[\'\w\-]+')
+
+def normalize_text(text):
+    text = retoken.findall(text.lower())
+    text = [morph.parse(x)[0].normal_form for x in text]
+    return ' '.join(text)
 
 
 class TargetEncoder:

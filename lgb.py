@@ -15,7 +15,7 @@ from sklearn.linear_model import Ridge
 import lightgbm as lgb
 
 from cv import run_cv_model
-from utils import print_step, rmse
+from utils import print_step, rmse, normalize_text
 from cache import get_data, is_in_cache, load_cache, save_in_cache
 
 
@@ -82,6 +82,7 @@ if not is_in_cache('data_with_fe'):
     print_step('Imputation 6/7')
     merge['description'].fillna('', inplace=True)
     print_step('Imputation 7/7')
+    # City names are duplicated across region, HT: Branden Murray https://www.kaggle.com/c/avito-demand-prediction/discussion/55630#321751
     merge['city'] = merge['city'] + '_' + merge['region']
 
     print('~~~~~~~~~~~~~~~~~~~~')
@@ -246,6 +247,19 @@ if not is_in_cache('data_with_fe'):
     train_fe['title_ridge'] = ridge_preds_oof
     test_fe['title_ridge'] = ridge_preds_test
 
+    print('~~~~~~~~~~~~~~~~~~~~~~~')
+	if not is_in_cache('normalized_desc'):
+		print_step('Normalize text 1/2')
+		# HT @IggiSv9t https://www.kaggle.com/iggisv9t/handling-russian-language-inflectional-structure
+		train_fe['desc'] = train_fe['desc'].astype(str).apply(normalize_text)
+		print_step('Normalize text 2/2')
+		test_fe['desc'] = test_fe['desc'].astype(str).apply(normalize_text)
+	else:
+        print_step('Loading normalized data from cache')
+		normalized_desc_train, normalized_desc_test = load_cache('normalized_desc')
+        train_fe['desc'] = normalized_desc_train['desc']
+        test_fe['desc'] = normalized_desc_test['desc']
+
     print('~~~~~~~~~~~~~~~~~~~')
     print_step('Text TFIDF 1/3')
     train_fe['desc'] = train_fe['title'] + ' ' + train_fe['description'].fillna('')
@@ -378,34 +392,35 @@ print_step('Done!')
 # LGB: -some NLP +some NLP                                                         - Dim 50,    5CV 0.2204, Submit 0.223, Delta -.0026  <954e3ad>
 # LGB: +adjusted_seq_num                                                           - Dim 51,    5CV 0.2204, Submit 0.223, Delta -.0026
 # LGB: +user_num_days, +user_days_range                                            - Dim 53,    5CV 0.2201, Submit 0.223, Delta -.0029  <e7ea303>
-# LGB: +recode city                                                                - Dim 53,    5CV 0.2201, Submit ?
+# LGB: +recode city                                                                - Dim 53,    5CV 0.2201, Submit ?                    <2054ce2>
+# LGB: +normalize desc                                                             - Dim 53,    5CV 0.2200, Submit ?
 
 # CURRENT
-# [2018-05-01 17:38:18.543311] lgb cv scores : [0.22065591488917718, 0.2197020419729133, 0.21994642049481802, 0.21966517425333254, 0.22037774828325576]
-# [2018-05-01 17:38:18.543448] lgb mean cv score : 0.22006945997869937
-# [2018-05-01 17:38:18.549760] lgb std cv score : 0.0003879568775147022
+# [2018-05-01 23:45:03.163244] lgb cv scores : [0.22057170421419972, 0.21963137531279636, 0.21988575584054534, 0.2196600134193972, 0.2203956428481082]
+# [2018-05-01 23:45:03.164198] lgb mean cv score : 0.2200288983270094
+# [2018-05-01 23:45:03.165246] lgb std cv score : 0.0003856760734732326
 
 # Title Ridge OOF 0.2337
-# Text Ridge OOF 0.2361
+# Text Ridge OOF 0.2360
 
-# [100]   training's rmse: 0.222022       valid_1's rmse: 0.224351
-# [200]   training's rmse: 0.219022       valid_1's rmse: 0.222628
-# [300]   training's rmse: 0.217297       valid_1's rmse: 0.221893
-# [400]   training's rmse: 0.216177       valid_1's rmse: 0.221501
-# [500]   training's rmse: 0.215132       valid_1's rmse: 0.221232
-# [600]   training's rmse: 0.214295       valid_1's rmse: 0.221033
-# [700]   training's rmse: 0.213495       valid_1's rmse: 0.220901
-# [800]   training's rmse: 0.212805       valid_1's rmse: 0.220777
-# [900]   training's rmse: 0.212164       valid_1's rmse: 0.220668
-# [1000]  training's rmse: 0.211577       valid_1's rmse: 0.220566
+# [100]   training's rmse: 0.221998       valid_1's rmse: 0.224382
+# [200]   training's rmse: 0.218931       valid_1's rmse: 0.222642
+# [300]   training's rmse: 0.217188       valid_1's rmse: 0.221919
+# [400]   training's rmse: 0.216049       valid_1's rmse: 0.221529
+# [500]   training's rmse: 0.215026       valid_1's rmse: 0.22126
+# [600]   training's rmse: 0.214168       valid_1's rmse: 0.221072
+# [700]   training's rmse: 0.213378       valid_1's rmse: 0.220929
+# [800]   training's rmse: 0.212654       valid_1's rmse: 0.220786
+# [900]   training's rmse: 0.211942       valid_1's rmse: 0.22066
+# [1000]  training's rmse: 0.211416       valid_1's rmse: 0.220572
 
 
 # TODO
-# Handle russian inflectional structure <https://www.kaggle.com/iggisv9t/handling-russian-language-inflectional-structure>
 # Russian NLP http://www.redhenlab.org/home/the-cognitive-core-research-topics-in-red-hen/the-barnyard/russian-nlp
 
 # Try Title SVD + Desc SVD vs. Text SVD vs. Title SVD + Desc SVD + Text SVD
 # Add Embedding and start doing embedding corrections
+    # https://www.kaggle.com/gunnvant/russian-word-embeddings-for-fun-and-for-profit
     # https://github.com/nlpub/russe-evaluation/tree/master/russe/measures/word2vec
 # See if SVD + embedding + top 300 words
 
