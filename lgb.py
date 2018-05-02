@@ -206,10 +206,36 @@ if not is_in_cache('data_with_fe'):
 
 
     print('~~~~~~~~~~~~~~~~~~~')
-    print_step('Title TFIDF 1/3')
+    print_step('Title TFIDF 1/2')
+    tfidf = TfidfVectorizer(ngram_range=(1, 1),
+                            max_features=100000,
+                            min_df=2,
+                            max_df=0.8,
+                            binary=True,
+                            encoding='KOI8-R')
+    tfidf_train = tfidf.fit_transform(train_fe['title'])
+    print(tfidf_train.shape)
+    print_step('Title TFIDF 2/2')
+    tfidf_test = tfidf.transform(test_fe['title'])
+    print(tfidf_test.shape)
+
+    print_step('Title SVD 1/4')
+    svd = TruncatedSVD(n_components=10, algorithm='arpack')
+    svd.fit(tfidf_train)
+    print_step('Title SVD 2/4')
+    train_svd = pd.DataFrame(svd.transform(tfidf_train))
+    print_step('Title SVD 3/4')
+    test_svd = pd.DataFrame(svd.transform(tfidf_test))
+    print_step('Title SVD 4/4')
+    train_svd.columns = ['svd_title_'+str(i+1) for i in range(10)]
+    test_svd.columns = ['svd_title_'+str(i+1) for i in range(10)]
+    train_fe = pd.concat([train_fe, train_svd], axis=1)
+    test_fe = pd.concat([test_fe, test_svd], axis=1)
+
+    print_step('Titlecat TFIDF 1/3')
     train_fe['titlecat'] = train_fe['parent_category_name'] + ' ' + train_fe['category_name'] + ' ' + train_fe['param_1'] + ' ' + train_fe['param_2'] + ' ' + train_fe['param_3'] + ' ' + train_fe['title']
     test_fe['titlecat'] = test_fe['parent_category_name'] + ' ' + test_fe['category_name'] + ' ' + test_fe['param_1'] + ' ' + test_fe['param_2'] + ' ' + test_fe['param_3'] + ' ' + test_fe['title']
-    print_step('Title TFIDF 2/3')
+    print_step('Titlecat TFIDF 2/3')
     tfidf = TfidfVectorizer(ngram_range=(1, 1),
                             max_features=100000,
                             min_df=2,
@@ -218,32 +244,45 @@ if not is_in_cache('data_with_fe'):
                             encoding='KOI8-R')
     tfidf_train = tfidf.fit_transform(train_fe['titlecat'])
     print(tfidf_train.shape)
-    print_step('Title TFIDF 3/3')
+    print_step('Titlecat TFIDF 3/3')
     tfidf_test = tfidf.transform(test_fe['titlecat'])
     print(tfidf_test.shape)
 
-    print_step('Title TFIDF Ridge 1/6')
+    print_step('Titlecat SVD 1/4')
+    svd = TruncatedSVD(n_components=10, algorithm='arpack')
+    svd.fit(tfidf_train)
+    print_step('Titlecat SVD 2/4')
+    train_svd = pd.DataFrame(svd.transform(tfidf_train))
+    print_step('Titlecat SVD 3/4')
+    test_svd = pd.DataFrame(svd.transform(tfidf_test))
+    print_step('Titlecat SVD 4/4')
+    train_svd.columns = ['svd_titlecat_'+str(i+1) for i in range(10)]
+    test_svd.columns = ['svd_titlecat_'+str(i+1) for i in range(10)]
+    train_fe = pd.concat([train_fe, train_svd], axis=1)
+    test_fe = pd.concat([test_fe, test_svd], axis=1)
+
+    print_step('Titlecat TFIDF Ridge 1/6')
     X_train_1, X_train_2, y_train_1, y_train_2 = train_test_split(tfidf_train, target, test_size = 0.5, shuffle = False)
     model = Ridge()
-    print_step('Title TFIDF Ridge 2/6 1/3')
+    print_step('Titlecat TFIDF Ridge 2/6 1/3')
     model.fit(X_train_1, y_train_1)
-    print_step('Title TFIDF Ridge 2/6 2/3')
+    print_step('Titlecat TFIDF Ridge 2/6 2/3')
     ridge_preds1 = model.predict(X_train_2)
-    print_step('Title TFIDF Ridge 2/6 3/3')
+    print_step('Titlecat TFIDF Ridge 2/6 3/3')
     ridge_preds1f = model.predict(tfidf_test)
     model = Ridge()
-    print_step('Title TFIDF Ridge 3/6 1/3')
+    print_step('Titlecat TFIDF Ridge 3/6 1/3')
     model.fit(X_train_2, y_train_2)
-    print_step('Title TFIDF Ridge 3/6 2/3')
+    print_step('Titlecat TFIDF Ridge 3/6 2/3')
     ridge_preds2 = model.predict(X_train_1)
-    print_step('Title TFIDF Ridge 3/6 3/3')
+    print_step('Titlecat TFIDF Ridge 3/6 3/3')
     ridge_preds2f = model.predict(tfidf_test)
-    print_step('Title TFIDF Ridge 4/6')
+    print_step('Titlecat TFIDF Ridge 4/6')
     ridge_preds_oof = np.concatenate((ridge_preds2, ridge_preds1), axis=0)
-    print_step('Title TFIDF Ridge 5/6')
+    print_step('Titlecat TFIDF Ridge 5/6')
     ridge_preds_test = (ridge_preds1f + ridge_preds2f) / 2.0
-    print_step('Title Ridge RMSE OOF: {}'.format(rmse(ridge_preds_oof, target)))
-    print_step('Title TFIDF Ridge 6/6')
+    print_step('Titlecat Ridge RMSE OOF: {}'.format(rmse(ridge_preds_oof, target)))
+    print_step('Titlecat TFIDF Ridge 6/6')
     train_fe['title_ridge'] = ridge_preds_oof
     test_fe['title_ridge'] = ridge_preds_test
 
@@ -263,9 +302,34 @@ if not is_in_cache('data_with_fe'):
         train_fe['desc'] = normalized_desc_train['desc'].fillna('')
         test_fe['desc'] = normalized_desc_test['desc'].fillna('')
 
-    print('~~~~~~~~~~~~~~~~~~~')
-    print_step('Text TFIDF 1/3')
-    print_step('Text TFIDF 2/3')
+    print('~~~~~~~~~~~~~~~~~~~~~~~~~~')
+    print_step('Description TFIDF 1/2')
+    tfidf = TfidfVectorizer(ngram_range=(1, 2),
+                            max_features=100000,
+                            min_df=2,
+                            max_df=0.8,
+                            binary=True,
+                            encoding='KOI8-R')
+    tfidf_train = tfidf.fit_transform(train_fe['description'])
+    print(tfidf_train.shape)
+    print_step('Description TFIDF 2/2')
+    tfidf_test = tfidf.transform(test_fe['description'])
+    print(tfidf_test.shape)
+
+    print_step('Description SVD 1/4')
+    svd = TruncatedSVD(n_components=10, algorithm='arpack')
+    svd.fit(tfidf_train)
+    print_step('Description SVD 2/4')
+    train_svd = pd.DataFrame(svd.transform(tfidf_train))
+    print_step('Description SVD 3/4')
+    test_svd = pd.DataFrame(svd.transform(tfidf_test))
+    print_step('Description SVD 4/4')
+    train_svd.columns = ['svd_description_'+str(i+1) for i in range(10)]
+    test_svd.columns = ['svd_description_'+str(i+1) for i in range(10)]
+    train_fe = pd.concat([train_fe, train_svd], axis=1)
+    test_fe = pd.concat([test_fe, test_svd], axis=1)
+
+    print_step('Text TFIDF 1/2')
     tfidf = TfidfVectorizer(ngram_range=(1, 2),
                             max_features=100000,
                             min_df=2,
@@ -274,7 +338,7 @@ if not is_in_cache('data_with_fe'):
                             encoding='KOI8-R')
     tfidf_train = tfidf.fit_transform(train_fe['desc'])
     print(tfidf_train.shape)
-    print_step('Text TFIDF 3/3')
+    print_step('Text TFIDF 2/2')
     tfidf_test = tfidf.transform(test_fe['desc'])
     print(tfidf_test.shape)
 
@@ -320,6 +384,19 @@ if not is_in_cache('data_with_fe'):
     tfidf_test = tfidf.transform(test_fe['title_and_desc'])
     print(tfidf_test.shape)
 
+    print_step('Title/Text SVD 1/4')
+    svd = TruncatedSVD(n_components=10, algorithm='arpack')
+    svd.fit(tfidf_train)
+    print_step('Title/Text SVD 2/4')
+    train_svd = pd.DataFrame(svd.transform(tfidf_train))
+    print_step('Title/Text SVD 3/4')
+    test_svd = pd.DataFrame(svd.transform(tfidf_test))
+    print_step('Title/Text SVD 4/4')
+    train_svd.columns = ['svd_title_and_desc_'+str(i+1) for i in range(10)]
+    test_svd.columns = ['svd_title_and_desc_'+str(i+1) for i in range(10)]
+    train_fe = pd.concat([train_fe, train_svd], axis=1)
+    test_fe = pd.concat([test_fe, test_svd], axis=1)
+
     print_step('Title/Text TFIDF Ridge 1/6')
     X_train_1, X_train_2, y_train_1, y_train_2 = train_test_split(tfidf_train, target, test_size = 0.5, shuffle = False)
     model = Ridge()
@@ -342,8 +419,8 @@ if not is_in_cache('data_with_fe'):
     ridge_preds_test = (ridge_preds1f + ridge_preds2f) / 2.0
     print_step('Title/Text Ridge RMSE OOF: {}'.format(rmse(ridge_preds_oof, target)))
     print_step('Title/Text TFIDF Ridge 6/6')
-    train_fe['title_text_ridge'] = ridge_preds_oof
-    test_fe['title_text_ridge'] = ridge_preds_test
+    train_fe['title_and_desc_ridge'] = ridge_preds_oof
+    test_fe['title_and_desc_ridge'] = ridge_preds_test
 
     print('~~~~~~~~~~~~~')
     print_step('Dropping')
@@ -437,45 +514,43 @@ print_step('Done!')
 # LGB: +user_num_days, +user_days_range                                            - Dim 53,    5CV 0.2201, Submit 0.223, Delta -.0029  <e7ea303>
 # LGB: +recode city                                                                - Dim 53,    5CV 0.2201, Submit ?                    <2054ce2>
 # LGB: +normalize desc                                                             - Dim 53,    5CV 0.2200, Submit ?                    <87b52f7>
-# LGB: +text/title ridge                                                           - Dim 54,    5CV 0.2199, Submit ? 
+# LGB: +text/title ridge                                                           - Dim 54,    5CV 0.2199, Submit ?                    <abd76a4>
+# LGB: +SVD(title, 10) +SVD(description, 10) +SVD(titlecat, 10) +SVD(text/title)   - Dim 94,    5CV 0.2197, Submit ?
 
 # CURRENT
-# [2018-05-02 01:46:27.995876] lgb cv scores : [0.22053254095170405, 0.21948387767933858, 0.21974512233847293, 0.21951250378264517, 0.22025539974612995]
-# [2018-05-02 01:46:27.997492] lgb mean cv score : 0.21990588889965812
-# [2018-05-02 01:46:27.998985] lgb std cv score : 0.00041798129950824903
+# [2018-05-02 03:49:33.653164] lgb cv scores : [0.22026769759496287, 0.2192648640671899, 0.21951962204213404, 0.2192720956007743, 0.22003271278807668]
+# [2018-05-02 03:49:33.653302] lgb mean cv score : 0.21967139841862754
+# [2018-05-02 03:49:33.653466] lgb std cv score : 0.0004083796686845431
 
 # Title Ridge OOF 0.2337
 # Text Ridge OOF 0.2360
 # Title-Text Ridge OOF 0.2340
 
-# [100]   training's rmse: 0.221656       valid_1's rmse: 0.224164
-# [200]   training's rmse: 0.218858       valid_1's rmse: 0.222624
-# [300]   training's rmse: 0.217013       valid_1's rmse: 0.221905
-# [400]   training's rmse: 0.215747       valid_1's rmse: 0.221499
-# [500]   training's rmse: 0.214678       valid_1's rmse: 0.221193
-# [600]   training's rmse: 0.21386        valid_1's rmse: 0.220997
-# [700]   training's rmse: 0.213097       valid_1's rmse: 0.220861
-# [800]   training's rmse: 0.212381       valid_1's rmse: 0.220726
-# [900]   training's rmse: 0.211782       valid_1's rmse: 0.220621
-# [1000]  training's rmse: 0.21124        valid_1's rmse: 0.220533
-
+# [100]   training's rmse: 0.221792       valid_1's rmse: 0.224194
+# [200]   training's rmse: 0.218397       valid_1's rmse: 0.222403
+# [300]   training's rmse: 0.216471       valid_1's rmse: 0.221658
+# [400]   training's rmse: 0.215052       valid_1's rmse: 0.221191
+# [500]   training's rmse: 0.213894       valid_1's rmse: 0.220903
+# [600]   training's rmse: 0.213009       valid_1's rmse: 0.220754
+# [700]   training's rmse: 0.212132       valid_1's rmse: 0.220609
+# [800]   training's rmse: 0.211341       valid_1's rmse: 0.220479
+# [900]   training's rmse: 0.210648       valid_1's rmse: 0.220349
+# [1000]  training's rmse: 0.209945       valid_1's rmse: 0.220268
 
 # TODO
-# Russian NLP http://www.redhenlab.org/home/the-cognitive-core-research-topics-in-red-hen/the-barnyard/russian-nlp
-
-# Try Title SVD + Desc SVD vs. Text SVD vs. Title SVD + Desc SVD + Text SVD
-# Add Embedding and start doing embedding corrections
-    # https://www.kaggle.com/gunnvant/russian-word-embeddings-for-fun-and-for-profit
-    # https://github.com/nlpub/russe-evaluation/tree/master/russe/measures/word2vec
-# See if SVD + embedding + top 300 words
-
 #get_element = lambda elem, item: elem[item] if len(elem) > item else ''
+#get_last_two = lambda elem: (elem[-2] if len(elem) >= 2 else '') + ' ' + elem[-1]
 #tr['title_first'] = tr['title'].apply(lambda ss: get_element(ss.translate(ss.maketrans('', '', russian_punct)).replace('\n', ' ').lower().split(' '), 0))
 # 0.7634060532342571
 #tr['title_second'] = tr['title'].apply(lambda ss: get_element(ss.translate(ss.maketrans('', '', russian_punct)).replace('\n', ' ').lower().split(' '), 1))
 # 0.7419195431638979
 #tr['title_last'] = tr['title'].apply(lambda ss: get_element(ss.translate(ss.maketrans('', '', russian_punct)).replace('\n', ' ').lower().split(' '), -1))
 # 0.7815870814266627
+#tr['title_last_two'] = tr['title'].apply(lambda ss: get_last_two(ss.translate(ss.maketrans('', '', russian_punct)).replace('\n', ' ').lower().split(' ')))
+# 0.7815870814266627
+
+# Understand and apply https://www.kaggle.com/rdizzl3/stage-2-lgbm-stacker-8th-place-solution/code
+# Words in other words (e.g., param_1 or title in descripton)?
 
 # if any lazy people used the same or similar entries for the title/description fields
 
@@ -484,6 +559,12 @@ print_step('Done!')
 # Geo encode region/city? (careful!)
 
 # Category - region interaction?
+
+# Add Embedding and start doing embedding corrections
+    # https://www.kaggle.com/gunnvant/russian-word-embeddings-for-fun-and-for-profit
+    # https://github.com/nlpub/russe-evaluation/tree/master/russe/measures/word2vec
+# See if SVD + embedding + top 300 words
+
 
 # Handle time features
        # https://github.com/mxbi/ftim
@@ -495,11 +576,6 @@ print_step('Done!')
 # Look at difference between log price and log mean price by category, user, region, category X region (careful!)
 # Predict log price to impute missing, also look at difference between predicted and actual price (careful!)
 
-# Understand and apply https://www.kaggle.com/rdizzl3/stage-2-lgbm-stacker-8th-place-solution/code
-# Words in other words (e.g., param_1 or title in descripton)?
-
-# Translate to english?
-
 # Image analysis
     # https://www.kaggle.com/wesamelshamy/image-classification-and-quality-score-w-resnet50
     # pic2vec
@@ -509,6 +585,9 @@ print_step('Done!')
     # Contrast? https://dsp.stackexchange.com/questions/3309/measuring-the-contrast-of-an-image
     # https://www.pyimagesearch.com/2014/03/03/charizard-explains-describe-quantify-image-using-feature-vectors/
     # NNs?
+
+# Translate to english?
+# Russian NLP http://www.redhenlab.org/home/the-cognitive-core-research-topics-in-red-hen/the-barnyard/russian-nlp
 
 # Train classification model with AUC
 
