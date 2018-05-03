@@ -8,8 +8,8 @@ import numpy as np
 from nltk.corpus import stopwords
 
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.feature_selection.univariate_selection import SelectKBest, f_regression
 from sklearn.model_selection import train_test_split
+from sklearn.decomposition import TruncatedSVD
 
 from sklearn.linear_model import Ridge
 import lightgbm as lgb
@@ -437,6 +437,12 @@ else:
     train_fe, test_fe = load_cache('data_with_fe')
 
 
+print('~~~~~~~~~~~~~~~~~~~~~')
+print_step('Loading submodel')
+train_deep_text_lgb, test_deep_text_lgb = load_cache('deep_text_lgb')
+train_fe['deep_text_lgb'] = train_deep_text_lgb['deep_text_lgb']
+test_fe['deep_text_lgb'] = test_deep_text_lgb['deep_text_lgb']
+
 print('~~~~~~~~~~~~~~~~~~~~~~~~~~~')
 print_step('Converting to category')
 train_fe['image_top_1'] = train_fe['image_top_1'].astype('str').fillna('missing')
@@ -497,106 +503,110 @@ submission['deal_probability'] = results['test'].clip(0.0, 1.0)
 submission.to_csv('submit/submit_lgb6.csv', index=False)
 print_step('Done!')
 
-# LOG (Comp start 25 Apr, merge deadline 20 June @ 7pm EDT, end 27 June @ 7pm EDT) (23/30 submits used as of 1 May UTC)
-# LGB: no text, geo, date, image, param data, or item_seq_number                   - Dim 51,    5CV 0.2313, Submit 0.235, Delta -.0037
-# LGB: +missing data, +OHE params (no text, geo, date, image, or item_seq_number)  - Dim 5057,  5CV 0.2269, Submit 0.230, Delta -.0031
-# LGB: +basic NLP (no other text, geo, date, image, or item_seq_number)            - Dim 5078,  5CV 0.2261, Submit 0.229, Delta -.0029  <a9e424c>
-# LGB: +date (no other text, geo, image, or item_seq_number)                       - Dim 5086,  5CV 0.2261, Submit ?                    <f6c28f2>
-# LGB: +OHE city and region (no other text, image, or item_seq_number)             - Dim 6866,  5CV 0.2254, Submit ?                    <531df17>
-# LGB: +item_seq_numbur (no other text or image)                                   - Dim 6867,  5CV 0.2252, Submit ?                    <624f1a4>
-# LGB: +more basic NLP (no other text or image)                                    - Dim 6877,  5CV 0.2251, Submit 0.229, Delta -.0039  <f47d17d>
-# LGB: +SelectKBest TFIDF description + text (no image)                            - Dim 54877, 5CV 0.2221, Submit 0.225, Delta -.0029  <7002d68>
-# LGB: +LGB Encoding Categoricals and Ridge Encoding text                          - Dim 51,    5CV 0.2212, Submit 0.224, Delta -.0028  <e1952cf>
-# LGB: -some missing vars, -weekend                                                - Dim 46,    5CV 0.2212, Submit ?
-# LGB: +Ridge Encoding title                                                       - Dim 47,    5CV 0.2205, Submit 0.223, Delta -.0025  <6a183fb>
-# LGB: -some NLP +some NLP                                                         - Dim 50,    5CV 0.2204, Submit 0.223, Delta -.0026  <954e3ad>
-# LGB: +adjusted_seq_num                                                           - Dim 51,    5CV 0.2204, Submit 0.223, Delta -.0026
-# LGB: +user_num_days, +user_days_range                                            - Dim 53,    5CV 0.2201, Submit 0.223, Delta -.0029  <e7ea303>
-# LGB: +recode city                                                                - Dim 53,    5CV 0.2201, Submit ?                    <2054ce2>
-# LGB: +normalize desc                                                             - Dim 53,    5CV 0.2200, Submit ?                    <87b52f7>
-# LGB: +text/title ridge                                                           - Dim 54,    5CV 0.2199, Submit ?                    <abd76a4>
-# LGB: +SVD(title, 10) +SVD(description, 10) +SVD(titlecat, 10) +SVD(text/title)   - Dim 94,    5CV 0.2197, Submit ?
+# LOG (Comp start 25 Apr, merge deadline 20 June @ 7pm EDT, end 27 June @ 7pm EDT) (23/40 submits used as of 2 May UTC)
+# LGB: no text, geo, date, image, param data, or item_seq_number                   - Dim 51,    5CV 0.23129, Submit 0.2355, Delta -.00421
+# LGB: +missing data, +OHE params (no text, geo, date, image, or item_seq_number)  - Dim 5057,  5CV 0.22694, Submit 0.2305, Delta -.00356
+# LGB: +basic NLP (no other text, geo, date, image, or item_seq_number)            - Dim 5078,  5CV 0.22607, Submit 0.2299, Delta -.00383  <a9e424c>
+# LGB: +date (no other text, geo, image, or item_seq_number)                       - Dim 5086,  5CV 0.22610, Submit ?                      <f6c28f2>
+# LGB: +OHE city and region (no other text, image, or item_seq_number)             - Dim 6866,  5CV 0.22540, Submit ?                      <531df17>
+# LGB: +item_seq_numbur (no other text or image)                                   - Dim 6867,  5CV 0.22517, Submit ?                      <624f1a4>
+# LGB: +more basic NLP (no other text or image)                                    - Dim 6877,  5CV 0.22508, Submit 0.2290, Delta -.00392  <f47d17d>
+# LGB: +SelectKBest TFIDF description + text (no image)                            - Dim 54877, 5CV 0.22206, Submit 0.2257, Delta -.00364  <7002d68>
+# LGB: +LGB Encode Cats and Ridge Encode text, -some missing vars, -weekend        - Dim 46,    5CV 0.22120, Submit ?
+# LGB: +Ridge Encoding title                                                       - Dim 47,    5CV 0.22047, Submit 0.2237, Delta -.00323  <6a183fb>
+# LGB: -some NLP +some NLP                                                         - Dim 50,    5CV 0.22040, Submit 0.2237, Delta -.00330  <954e3ad>
+# LGB: +adjusted_seq_num, +user_num_days, +user_days_range                         - Dim 53,    5CV 0.22005, Submit 0.2235, Delta -.00345  <e7ea303>
+# LGB: +recode city                                                                - Dim 53,    5CV 0.22006, Submit ?                      <2054ce2>
+# LGB: +normalize desc                                                             - Dim 53,    5CV 0.22002, Submit ?                      <87b52f7>
+# LGB: +text/title ridge                                                           - Dim 54,    5CV 0.21991, Submit ?                      <abd76a4>
+# LGB: +SVD(title, 10) +SVD(description, 10) +SVD(titlecat, 10) +SVD(text/title)   - Dim 94,    5CV 0.21967, Submit 0.2230, Delta -.00333  <6e94776>
+# LGB: +Deep text LGB                                                              - Dim 95,    5CV 0.21862, Submit 0.2217, Delta -.00308
 
 # CURRENT
-# [2018-05-02 03:49:33.653164] lgb cv scores : [0.22026769759496287, 0.2192648640671899, 0.21951962204213404, 0.2192720956007743, 0.22003271278807668]
-# [2018-05-02 03:49:33.653302] lgb mean cv score : 0.21967139841862754
-# [2018-05-02 03:49:33.653466] lgb std cv score : 0.0004083796686845431
+# [2018-05-03 10:15:12.430130] lgb cv scores : [0.2193052797775483, 0.2182215067555297, 0.21850479121488695, 0.21819423355756168, 0.21888741727852243]
+# [2018-05-03 10:15:12.431123] lgb mean cv score : 0.2186226457168098
+# [2018-05-03 10:15:12.433547] lgb std cv score : 0.0004229497296001188
 
-# Title Ridge OOF 0.2337
-# Text Ridge OOF 0.2360
+# Title Ridge      OOF 0.2337
+# Text Ridge       OOF 0.2360
 # Title-Text Ridge OOF 0.2340
+# Deep LGB         OOF 0.22196
 
-# [100]   training's rmse: 0.221792       valid_1's rmse: 0.224194
-# [200]   training's rmse: 0.218397       valid_1's rmse: 0.222403
-# [300]   training's rmse: 0.216471       valid_1's rmse: 0.221658
-# [400]   training's rmse: 0.215052       valid_1's rmse: 0.221191
-# [500]   training's rmse: 0.213894       valid_1's rmse: 0.220903
-# [600]   training's rmse: 0.213009       valid_1's rmse: 0.220754
-# [700]   training's rmse: 0.212132       valid_1's rmse: 0.220609
-# [800]   training's rmse: 0.211341       valid_1's rmse: 0.220479
-# [900]   training's rmse: 0.210648       valid_1's rmse: 0.220349
-# [1000]  training's rmse: 0.209945       valid_1's rmse: 0.220268
+# [100]   training's rmse: 0.218437       valid_1's rmse: 0.221023
+# [200]   training's rmse: 0.215872       valid_1's rmse: 0.220179
+# [300]   training's rmse: 0.214396       valid_1's rmse: 0.219841
+# [400]   training's rmse: 0.213305       valid_1's rmse: 0.219656
+# [500]   training's rmse: 0.212366       valid_1's rmse: 0.219535
+# [600]   training's rmse: 0.211541       valid_1's rmse: 0.219466
+# [700]   training's rmse: 0.210787       valid_1's rmse: 0.219412
+# [800]   training's rmse: 0.210083       valid_1's rmse: 0.219373
+# [900]   training's rmse: 0.209433       valid_1's rmse: 0.219336
+# [1000]  training's rmse: 0.20887        valid_1's rmse: 0.219305
 
 # TODO
-#get_element = lambda elem, item: elem[item] if len(elem) > item else ''
-#get_last_two = lambda elem: (elem[-2] if len(elem) >= 2 else '') + ' ' + elem[-1]
-#tr['title_first'] = tr['title'].apply(lambda ss: get_element(ss.translate(ss.maketrans('', '', russian_punct)).replace('\n', ' ').lower().split(' '), 0))
-# 0.7634060532342571
-#tr['title_second'] = tr['title'].apply(lambda ss: get_element(ss.translate(ss.maketrans('', '', russian_punct)).replace('\n', ' ').lower().split(' '), 1))
-# 0.7419195431638979
-#tr['title_last'] = tr['title'].apply(lambda ss: get_element(ss.translate(ss.maketrans('', '', russian_punct)).replace('\n', ' ').lower().split(' '), -1))
-# 0.7815870814266627
-#tr['title_last_two'] = tr['title'].apply(lambda ss: get_last_two(ss.translate(ss.maketrans('', '', russian_punct)).replace('\n', ' ').lower().split(' ')))
-# 0.7815870814266627
+# Owe two novel contributions in kernels (pay it forward for images, Russian NLP)
 
-# Understand and apply https://www.kaggle.com/rdizzl3/stage-2-lgbm-stacker-8th-place-solution/code
-# Words in other words (e.g., param_1 or title in descripton)?
+# Train MNB on >0 for Ridge
 
-# if any lazy people used the same or similar entries for the title/description fields
+# Image analysis
+    # Try to get color, contrast, exposure, saturation, temperature, tint, etc. as features
+        # Are all the images the same size?
+        # https://dsp.stackexchange.com/questions/3309/measuring-the-contrast-of-an-image
+        # https://www.pyimagesearch.com/2014/03/03/charizard-explains-describe-quantify-image-using-feature-vectors/
+    # Add image classification percentage from all three image classifiers https://www.kaggle.com/wesamelshamy/image-classification-and-quality-score-w-resnet50
+        # https://www.kaggle.com/wesamelshamy/ad-image-recognition-and-quality-scoring
+    # Add VGG16 train features - SVD to main model, make separate embedding model
+        # https://www.kaggle.com/classtag/extract-avito-image-features-via-keras-vgg16
+        # https://www.kaggle.com/bguberfain/vgg16-train-features/code
+    # Add pic2vec SVD to main model, make separate embedding model
+    # DR pic2vec
+    # Deep image model
+        # https://www.kaggle.com/bguberfain/naive-lgb-with-text-images
+
+# Start doing text embedding corrections; add SVD of embedding to main model, full embedding to OHE model, and make separate embedding model
+    # https://www.kaggle.com/gunnvant/russian-word-embeddings-for-fun-and-for-profit
+    # https://github.com/nlpub/russe-evaluation/tree/master/russe/measures/word2vec
+	# https://www.kaggle.com/jagangupta/understanding-approval-donorschoose-eda-fe-eli5
+	# https://docs.google.com/document/d/1ply0qHqUN6fumuNeJ_xAaz9kAlHyjbIU0mNDhdrFmv8/edit
 
 # Recategorize categories according to english translation (maybe by hand or CountVectorizer)
 # Population encode region/city? (careful!)
 # Geo encode region/city? (careful!)
 
+# Look at supplementary data
+
 # Category - region interaction?
 
-# Add Embedding and start doing embedding corrections
-    # https://www.kaggle.com/gunnvant/russian-word-embeddings-for-fun-and-for-profit
-    # https://github.com/nlpub/russe-evaluation/tree/master/russe/measures/word2vec
-# See if SVD + embedding + top 300 words
+# Understand and apply https://www.kaggle.com/rdizzl3/stage-2-lgbm-stacker-8th-place-solution/code
+	#tr['title_first'] = tr['title'].apply(lambda ss: ss.translate(ss.maketrans('', '', russian_punct)).replace('\n', ' ').lower().split(' ')[0])
+	#get_last_two = lambda elem: (elem[-2] if len(elem) >= 2 else '') + ' ' + elem[-1]
+	#tr['title_last_two'] = tr['title'].apply(lambda ss: get_last_two(ss.translate(ss.maketrans('', '', russian_punct)).replace('\n', ' ').lower().split(' ')))
+	#get_first_two = lambda elem: elem[0] + ' ' + (elem[-2] if len(elem) >= 2 else ''))
+	#tr['title_first_two'] = tr['title'].apply(lambda ss: get_first_two(ss.translate(ss.maketrans('', '', russian_punct)).replace('\n', ' ').lower().split(' ')))
+	# Words in other words (e.g., param_1 or title in descripton)?
 
+# Model on combination of SVD(text), embedding, SVD(embedding) model encoding, and raw text (SelectKBest)
 
-# Handle time features
-       # https://github.com/mxbi/ftim
-       # Try OTV validation
-    # Include date as a feature
-    # Days since user last posted and such
+# Overall Ridge
+# Ridges for each parent_category
+# FM
+# KNN
+
+# https://github.com/mxbi/ftim
+
+# if any lazy people used the same or similar entries for the title/description fields
 
 # Handle price outliers
 # Look at difference between log price and log mean price by category, user, region, category X region (careful!)
 # Predict log price to impute missing, also look at difference between predicted and actual price (careful!)
 
-# Image analysis
-    # https://www.kaggle.com/wesamelshamy/image-classification-and-quality-score-w-resnet50
-    # pic2vec
-    # img_hash.py?
-    # https://www.kaggle.com/classtag/extract-avito-image-features-via-keras-vgg16
-    # https://www.kaggle.com/bguberfain/vgg16-train-features/code
-    # Contrast? https://dsp.stackexchange.com/questions/3309/measuring-the-contrast-of-an-image
-    # https://www.pyimagesearch.com/2014/03/03/charizard-explains-describe-quantify-image-using-feature-vectors/
-    # NNs?
-
-# Translate to english?
-# Russian NLP http://www.redhenlab.org/home/the-cognitive-core-research-topics-in-red-hen/the-barnyard/russian-nlp
-
-# Train classification model with AUC
-
-# Owe two novel contributions in kernels (pay it forward for images, Russian NLP)
-
 # Check feature impact and tuning in DR
 # Tune models some
-# Train more models (Ridge, FM, MNB, Deep LGB, KNN, NNs)
-# Ridges for each parent_category
+	# SelectKBest?
+	# Dart?
+
+# Can we do a two stage classification + regression?
+
 # Vary model
     # Train Ridge on text, include into as-is LGB
     # Take LGB, add text with Ridge / SelectKBest
@@ -605,18 +615,21 @@ print_step('Done!')
     # Take LGB, add text OHE with SVD + embedding
     # OHE everything into Ridge and then take just encoded categorical and numeric into LGB and boost with LGB
     # OHE everything into LGB except text, then use text and residuals and boost with Ridge
+	# Train classification model with AUC
+
+# Translate to english?
+# Russian NLP http://www.redhenlab.org/home/the-cognitive-core-research-topics-in-red-hen/the-barnyard/russian-nlp
+
+# Make NNs
 
 # Look to DonorsChoose
     # https://www.kaggle.com/qinhui1999/deep-learning-is-all-you-need-lb-0-80x/code
     # https://www.kaggle.com/fizzbuzz/the-all-in-one-model
-    # https://www.kaggle.com/jagangupta/understanding-approval-donorschoose-eda-fe-eli5
     # https://www.kaggle.com/fizzbuzz/beginner-s-guide-to-capsule-networks
-    # https://www.kaggle.com/nicapotato/abc-s-of-tf-idf-boosting-0-798
     # https://www.kaggle.com/shadowwarrior/1st-place-solution
 
 # https://www.kaggle.com/c/avito-duplicate-ads-detection/discussion
 # https://www.kaggle.com/c/two-sigma-connect-rental-listing-inquiries/discussion
 # https://www.kaggle.com/c/cdiscount-image-classification-challenge/discussion
 
-# Use train_active and test_active somehow?
 # Denoising autoencoder? https://github.com/phdowling/mSDA

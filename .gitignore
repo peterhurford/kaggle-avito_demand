@@ -1,4 +1,4 @@
 *.pyc
 *.csv
-submit
+*.npz
 __pycache__

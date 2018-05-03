@@ -15,14 +15,17 @@ def run_cv_model(train, test, target, model_fn, eval_fn, label):
     i = 1
     for dev_index, val_index in fold_splits:
         print_step('Started ' + label + ' fold ' + str(i) + '/5')
-        dev_X, val_X = train.values[dev_index], train.values[val_index]
-        dev_y, val_y = target[dev_index], target[val_index]
-
-        dev_X = pd.DataFrame(dev_X, columns=train.columns)
-        val_X = pd.DataFrame(val_X, columns=train.columns)
-        for (column, dtype) in list(zip(train.columns, list(train.dtypes))):
-            dev_X[column] = dev_X[column].astype(dtype)
-            val_X[column] = val_X[column].astype(dtype)
+        if isinstance(train, pd.DataFrame):
+            dev_X, val_X = train.values[dev_index], train.values[val_index]
+            dev_y, val_y = target[dev_index], target[val_index]
+            dev_X = pd.DataFrame(dev_X, columns=train.columns)
+            val_X = pd.DataFrame(val_X, columns=train.columns)
+            for (column, dtype) in list(zip(train.columns, list(train.dtypes))):
+                dev_X[column] = dev_X[column].astype(dtype)
+                val_X[column] = val_X[column].astype(dtype)
+        else:
+            dev_X, val_X = train[dev_index], train[val_index]
+            dev_y, val_y = target[dev_index], target[val_index]
 
         pred_val_y, pred_test_y = model_fn(dev_X, dev_y, val_X, val_y, test)
         pred_full_test = pred_full_test + pred_test_y
