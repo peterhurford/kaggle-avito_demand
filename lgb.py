@@ -26,15 +26,16 @@ def runLGB(train_X, train_y, test_X, test_y, test_X2):
     watchlist = [d_train, d_valid]
     params = {'learning_rate': 0.05,
               'application': 'regression',
-              'num_leaves': 31,
+              'num_leaves': 118,
               'verbosity': -1,
               'metric': 'rmse',
               'data_random_seed': 3,
-              'bagging_fraction': 0.9,
-              'feature_fraction': 0.4,
+              'bagging_fraction': 0.8,
+              'feature_fraction': 0.2,
               'nthread': 3,
-              'lambda_l1': 1,
-              'lambda_l2': 1}
+              'lambda_l1': 5,
+              'lambda_l2': 5,
+			  'min_data_in_leaf': 40}
     model = lgb.train(params,
                       train_set=d_train,
                       num_boost_round=1000,
@@ -503,7 +504,7 @@ submission['deal_probability'] = results['test'].clip(0.0, 1.0)
 submission.to_csv('submit/submit_lgb6.csv', index=False)
 print_step('Done!')
 
-# LOG (Comp start 25 Apr, merge deadline 20 June @ 7pm EDT, end 27 June @ 7pm EDT) (23/40 submits used as of 2 May UTC)
+# LOG (Comp start 25 Apr, merge deadline 20 June @ 7pm EDT, end 27 June @ 7pm EDT) (23/40 submits used as of 2 May UTC) -- Average Delta 0.00355
 # LGB: no text, geo, date, image, param data, or item_seq_number                   - Dim 51,    5CV 0.23129, Submit 0.2355, Delta -.00421
 # LGB: +missing data, +OHE params (no text, geo, date, image, or item_seq_number)  - Dim 5057,  5CV 0.22694, Submit 0.2305, Delta -.00356
 # LGB: +basic NLP (no other text, geo, date, image, or item_seq_number)            - Dim 5078,  5CV 0.22607, Submit 0.2299, Delta -.00383  <a9e424c>
@@ -521,27 +522,28 @@ print_step('Done!')
 # LGB: +text/title ridge                                                           - Dim 54,    5CV 0.21991, Submit ?                      <abd76a4>
 # LGB: +SVD(title, 10) +SVD(description, 10) +SVD(titlecat, 10) +SVD(text/title)   - Dim 94,    5CV 0.21967, Submit 0.2230, Delta -.00333  <6e94776>
 # LGB: +Deep text LGB                                                              - Dim 95,    5CV 0.21862, Submit 0.2217, Delta -.00308
+# LGB: +Some tuning                                                                - Dim 95,    5CV 0.21778, Submit ?0.22133?
 
 # CURRENT
-# [2018-05-03 10:15:12.430130] lgb cv scores : [0.2193052797775483, 0.2182215067555297, 0.21850479121488695, 0.21819423355756168, 0.21888741727852243]
-# [2018-05-03 10:15:12.431123] lgb mean cv score : 0.2186226457168098
-# [2018-05-03 10:15:12.433547] lgb std cv score : 0.0004229497296001188
+# [2018-05-04 12:46:29.703614] lgb cv scores : [0.21840298600746097, 0.21737186522788002, 0.217758278838798, 0.21738950100598978, 0.21799650148370006]
+# [2018-05-04 12:46:29.703723] lgb mean cv score : 0.21778382651276576
+# [2018-05-04 12:46:29.703873] lgb std cv score : 0.0003884447225326001
 
 # Title Ridge      OOF 0.2337
 # Text Ridge       OOF 0.2360
 # Title-Text Ridge OOF 0.2340
 # Deep LGB         OOF 0.22196
 
-# [100]   training's rmse: 0.218437       valid_1's rmse: 0.221023
-# [200]   training's rmse: 0.215872       valid_1's rmse: 0.220179
-# [300]   training's rmse: 0.214396       valid_1's rmse: 0.219841
-# [400]   training's rmse: 0.213305       valid_1's rmse: 0.219656
-# [500]   training's rmse: 0.212366       valid_1's rmse: 0.219535
-# [600]   training's rmse: 0.211541       valid_1's rmse: 0.219466
-# [700]   training's rmse: 0.210787       valid_1's rmse: 0.219412
-# [800]   training's rmse: 0.210083       valid_1's rmse: 0.219373
-# [900]   training's rmse: 0.209433       valid_1's rmse: 0.219336
-# [1000]  training's rmse: 0.20887        valid_1's rmse: 0.219305
+# [100]   training's rmse: 0.216517       valid_1's rmse: 0.2206
+# [200]   training's rmse: 0.212702       valid_1's rmse: 0.219343
+# [300]   training's rmse: 0.2103 valid_1's rmse: 0.218933
+# [400]   training's rmse: 0.208467       valid_1's rmse: 0.218749
+# [500]   training's rmse: 0.20676        valid_1's rmse: 0.218635
+# [600]   training's rmse: 0.205301       valid_1's rmse: 0.218549
+# [700]   training's rmse: 0.20397        valid_1's rmse: 0.218521
+# [800]   training's rmse: 0.202851       valid_1's rmse: 0.21846
+# [900]   training's rmse: 0.201757       valid_1's rmse: 0.218419
+# [1000]  training's rmse: 0.200643       valid_1's rmse: 0.218403
 
 # TODO
 # Owe two novel contributions in kernels (pay it forward for images, Russian NLP)
@@ -572,6 +574,8 @@ print_step('Done!')
 # Recategorize categories according to english translation (maybe by hand or CountVectorizer)
 # Population encode region/city? (careful!)
 # Geo encode region/city? (careful!)
+	# https://www.kaggle.com/jpmiller/exploring-geography-for-1-5m-deals/notebook
+	# https://www.kaggle.com/jpmiller/russian-cities/data
 
 # Look at supplementary data
 
