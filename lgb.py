@@ -35,7 +35,7 @@ def runLGB(train_X, train_y, test_X, test_y, test_X2):
               'nthread': 3,
               'lambda_l1': 5,
               'lambda_l2': 5,
-			  'min_data_in_leaf': 40}
+              'min_data_in_leaf': 40}
     model = lgb.train(params,
                       train_set=d_train,
                       num_boost_round=1000,
@@ -92,89 +92,94 @@ if not is_in_cache('data_with_fe'):
     merge['day_of_week'] = merge['activation_date'].dt.weekday
 
     print('~~~~~~~~~~~~~~~~~~~')
-    print_step('Basic NLP 1/36')
+    print_step('Basic NLP 1/38')
     merge['num_words_description'] = merge['description'].apply(lambda x: len(str(x).split()))
-    print_step('Basic NLP 2/36')
+    print_step('Basic NLP 2/38')
     merge['num_words_title'] = merge['title'].apply(lambda x: len(str(x).split()))
-    print_step('Basic NLP 3/36')
+    print_step('Basic NLP 3/38')
     merge['num_chars_description'] = merge['description'].apply(lambda x: len(str(x)))
-    print_step('Basic NLP 4/36')
+    print_step('Basic NLP 4/38')
     merge['num_chars_title'] = merge['title'].apply(lambda x: len(str(x)))
-    print_step('Basic NLP 5/36')
+    print_step('Basic NLP 5/38')
     merge['num_capital_description'] = merge['description'].apply(lambda x: len([c for c in x if c.isupper()]))
-    print_step('Basic NLP 6/36')
+    print_step('Basic NLP 6/38')
     merge['num_capital_title'] = merge['title'].apply(lambda x: len([c for c in x if c.isupper()]))
-    print_step('Basic NLP 7/36')
+    print_step('Basic NLP 7/38')
     merge['num_lowercase_description'] = merge['description'].apply(lambda x: len([c for c in x if c.islower()]))
-    print_step('Basic NLP 8/36')
+    print_step('Basic NLP 8/38')
     merge['num_lowercase_title'] = merge['title'].apply(lambda x: len([c for c in x if c.islower()]))
-    print_step('Basic NLP 9/36')
+    print_step('Basic NLP 9/38')
     merge['capital_per_char_description'] = merge['num_capital_description'] / merge['num_chars_description']
     merge['capital_per_char_description'].fillna(0, inplace=True)
-    print_step('Basic NLP 10/36')
+    print_step('Basic NLP 10/38')
     merge['capital_per_char_title'] = merge['num_capital_title'] / merge['num_chars_title']
     merge['capital_per_char_title'].fillna(0, inplace=True)
-    print_step('Basic NLP 11/36')
+    print_step('Basic NLP 11/38')
     russian_punct = string.punctuation + '—»«„'
     merge['num_punctuations_description'] = merge['description'].apply(lambda x: len([c for c in str(x) if c in russian_punct])) # russian_punct has +0.00001 univariate lift over string.punctuation
-    print_step('Basic NLP 12/36')
+    print_step('Basic NLP 12/38')
     merge['punctuation_per_char_description'] = merge['num_punctuations_description'] / merge['num_chars_description']
     merge['punctuation_per_char_description'].fillna(0, inplace=True)
-    print_step('Basic NLP 13/36')
+    print_step('Basic NLP 13/38')
     merge['num_punctuations_title'] = merge['title'].apply(lambda x: len([c for c in str(x) if c in string.punctuation])) # string.punctuation has +0.0003 univariate lift over russian_punct
-    print_step('Basic NLP 14/36')
+    print_step('Basic NLP 14/38')
     merge['punctuation_per_char_title'] = merge['num_punctuations_title'] / merge['num_chars_title']
     merge['punctuation_per_char_title'].fillna(0, inplace=True)
-    print_step('Basic NLP 15/36')
+    print_step('Basic NLP 15/38')
     merge['num_words_upper_description'] = merge['description'].apply(lambda x: len([w for w in str(x).split() if w.isupper()]))
-    print_step('Basic NLP 16/36')
+    print_step('Basic NLP 16/38')
     merge['num_words_lower_description'] = merge['description'].apply(lambda x: len([w for w in str(x).split() if w.islower()]))
-    print_step('Basic NLP 17/36')
+    print_step('Basic NLP 17/38')
     merge['num_words_entitled_description'] = merge['description'].apply(lambda x: len([w for w in str(x).split() if w.istitle()]))
-    print_step('Basic NLP 18/36')
+    print_step('Basic NLP 18/38')
     merge['chars_per_word_description'] = merge['num_chars_description'] / merge['num_words_description']
     merge['chars_per_word_description'].fillna(0, inplace=True)
-    print_step('Basic NLP 19/36')
+    print_step('Basic NLP 19/38')
     merge['chars_per_word_title'] = merge['num_chars_title'] / merge['num_words_title']
     merge['chars_per_word_title'].fillna(0, inplace=True)
-    print_step('Basic NLP 20/36')
+    print_step('Basic NLP 20/38')
     merge['description_words_per_title_words'] = merge['num_words_description'] / merge['num_words_title']
-    print_step('Basic NLP 21/36')
+    print_step('Basic NLP 21/38')
     merge['description_words_per_title_words'].fillna(0, inplace=True)
-    print_step('Basic NLP 22/36')
+    print_step('Basic NLP 22/38')
     merge['description_chars_per_title_chars'] = merge['num_chars_description'] / merge['num_chars_title']
-    print_step('Basic NLP 23/36')
+    print_step('Basic NLP 23/38')
     merge['description_chars_per_title_chars'].fillna(0, inplace=True)
-    print_step('Basic NLP 24/36')
+    print_step('Basic NLP 24/38')
     merge['num_english_chars_description'] = merge['description'].apply(lambda ss: len([s for s in ss.lower() if s in string.ascii_lowercase]))
-    print_step('Basic NLP 25/36')
+    print_step('Basic NLP 25/38')
     merge['num_english_chars_title'] = merge['title'].apply(lambda ss: len([s for s in ss.lower() if s in string.ascii_lowercase]))
-    print_step('Basic NLP 26/36')
+    print_step('Basic NLP 26/38')
     merge['english_chars_per_char_description'] = merge['num_english_chars_description'] / merge['num_chars_description']
     merge['english_chars_per_char_description'].fillna(0, inplace=True)
-    print_step('Basic NLP 27/36')
+    print_step('Basic NLP 27/38')
     merge['english_chars_per_char_title'] = merge['num_english_chars_title'] / merge['num_chars_title']
     merge['english_chars_per_char_title'].fillna(0, inplace=True)
-    print_step('Basic NLP 28/36')
+    print_step('Basic NLP 28/38')
     merge['num_english_words_description'] = merge['description'].apply(lambda ss: len([w for w in ss.lower().translate(ss.maketrans('', '', russian_punct)).replace('\n', ' ').split(' ') if all([s in string.ascii_lowercase for s in w]) and len(w) > 0]))
-    print_step('Basic NLP 29/36')
-    merge['english_words_per_char_description'] = merge['num_english_words_description'] / merge['num_words_description']
-    merge['english_words_per_char_description'].fillna(0, inplace=True)
-    print_step('Basic NLP 30/36')
+    print_step('Basic NLP 29/38')
+    merge['english_words_per_word_description'] = merge['num_english_words_description'] / merge['num_words_description']
+    merge['english_words_per_word_description'].fillna(0, inplace=True)
+    print_step('Basic NLP 30/38')
     merge['max_word_length_description'] = merge['description'].apply(lambda ss: np.max([len(w) for w in ss.split(' ')]))
-    print_step('Basic NLP 31/36')
+    print_step('Basic NLP 31/38')
     merge['max_word_length_title'] = merge['title'].apply(lambda ss: np.max([len(w) for w in ss.split(' ')]))
-    print_step('Basic NLP 32/36')
+    print_step('Basic NLP 32/38')
     merge['mean_word_length_description'] = merge['description'].apply(lambda ss: np.mean([len(w) for w in ss.split(' ')]))
-    print_step('Basic NLP 33/36')
+    print_step('Basic NLP 33/38')
     merge['mean_word_length_title'] = merge['title'].apply(lambda ss: np.mean([len(w) for w in ss.split(' ')]))
-    print_step('Basic NLP 34/36')
+    print_step('Basic NLP 34/38')
     stop_words = {x: 1 for x in stopwords.words('russian')}
     merge['num_stopwords_description'] = merge['description'].apply(lambda x: len([w for w in str(x).lower().split() if w in stop_words]))
-    print_step('Basic NLP 35/36')
+    print_step('Basic NLP 35/38')
     merge['number_count_description'] = merge['description'].str.count('[0-9]')
-    print_step('Basic NLP 36/36')
+    print_step('Basic NLP 36/38')
     merge['number_count_title'] = merge['title'].str.count('[0-9]')
+    print_step('Basic NLP 37/38')
+    merge['num_unique_words_description'] = merge['description'].apply(lambda x: len(set(str(x).lower().split())))
+    print_step('Basic NLP 38/38')
+    merge['unique_words_per_word_description'] = merge['num_unique_words_description'] / merge['num_words_description']
+    merge['unique_words_per_word_description'].fillna(0, inplace=True)
 
     print('~~~~~~~~~~~~')
     print_step('Unmerge')
@@ -504,7 +509,7 @@ submission['deal_probability'] = results['test'].clip(0.0, 1.0)
 submission.to_csv('submit/submit_lgb6.csv', index=False)
 print_step('Done!')
 
-# LOG (Comp start 25 Apr, merge deadline 20 June @ 7pm EDT, end 27 June @ 7pm EDT) (23/40 submits used as of 2 May UTC) -- Average Delta 0.00355
+# LOG (Comp start 25 Apr, merge deadline 20 June @ 7pm EDT, end 27 June @ 7pm EDT) (26/60 submits used as of 7 May UTC) -- Average Delta 0.00355
 # LGB: no text, geo, date, image, param data, or item_seq_number                   - Dim 51,    5CV 0.23129, Submit 0.2355, Delta -.00421
 # LGB: +missing data, +OHE params (no text, geo, date, image, or item_seq_number)  - Dim 5057,  5CV 0.22694, Submit 0.2305, Delta -.00356
 # LGB: +basic NLP (no other text, geo, date, image, or item_seq_number)            - Dim 5078,  5CV 0.22607, Submit 0.2299, Delta -.00383  <a9e424c>
@@ -522,41 +527,39 @@ print_step('Done!')
 # LGB: +text/title ridge                                                           - Dim 54,    5CV 0.21991, Submit ?                      <abd76a4>
 # LGB: +SVD(title, 10) +SVD(description, 10) +SVD(titlecat, 10) +SVD(text/title)   - Dim 94,    5CV 0.21967, Submit 0.2230, Delta -.00333  <6e94776>
 # LGB: +Deep text LGB                                                              - Dim 95,    5CV 0.21862, Submit 0.2217, Delta -.00308
-# LGB: +Some tuning                                                                - Dim 95,    5CV 0.21778, Submit ?0.22133?
+# LGB: +Some tuning                                                                - Dim 95,    5CV 0.21778, Submit ?0.2213?
+# LGB: +Num unique words +Unique words ratio                                       - Dim 97,    5CV 0.21782, Submit ?0.2214?
 
 # CURRENT
-# [2018-05-04 12:46:29.703614] lgb cv scores : [0.21840298600746097, 0.21737186522788002, 0.217758278838798, 0.21738950100598978, 0.21799650148370006]
-# [2018-05-04 12:46:29.703723] lgb mean cv score : 0.21778382651276576
-# [2018-05-04 12:46:29.703873] lgb std cv score : 0.0003884447225326001
+# [2018-05-07 23:43:56.293150] lgb cv scores : [0.2184206583882686, 0.21739937780711724, 0.21778133489780313, 0.21743399930551183, 0.2180585714366168]
+# [2018-05-07 23:43:56.293971] lgb mean cv score : 0.21781878836706353
+# [2018-05-07 23:43:56.295427] lgb std cv score : 0.0003860347250996276
 
 # Title Ridge      OOF 0.2337
 # Text Ridge       OOF 0.2360
 # Title-Text Ridge OOF 0.2340
 # Deep LGB         OOF 0.22196
 
-# [100]   training's rmse: 0.216517       valid_1's rmse: 0.2206
-# [200]   training's rmse: 0.212702       valid_1's rmse: 0.219343
-# [300]   training's rmse: 0.2103 valid_1's rmse: 0.218933
-# [400]   training's rmse: 0.208467       valid_1's rmse: 0.218749
-# [500]   training's rmse: 0.20676        valid_1's rmse: 0.218635
-# [600]   training's rmse: 0.205301       valid_1's rmse: 0.218549
-# [700]   training's rmse: 0.20397        valid_1's rmse: 0.218521
-# [800]   training's rmse: 0.202851       valid_1's rmse: 0.21846
-# [900]   training's rmse: 0.201757       valid_1's rmse: 0.218419
-# [1000]  training's rmse: 0.200643       valid_1's rmse: 0.218403
+# [100]   training's rmse: 0.217765       valid_1's rmse: 0.221476
+# [200]   training's rmse: 0.213303       valid_1's rmse: 0.219626
+# [300]   training's rmse: 0.210841       valid_1's rmse: 0.219101
+# [400]   training's rmse: 0.208826       valid_1's rmse: 0.218853
+# [500]   training's rmse: 0.207023       valid_1's rmse: 0.218684
+# [600]   training's rmse: 0.205541       valid_1's rmse: 0.21859
+# [700]   training's rmse: 0.204155       valid_1's rmse: 0.21855
+# [800]   training's rmse: 0.202873       valid_1's rmse: 0.218488
+# [900]   training's rmse: 0.201758       valid_1's rmse: 0.218449
+# [1000]  training's rmse: 0.200664       valid_1's rmse: 0.218421
 
 # TODO
-# Owe two novel contributions in kernels (pay it forward for images, Russian NLP)
+# Sentiment (HT: https://www.kaggle.com/the1owl/beep-beep)
 
-# Train MNB on >0 for Ridge
+# https://www.kaggle.com/peterhurford/boosting-mlp-lb-0-2297/
 
 # Image analysis
+	# https://www.kaggle.com/peterhurford/image-feature-engineering
     # Try to get color, contrast, exposure, saturation, temperature, tint, etc. as features
-        # Are all the images the same size?
         # https://dsp.stackexchange.com/questions/3309/measuring-the-contrast-of-an-image
-        # https://www.pyimagesearch.com/2014/03/03/charizard-explains-describe-quantify-image-using-feature-vectors/
-    # Add image classification percentage from all three image classifiers https://www.kaggle.com/wesamelshamy/image-classification-and-quality-score-w-resnet50
-        # https://www.kaggle.com/wesamelshamy/ad-image-recognition-and-quality-scoring
     # Add VGG16 train features - SVD to main model, make separate embedding model
         # https://www.kaggle.com/classtag/extract-avito-image-features-via-keras-vgg16
         # https://www.kaggle.com/bguberfain/vgg16-train-features/code
@@ -568,26 +571,26 @@ print_step('Done!')
 # Start doing text embedding corrections; add SVD of embedding to main model, full embedding to OHE model, and make separate embedding model
     # https://www.kaggle.com/gunnvant/russian-word-embeddings-for-fun-and-for-profit
     # https://github.com/nlpub/russe-evaluation/tree/master/russe/measures/word2vec
-	# https://www.kaggle.com/jagangupta/understanding-approval-donorschoose-eda-fe-eli5
-	# https://docs.google.com/document/d/1ply0qHqUN6fumuNeJ_xAaz9kAlHyjbIU0mNDhdrFmv8/edit
+    # https://www.kaggle.com/jagangupta/understanding-approval-donorschoose-eda-fe-eli5
+    # https://docs.google.com/document/d/1ply0qHqUN6fumuNeJ_xAaz9kAlHyjbIU0mNDhdrFmv8/edit
 
 # Recategorize categories according to english translation (maybe by hand or CountVectorizer)
 # Population encode region/city? (careful!)
 # Geo encode region/city? (careful!)
-	# https://www.kaggle.com/jpmiller/exploring-geography-for-1-5m-deals/notebook
-	# https://www.kaggle.com/jpmiller/russian-cities/data
+    # https://www.kaggle.com/jpmiller/exploring-geography-for-1-5m-deals/notebook
+    # https://www.kaggle.com/jpmiller/russian-cities/data
 
 # Look at supplementary data
 
 # Category - region interaction?
 
 # Understand and apply https://www.kaggle.com/rdizzl3/stage-2-lgbm-stacker-8th-place-solution/code
-	#tr['title_first'] = tr['title'].apply(lambda ss: ss.translate(ss.maketrans('', '', russian_punct)).replace('\n', ' ').lower().split(' ')[0])
-	#get_last_two = lambda elem: (elem[-2] if len(elem) >= 2 else '') + ' ' + elem[-1]
-	#tr['title_last_two'] = tr['title'].apply(lambda ss: get_last_two(ss.translate(ss.maketrans('', '', russian_punct)).replace('\n', ' ').lower().split(' ')))
-	#get_first_two = lambda elem: elem[0] + ' ' + (elem[-2] if len(elem) >= 2 else ''))
-	#tr['title_first_two'] = tr['title'].apply(lambda ss: get_first_two(ss.translate(ss.maketrans('', '', russian_punct)).replace('\n', ' ').lower().split(' ')))
-	# Words in other words (e.g., param_1 or title in descripton)?
+    #tr['title_first'] = tr['title'].apply(lambda ss: ss.translate(ss.maketrans('', '', russian_punct)).replace('\n', ' ').lower().split(' ')[0])
+    #get_last_two = lambda elem: (elem[-2] if len(elem) >= 2 else '') + ' ' + elem[-1]
+    #tr['title_last_two'] = tr['title'].apply(lambda ss: get_last_two(ss.translate(ss.maketrans('', '', russian_punct)).replace('\n', ' ').lower().split(' ')))
+    #get_first_two = lambda elem: elem[0] + ' ' + (elem[-2] if len(elem) >= 2 else ''))
+    #tr['title_first_two'] = tr['title'].apply(lambda ss: get_first_two(ss.translate(ss.maketrans('', '', russian_punct)).replace('\n', ' ').lower().split(' ')))
+    # Words in other words (e.g., param_1 or title in descripton)?
 
 # Model on combination of SVD(text), embedding, SVD(embedding) model encoding, and raw text (SelectKBest)
 
@@ -606,22 +609,15 @@ print_step('Done!')
 
 # Check feature impact and tuning in DR
 # Tune models some
-	# SelectKBest?
-	# Dart?
+    # Dart?
 
 # Can we do a two stage classification + regression?
 
 # Vary model
-    # Train Ridge on text, include into as-is LGB
-    # Take LGB, add text with Ridge / SelectKBest
     # Take LGB, add text with SVD + embedding
-    # Take LGB, add text OHE with Ridge / SelectKBest
-    # Take LGB, add text OHE with SVD + embedding
-    # OHE everything into Ridge and then take just encoded categorical and numeric into LGB and boost with LGB
     # OHE everything into LGB except text, then use text and residuals and boost with Ridge
-	# Train classification model with AUC
+    # Train classification model with AUC
 
-# Translate to english?
 # Russian NLP http://www.redhenlab.org/home/the-cognitive-core-research-topics-in-red-hen/the-barnyard/russian-nlp
 
 # Make NNs
