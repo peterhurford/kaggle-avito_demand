@@ -449,6 +449,19 @@ train_deep_text_lgb, test_deep_text_lgb = load_cache('deep_text_lgb')
 train_fe['deep_text_lgb'] = train_deep_text_lgb['deep_text_lgb']
 test_fe['deep_text_lgb'] = test_deep_text_lgb['deep_text_lgb']
 
+print('~~~~~~~~~~')
+print_step('Stuff')
+train_fe['price'] = train['price']
+test_fe['price'] = test['price']
+train_fe['price'].fillna(0, inplace=True)
+test_fe['price'].fillna(0, inplace=True)
+train_enc = train.groupby('category_name')['price'].agg(['mean']).reset_index()
+train_enc.columns = ['category_name', 'cat_price_mean']
+train_fe = pd.merge(train_fe, train_enc, how='left', on='category_name')
+test_fe = pd.merge(test_fe, train_enc, how='left', on='category_name')
+train_fe['cat_price_diff'] = train_fe['price'] - train_fe['cat_price_mean']
+test_fe['cat_price_diff'] = test_fe['price'] - test_fe['cat_price_mean']
+
 print('~~~~~~~~~~~~~~~~~~~~~~~~~~~')
 print_step('Converting to category')
 train_fe['image_top_1'] = train_fe['image_top_1'].astype('str').fillna('missing')
@@ -497,19 +510,20 @@ results = run_cv_model(train_fe, test_fe, target, runLGB, rmse, 'lgb')
 import pdb
 pdb.set_trace()
 
-#print('~~~~~~~~~~')
-#print_step('Cache')
-#save_in_cache('lvl1_lgb', train, test)
+print('~~~~~~~~~~')
+print_step('Cache')
+save_in_cache('lgb_preds', pd.DataFrame({'lgb': results['train']}),
+                           pd.DataFrame({'lgb': results['test']}))
 
 print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
 print_step('Prepping submission file')
 submission = pd.DataFrame()
 submission['item_id'] = test_id
 submission['deal_probability'] = results['test'].clip(0.0, 1.0)
-submission.to_csv('submit/submit_lgb6.csv', index=False)
+submission.to_csv('submit/submit_lgb7.csv', index=False)
 print_step('Done!')
 
-# LOG (Comp start 25 Apr, merge deadline 20 June @ 7pm EDT, end 27 June @ 7pm EDT) (26/60 submits used as of 7 May UTC) -- Average Delta 0.00355
+# LOG (Comp start 25 Apr, merge deadline 20 June @ 7pm EDT, end 27 June @ 7pm EDT) (26/60 submits used as of 7 May UTC) -- Average Delta 0.00355, Safety Margin 0.002
 # LGB: no text, geo, date, image, param data, or item_seq_number                   - Dim 51,    5CV 0.23129, Submit 0.2355, Delta -.00421
 # LGB: +missing data, +OHE params (no text, geo, date, image, or item_seq_number)  - Dim 5057,  5CV 0.22694, Submit 0.2305, Delta -.00356
 # LGB: +basic NLP (no other text, geo, date, image, or item_seq_number)            - Dim 5078,  5CV 0.22607, Submit 0.2299, Delta -.00383  <a9e424c>
@@ -526,38 +540,47 @@ print_step('Done!')
 # LGB: +normalize desc                                                             - Dim 53,    5CV 0.22002, Submit ?                      <87b52f7>
 # LGB: +text/title ridge                                                           - Dim 54,    5CV 0.21991, Submit ?                      <abd76a4>
 # LGB: +SVD(title, 10) +SVD(description, 10) +SVD(titlecat, 10) +SVD(text/title)   - Dim 94,    5CV 0.21967, Submit 0.2230, Delta -.00333  <6e94776>
-# LGB: +Deep text LGB                                                              - Dim 95,    5CV 0.21862, Submit 0.2217, Delta -.00308
-# LGB: +Some tuning                                                                - Dim 95,    5CV 0.21778, Submit ?0.2213?
-# LGB: +Num unique words +Unique words ratio                                       - Dim 97,    5CV 0.21782, Submit ?0.2214?
+# LGB: +Deep text LGB                                                              - Dim 95,    5CV 0.21862, Submit 0.2217, Delta -.00308  <be831c5>
+# LGB: +Some tuning                                                                - Dim 95,    5CV 0.21778, Submit ?0.2213?               <627d398>
+# LGB: +Num unique words +Unique words ratio                                       - Dim 97,    5CV 0.21782, Submit ?0.2214?               <2bcd64e>
+# LGB: +cat_price_mean +cat_price_diff                                             - Dim 99,    5CV 0.21768, Submit 0.2209, Delta -.00322
 
 # CURRENT
-# [2018-05-07 23:43:56.293150] lgb cv scores : [0.2184206583882686, 0.21739937780711724, 0.21778133489780313, 0.21743399930551183, 0.2180585714366168]
-# [2018-05-07 23:43:56.293971] lgb mean cv score : 0.21781878836706353
-# [2018-05-07 23:43:56.295427] lgb std cv score : 0.0003860347250996276
+# [2018-05-08 22:48:35.123043] lgb cv scores : [0.21832335597122593, 0.2172917250318506, 0.21756036063467007, 0.21728413227752955, 0.2179618168215536]
+# [2018-05-08 22:48:35.124016] lgb mean cv score : 0.21768427814736596
+# [2018-05-08 22:48:35.124985] lgb std cv score : 0.00040373714127390467
 
 # Title Ridge      OOF 0.2337
 # Text Ridge       OOF 0.2360
 # Title-Text Ridge OOF 0.2340
-# Deep LGB         OOF 0.22196
+# Deep Text LGB    OOF 0.22196
 
-# [100]   training's rmse: 0.217765       valid_1's rmse: 0.221476
-# [200]   training's rmse: 0.213303       valid_1's rmse: 0.219626
-# [300]   training's rmse: 0.210841       valid_1's rmse: 0.219101
-# [400]   training's rmse: 0.208826       valid_1's rmse: 0.218853
-# [500]   training's rmse: 0.207023       valid_1's rmse: 0.218684
-# [600]   training's rmse: 0.205541       valid_1's rmse: 0.21859
-# [700]   training's rmse: 0.204155       valid_1's rmse: 0.21855
-# [800]   training's rmse: 0.202873       valid_1's rmse: 0.218488
-# [900]   training's rmse: 0.201758       valid_1's rmse: 0.218449
-# [1000]  training's rmse: 0.200664       valid_1's rmse: 0.218421
+# [100]   training's rmse: 0.216793       valid_1's rmse: 0.22114
+# [200]   training's rmse: 0.212379       valid_1's rmse: 0.219532
+# [300]   training's rmse: 0.209801       valid_1's rmse: 0.21895
+# [400]   training's rmse: 0.207717       valid_1's rmse: 0.218711
+# [500]   training's rmse: 0.206052       valid_1's rmse: 0.218586
+# [600]   training's rmse: 0.204557       valid_1's rmse: 0.218506
+# [700]   training's rmse: 0.203182       valid_1's rmse: 0.218441
+# [800]   training's rmse: 0.20198        valid_1's rmse: 0.218406
+# [900]   training's rmse: 0.200944       valid_1's rmse: 0.218367
+# [1000]  training's rmse: 0.199929       valid_1's rmse: 0.218323
 
 # TODO
-# Sentiment (HT: https://www.kaggle.com/the1owl/beep-beep)
+# Category - region interaction?
 
-# https://www.kaggle.com/peterhurford/boosting-mlp-lb-0-2297/
+# Handle price outliers
+# Look at difference between log price and log mean price by category, region, category X region (careful!)
+# Predict log price to impute missing, also look at difference between predicted and actual price (careful!)
+
+# Geo encode region/city? (careful!)
+    # https://www.kaggle.com/jpmiller/exploring-geography-for-1-5m-deals/notebook
+    # https://www.kaggle.com/jpmiller/russian-cities/data
+
+# Population encode region/city? (careful!)
 
 # Image analysis
-	# https://www.kaggle.com/peterhurford/image-feature-engineering
+    # https://www.kaggle.com/peterhurford/image-feature-engineering
     # Try to get color, contrast, exposure, saturation, temperature, tint, etc. as features
         # https://dsp.stackexchange.com/questions/3309/measuring-the-contrast-of-an-image
     # Add VGG16 train features - SVD to main model, make separate embedding model
@@ -573,16 +596,17 @@ print_step('Done!')
     # https://github.com/nlpub/russe-evaluation/tree/master/russe/measures/word2vec
     # https://www.kaggle.com/jagangupta/understanding-approval-donorschoose-eda-fe-eli5
     # https://docs.google.com/document/d/1ply0qHqUN6fumuNeJ_xAaz9kAlHyjbIU0mNDhdrFmv8/edit
-
-# Recategorize categories according to english translation (maybe by hand or CountVectorizer)
-# Population encode region/city? (careful!)
-# Geo encode region/city? (careful!)
-    # https://www.kaggle.com/jpmiller/exploring-geography-for-1-5m-deals/notebook
-    # https://www.kaggle.com/jpmiller/russian-cities/data
+# Model on combination of SVD(text), embedding, SVD(embedding) model encoding, and raw text (SelectKBest)
 
 # Look at supplementary data
 
-# Category - region interaction?
+# https://github.com/mxbi/ftim
+
+# if any lazy people used the same or similar entries for the title/description fields
+
+# Check feature impact and tuning in DR
+# Tune models some
+    # Dart?
 
 # Understand and apply https://www.kaggle.com/rdizzl3/stage-2-lgbm-stacker-8th-place-solution/code
     #tr['title_first'] = tr['title'].apply(lambda ss: ss.translate(ss.maketrans('', '', russian_punct)).replace('\n', ' ').lower().split(' ')[0])
@@ -592,26 +616,22 @@ print_step('Done!')
     #tr['title_first_two'] = tr['title'].apply(lambda ss: get_first_two(ss.translate(ss.maketrans('', '', russian_punct)).replace('\n', ' ').lower().split(' ')))
     # Words in other words (e.g., param_1 or title in descripton)?
 
-# Model on combination of SVD(text), embedding, SVD(embedding) model encoding, and raw text (SelectKBest)
-
 # Overall Ridge
 # Ridges for each parent_category
 # FM
+# Check averaging vs. including for https://www.kaggle.com/nicapotato/bow-meta-text-and-dense-features-lgbm/code
+# Check averaging vs. including for https://www.kaggle.com/kailex/xgb-text2vec-tfidf-0-2248/code
+# Check including submodels vs. including boosted model vs. averaging boosted model for https://www.kaggle.com/peterhurford/boosting-mlp-lb-0-2297/
+# LibFFM
 # KNN
 
-# https://github.com/mxbi/ftim
-
-# if any lazy people used the same or similar entries for the title/description fields
-
-# Handle price outliers
-# Look at difference between log price and log mean price by category, user, region, category X region (careful!)
-# Predict log price to impute missing, also look at difference between predicted and actual price (careful!)
-
-# Check feature impact and tuning in DR
-# Tune models some
-    # Dart?
+# Classification models
+    # MNB (didn't work in this model but may work in a different ensemble that can be averaged together -- worked well in Mercari)
 
 # Can we do a two stage classification + regression?
+    # Train best model as classification, try including in Regression, or using output to decide whether to send to regression versus set as 0
+
+# Try different ensembling strategies and check feature impact using submodels and tuning in DR
 
 # Vary model
     # Take LGB, add text with SVD + embedding

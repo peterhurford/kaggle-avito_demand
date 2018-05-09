@@ -201,14 +201,10 @@ results = run_cv_model(train, test, target, runLGB, rmse, 'lgb')
 import pdb
 pdb.set_trace()
 
-print('~~~~~~~~~~~~')
-print_step('Run LGB')
+print('~~~~~~~~~~')
+print_step('Cache')
 save_in_cache('deep_text_lgb', pd.DataFrame({'deep_text_lgb': results['train']}),
 							   pd.DataFrame({'deep_text_lgb': results['test']}))
-
-#print('~~~~~~~~~~')
-#print_step('Cache')
-#save_in_cache('lvl1_lgb', train, test)
 
 print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
 print_step('Prepping submission file')
