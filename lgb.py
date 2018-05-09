@@ -84,7 +84,7 @@ if not is_in_cache('data_with_fe'):
     merge['description'].fillna('', inplace=True)
     print_step('Imputation 7/7')
     # City names are duplicated across region, HT: Branden Murray https://www.kaggle.com/c/avito-demand-prediction/discussion/55630#321751
-    merge['city'] = merge['city'] + '_' + merge['region']
+    merge['city'] = merge['city'] + ', ' + merge['region']
 
     print('~~~~~~~~~~~~~~~~~~~~')
     print_step('Activation Date')
@@ -455,12 +455,21 @@ train_fe['price'] = train['price']
 test_fe['price'] = test['price']
 train_fe['price'].fillna(0, inplace=True)
 test_fe['price'].fillna(0, inplace=True)
-train_enc = train.groupby('category_name')['price'].agg(['mean']).reset_index()
+train_enc = train_fe.groupby('category_name')['price'].agg(['mean']).reset_index()
 train_enc.columns = ['category_name', 'cat_price_mean']
 train_fe = pd.merge(train_fe, train_enc, how='left', on='category_name')
 test_fe = pd.merge(test_fe, train_enc, how='left', on='category_name')
 train_fe['cat_price_diff'] = train_fe['price'] - train_fe['cat_price_mean']
 test_fe['cat_price_diff'] = test_fe['price'] - test_fe['cat_price_mean']
+train_fe['city'] = train_fe['city'].apply(lambda x: x.replace('_', ', '))
+test_fe['city'] = test_fe['city'].apply(lambda x: x.replace('_', ', '))
+# HT: https://www.kaggle.com/jpmiller/russian-cities/data
+# HT: https://www.kaggle.com/jpmiller/exploring-geography-for-1-5m-deals/notebook
+locations = pd.read_csv('city_latlons.csv')
+train_fe = train_fe.merge(locations, how='left', left_on='city', right_on='location')
+test_fe = test_fe.merge(locations, how='left', left_on='city', right_on='location')
+train_fe.drop('location', axis=1, inplace=True)
+test_fe.drop('location', axis=1, inplace=True)
 
 print('~~~~~~~~~~~~~~~~~~~~~~~~~~~')
 print_step('Converting to category')
@@ -523,7 +532,7 @@ submission['deal_probability'] = results['test'].clip(0.0, 1.0)
 submission.to_csv('submit/submit_lgb7.csv', index=False)
 print_step('Done!')
 
-# LOG (Comp start 25 Apr, merge deadline 20 June @ 7pm EDT, end 27 June @ 7pm EDT) (26/60 submits used as of 7 May UTC) -- Average Delta 0.00355, Safety Margin 0.002
+# LOG (Comp start 25 Apr, merge deadline 20 June @ 7pm EDT, end 27 June @ 7pm EDT) (26/60 submits used as of 7 May UTC) -- Average Delta 0.0035, Safety Margin 0.002
 # LGB: no text, geo, date, image, param data, or item_seq_number                   - Dim 51,    5CV 0.23129, Submit 0.2355, Delta -.00421
 # LGB: +missing data, +OHE params (no text, geo, date, image, or item_seq_number)  - Dim 5057,  5CV 0.22694, Submit 0.2305, Delta -.00356
 # LGB: +basic NLP (no other text, geo, date, image, or item_seq_number)            - Dim 5078,  5CV 0.22607, Submit 0.2299, Delta -.00383  <a9e424c>
@@ -543,53 +552,54 @@ print_step('Done!')
 # LGB: +Deep text LGB                                                              - Dim 95,    5CV 0.21862, Submit 0.2217, Delta -.00308  <be831c5>
 # LGB: +Some tuning                                                                - Dim 95,    5CV 0.21778, Submit ?0.2213?               <627d398>
 # LGB: +Num unique words +Unique words ratio                                       - Dim 97,    5CV 0.21782, Submit ?0.2214?               <2bcd64e>
-# LGB: +cat_price_mean +cat_price_diff                                             - Dim 99,    5CV 0.21768, Submit 0.2209, Delta -.00322
+# LGB: +cat_price_mean +cat_price_diff                                             - Dim 99,    5CV 0.21768, Submit 0.2209, Delta -.00322  <0c9e1e4>
+# LGB: +lat/lon of cities                                                          - Dim 101,   5CV 0.21766, Submit ?0.2212?
 
 # CURRENT
-# [2018-05-08 22:48:35.123043] lgb cv scores : [0.21832335597122593, 0.2172917250318506, 0.21756036063467007, 0.21728413227752955, 0.2179618168215536]
-# [2018-05-08 22:48:35.124016] lgb mean cv score : 0.21768427814736596
-# [2018-05-08 22:48:35.124985] lgb std cv score : 0.00040373714127390467
+# [2018-05-09 17:48:56.776252] lgb cv scores : [0.2182758301052505, 0.21723093122493078, 0.21763877272953158, 0.21725774531346095, 0.21788800230572858]
+# [2018-05-09 17:48:56.776962] lgb mean cv score : 0.21765825633578045
+# [2018-05-09 17:48:56.777833] lgb std cv score : 0.00039435415852236404
+
 
 # Title Ridge      OOF 0.2337
 # Text Ridge       OOF 0.2360
 # Title-Text Ridge OOF 0.2340
 # Deep Text LGB    OOF 0.22196
 
-# [100]   training's rmse: 0.216793       valid_1's rmse: 0.22114
-# [200]   training's rmse: 0.212379       valid_1's rmse: 0.219532
-# [300]   training's rmse: 0.209801       valid_1's rmse: 0.21895
-# [400]   training's rmse: 0.207717       valid_1's rmse: 0.218711
-# [500]   training's rmse: 0.206052       valid_1's rmse: 0.218586
-# [600]   training's rmse: 0.204557       valid_1's rmse: 0.218506
-# [700]   training's rmse: 0.203182       valid_1's rmse: 0.218441
-# [800]   training's rmse: 0.20198        valid_1's rmse: 0.218406
-# [900]   training's rmse: 0.200944       valid_1's rmse: 0.218367
-# [1000]  training's rmse: 0.199929       valid_1's rmse: 0.218323
+# [100]   training's rmse: 0.217322       valid_1's rmse: 0.220917
+# [200]   training's rmse: 0.213147       valid_1's rmse: 0.219407
+# [300]   training's rmse: 0.210607       valid_1's rmse: 0.218948
+# [400]   training's rmse: 0.208576       valid_1's rmse: 0.218695
+# [500]   training's rmse: 0.206715       valid_1's rmse: 0.218553
+# [600]   training's rmse: 0.205193       valid_1's rmse: 0.218447
+# [700]   training's rmse: 0.203884       valid_1's rmse: 0.218364
+# [800]   training's rmse: 0.202615       valid_1's rmse: 0.218336
+# [900]   training's rmse: 0.201535       valid_1's rmse: 0.218293
+# [1000]  training's rmse: 0.200449       valid_1's rmse: 0.218276
 
 # TODO
-# Category - region interaction?
-
 # Handle price outliers
-# Look at difference between log price and log mean price by category, region, category X region (careful!)
+    # Call on the number that is indicated on the "price" '
+    # rain[train.price == train.price.max()]['description'].values
 # Predict log price to impute missing, also look at difference between predicted and actual price (careful!)
 
-# Geo encode region/city? (careful!)
-    # https://www.kaggle.com/jpmiller/exploring-geography-for-1-5m-deals/notebook
-    # https://www.kaggle.com/jpmiller/russian-cities/data
-
+# Count encode region_X_cat
 # Population encode region/city? (careful!)
+# Macroeconomic data for locations?
 
 # Image analysis
     # https://www.kaggle.com/peterhurford/image-feature-engineering
     # Try to get color, contrast, exposure, saturation, temperature, tint, etc. as features
         # https://dsp.stackexchange.com/questions/3309/measuring-the-contrast-of-an-image
-    # Add VGG16 train features - SVD to main model, make separate embedding model
-        # https://www.kaggle.com/classtag/extract-avito-image-features-via-keras-vgg16
-        # https://www.kaggle.com/bguberfain/vgg16-train-features/code
+	# https://www.kaggle.com/classtag/extract-avito-image-features-via-keras-vgg16
+	# https://www.kaggle.com/bguberfain/vgg16-train-features/code
+	# https://www.pyimagesearch.com/2016/08/10/imagenet-classification-with-python-and-keras/
     # Add pic2vec SVD to main model, make separate embedding model
     # DR pic2vec
     # Deep image model
         # https://www.kaggle.com/bguberfain/naive-lgb-with-text-images
+
+# Char n-grams https://www.kaggle.com/c/avito-demand-prediction/discussion/56061#325063
 
 # Start doing text embedding corrections; add SVD of embedding to main model, full embedding to OHE model, and make separate embedding model
     # https://www.kaggle.com/gunnvant/russian-word-embeddings-for-fun-and-for-profit
@@ -637,6 +647,8 @@ print_step('Done!')
     # Take LGB, add text with SVD + embedding
     # OHE everything into LGB except text, then use text and residuals and boost with Ridge
     # Train classification model with AUC
+	# Include region_X_cat, region_X_cat_price_mean, region_X_cat_price_diff (doesn't work in current model, but has high feature importance and might work with different tuning)
+	# Treat img_top_1 as numeric
 
 # Russian NLP http://www.redhenlab.org/home/the-cognitive-core-research-topics-in-red-hen/the-barnyard/russian-nlp
 
