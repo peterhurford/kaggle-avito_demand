@@ -461,6 +461,7 @@ train_fe = pd.merge(train_fe, train_enc, how='left', on='category_name')
 test_fe = pd.merge(test_fe, train_enc, how='left', on='category_name')
 train_fe['cat_price_diff'] = train_fe['price'] - train_fe['cat_price_mean']
 test_fe['cat_price_diff'] = test_fe['price'] - test_fe['cat_price_mean']
+
 train_fe['city'] = train_fe['city'].apply(lambda x: x.replace('_', ', '))
 test_fe['city'] = test_fe['city'].apply(lambda x: x.replace('_', ', '))
 # HT: https://www.kaggle.com/jpmiller/russian-cities/data
@@ -470,6 +471,37 @@ train_fe = train_fe.merge(locations, how='left', left_on='city', right_on='locat
 test_fe = test_fe.merge(locations, how='left', left_on='city', right_on='location')
 train_fe.drop('location', axis=1, inplace=True)
 test_fe.drop('location', axis=1, inplace=True)
+
+train_enc = train_fe.groupby('parent_category_name')['parent_category_name'].agg(['count']).reset_index()
+train_enc.columns = ['parent_category_name', 'parent_cat_count']
+train_fe = pd.merge(train_fe, train_enc, how='left', on='parent_category_name')
+test_fe = pd.merge(test_fe, train_enc, how='left', on='parent_category_name')
+
+train_enc = train_fe.groupby('city')['city'].agg(['count']).reset_index()
+train_enc.columns = ['city', 'city_count']
+train_fe = pd.merge(train_fe, train_enc, how='left', on='city')
+test_fe = pd.merge(test_fe, train_enc, how='left', on='city')
+test_fe['city_count'].fillna(0, inplace=True)
+
+train_fe['region_X_cat'] = train_fe['region'] + ':' + train_fe['parent_category_name']
+test_fe['region_X_cat'] = test_fe['region'] + ':' + test_fe['parent_category_name']
+train_enc = train_fe.groupby('region_X_cat')['region_X_cat'].agg(['count']).reset_index()
+train_enc.columns = ['region_X_cat', 'region_X_cat_count']
+train_fe = pd.merge(train_fe, train_enc, how='left', on='region_X_cat')
+test_fe = pd.merge(test_fe, train_enc, how='left', on='region_X_cat')
+train_fe.drop('region_X_cat', axis=1, inplace=True)
+test_fe.drop('region_X_cat', axis=1, inplace=True)
+
+train_fe['user_id'] = train['user_id']
+test_fe['user_id'] = test['user_id']
+merge = pd.concat([train_fe, test_fe])
+merge['user_max_items'] = merge.groupby('user_id')['item_seq_number'].transform('max')
+merge['mean_items_by_user_type'] = merge.groupby('user_type')['user_max_items'].transform('mean')
+merge['user_max_items_diff'] = merge['user_max_items'] - merge['mean_items_by_user_type']
+merge.drop(['mean_items_by_user_type', 'user_id'], axis=1, inplace=True)
+dim = train.shape[0]
+train_fe = pd.DataFrame(merge.values[:dim, :], columns = merge.columns)
+test_fe = pd.DataFrame(merge.values[dim:, :], columns = merge.columns)
 
 print('~~~~~~~~~~~~~~~~~~~~~~~~~~~')
 print_step('Converting to category')
@@ -553,12 +585,14 @@ print_step('Done!')
 # LGB: +Some tuning                                                                - Dim 95,    5CV 0.21778, Submit ?0.2213?               <627d398>
 # LGB: +Num unique words +Unique words ratio                                       - Dim 97,    5CV 0.21782, Submit ?0.2214?               <2bcd64e>
 # LGB: +cat_price_mean +cat_price_diff                                             - Dim 99,    5CV 0.21768, Submit 0.2209, Delta -.00322  <0c9e1e4>
-# LGB: +lat/lon of cities                                                          - Dim 101,   5CV 0.21766, Submit ?0.2212?
+# LGB: +lat/lon of cities                                                          - Dim 101,   5CV 0.21766, Submit ?0.2212?               <a3d9005>
+# LGB: +parent_cat_count, region_X_cat_count                                       - Dim 103,   5CV 0.21763, Submit ?0.2211?
+# LGB: +city_count                                                                 - Dim 104,   5CV 0.21747, Submit ?0.2210?
 
 # CURRENT
-# [2018-05-09 17:48:56.776252] lgb cv scores : [0.2182758301052505, 0.21723093122493078, 0.21763877272953158, 0.21725774531346095, 0.21788800230572858]
-# [2018-05-09 17:48:56.776962] lgb mean cv score : 0.21765825633578045
-# [2018-05-09 17:48:56.777833] lgb std cv score : 0.00039435415852236404
+# [2018-05-09 22:39:42.778227] lgb cv scores : [0.21805966540045607, 0.21705929484738665, 0.21742744041563333, 0.21706854552504978, 0.2177181188036843]
+# [2018-05-09 22:39:42.779709] lgb mean cv score : 0.21746661299844203
+# [2018-05-09 22:39:42.781332] lgb std cv score : 0.0003849328778894197
 
 
 # Title Ridge      OOF 0.2337
@@ -566,26 +600,28 @@ print_step('Done!')
 # Title-Text Ridge OOF 0.2340
 # Deep Text LGB    OOF 0.22196
 
-# [100]   training's rmse: 0.217322       valid_1's rmse: 0.220917
-# [200]   training's rmse: 0.213147       valid_1's rmse: 0.219407
-# [300]   training's rmse: 0.210607       valid_1's rmse: 0.218948
-# [400]   training's rmse: 0.208576       valid_1's rmse: 0.218695
-# [500]   training's rmse: 0.206715       valid_1's rmse: 0.218553
-# [600]   training's rmse: 0.205193       valid_1's rmse: 0.218447
-# [700]   training's rmse: 0.203884       valid_1's rmse: 0.218364
-# [800]   training's rmse: 0.202615       valid_1's rmse: 0.218336
-# [900]   training's rmse: 0.201535       valid_1's rmse: 0.218293
-# [1000]  training's rmse: 0.200449       valid_1's rmse: 0.218276
+# [100]   training's rmse: 0.217158       valid_1's rmse: 0.220805
+# [200]   training's rmse: 0.213181       valid_1's rmse: 0.219241
+# [300]   training's rmse: 0.2108         valid_1's rmse: 0.218764
+# [400]   training's rmse: 0.208745       valid_1's rmse: 0.218526
+# [500]   training's rmse: 0.207019       valid_1's rmse: 0.218346
+# [600]   training's rmse: 0.205422       valid_1's rmse: 0.218263
+# [700]   training's rmse: 0.204084       valid_1's rmse: 0.218185
+# [800]   training's rmse: 0.202819       valid_1's rmse: 0.218122
+# [900]   training's rmse: 0.201698       valid_1's rmse: 0.218091
+# [1000]  training's rmse: 0.200674       valid_1's rmse: 0.21806
 
 # TODO
 # Handle price outliers
-    # Call on the number that is indicated on the "price" '
-    # rain[train.price == train.price.max()]['description'].values
+    # Call on the number that is indicated on the "price"
+    # train[train.price == train.price.max()]['description'].values
+
 # Predict log price to impute missing, also look at difference between predicted and actual price (careful!)
 
-# Count encode region_X_cat
-# Population encode region/city? (careful!)
 # Macroeconomic data for locations?
+
+# Population encode region/city?
+	# Is this different from count encoding?
 
 # Image analysis
     # https://www.kaggle.com/peterhurford/image-feature-engineering
