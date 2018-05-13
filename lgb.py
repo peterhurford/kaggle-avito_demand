@@ -378,7 +378,7 @@ if not is_in_cache('data_with_fe'):
     train_fe['title_and_desc'] = train_fe['titlecat'] + ' ' + train_fe['description'].fillna('')
     test_fe['title_and_desc'] = test_fe['titlecat'] + ' ' + test_fe['description'].fillna('')
     print_step('Title/Text TFIDF 2/3')
-    tfidf = TfidfVectorizer(ngram_range=(1, 1),
+    tfidf = TfidfVectorizer(ngram_range=(1, 2),
                             max_features=100000,
                             min_df=2,
                             max_df=0.8,
@@ -428,6 +428,47 @@ if not is_in_cache('data_with_fe'):
     train_fe['title_and_desc_ridge'] = ridge_preds_oof
     test_fe['title_and_desc_ridge'] = ridge_preds_test
 
+    print('~~~~~~~~~~~~~~~~~~~~~~~~')
+    print_step('Text Char TFIDF 1/2')
+    # Using char n-grams ends up being surprisingly good, HT https://www.kaggle.com/c/avito-demand-prediction/discussion/56061#325063
+    tfidf = TfidfVectorizer(ngram_range=(2, 5),
+                            max_features=100000,
+                            min_df=2,
+                            max_df=0.8,
+                            binary=True,
+                            analyzer='char',
+                            encoding='KOI8-R')
+    tfidf_train = tfidf.fit_transform(train_fe['desc'])
+    print(tfidf_train.shape)
+    print_step('Text Char TFIDF 2/2')
+    tfidf_test = tfidf.transform(test_fe['desc'])
+    print(tfidf_test.shape)
+
+    print_step('Text Char TFIDF Ridge 1/6')
+    X_train_1, X_train_2, y_train_1, y_train_2 = train_test_split(tfidf_train, target, test_size = 0.5, shuffle = False)
+    model = Ridge()
+    print_step('Text Char TFIDF Ridge 2/6 1/3')
+    model.fit(X_train_1, y_train_1)
+    print_step('Text Char TFIDF Ridge 2/6 2/3')
+    ridge_preds1 = model.predict(X_train_2)
+    print_step('Text Char TFIDF Ridge 2/6 3/3')
+    ridge_preds1f = model.predict(tfidf_test)
+    model = Ridge()
+    print_step('Text Char TFIDF Ridge 3/6 1/3')
+    model.fit(X_train_2, y_train_2)
+    print_step('Text Char TFIDF Ridge 3/6 2/3')
+    ridge_preds2 = model.predict(X_train_1)
+    print_step('Text Char TFIDF Ridge 3/6 3/3')
+    ridge_preds2f = model.predict(tfidf_test)
+    print_step('Text Char TFIDF Ridge 4/6')
+    ridge_preds_oof = np.concatenate((ridge_preds2, ridge_preds1), axis=0)
+    print_step('Text Char TFIDF Ridge 5/6')
+    ridge_preds_test = (ridge_preds1f + ridge_preds2f) / 2.0
+    print_step('Text Char Ridge RMSE OOF: {}'.format(rmse(ridge_preds_oof, target)))
+    print_step('Text Char TFIDF Ridge 6/6')
+    train_fe['desc_char_ridge'] = ridge_preds_oof
+    test_fe['desc_char_ridge'] = ridge_preds_test
+
     print('~~~~~~~~~~~~~')
     print_step('Dropping')
     drops = ['activation_date', 'description', 'title', 'desc', 'titlecat', 'title_and_desc', 'image', 'user_id', 'date_int']
@@ -451,6 +492,8 @@ test_fe['deep_text_lgb'] = test_deep_text_lgb['deep_text_lgb']
 
 print('~~~~~~~~~~')
 print_step('Stuff')
+# train_fe.drop(['price', 'cat_price_mean', 'cat_price_diff', 'city_count', 'region_X_cat_count', 'parent_cat_count', 'lat', 'lon'], axis=1, inplace=True)
+# test_fe.drop(['price', 'cat_price_mean', 'cat_price_diff', 'city_count', 'region_X_cat_count', 'parent_cat_count', 'lat', 'lon'], axis=1, inplace=True)
 train_fe['price'] = train['price']
 test_fe['price'] = test['price']
 train_fe['price'].fillna(0, inplace=True)
@@ -472,6 +515,10 @@ test_fe = test_fe.merge(locations, how='left', left_on='city', right_on='locatio
 train_fe.drop('location', axis=1, inplace=True)
 test_fe.drop('location', axis=1, inplace=True)
 
+region_macro = pd.read_csv('region_macro.csv')
+train_fe = train_fe.merge(region_macro, how='left', on='region')
+test_fe = test_fe.merge(region_macro, how='left', on='region')
+
 train_enc = train_fe.groupby('parent_category_name')['parent_category_name'].agg(['count']).reset_index()
 train_enc.columns = ['parent_category_name', 'parent_cat_count']
 train_fe = pd.merge(train_fe, train_enc, how='left', on='parent_category_name')
@@ -491,17 +538,6 @@ train_fe = pd.merge(train_fe, train_enc, how='left', on='region_X_cat')
 test_fe = pd.merge(test_fe, train_enc, how='left', on='region_X_cat')
 train_fe.drop('region_X_cat', axis=1, inplace=True)
 test_fe.drop('region_X_cat', axis=1, inplace=True)
-
-train_fe['user_id'] = train['user_id']
-test_fe['user_id'] = test['user_id']
-merge = pd.concat([train_fe, test_fe])
-merge['user_max_items'] = merge.groupby('user_id')['item_seq_number'].transform('max')
-merge['mean_items_by_user_type'] = merge.groupby('user_type')['user_max_items'].transform('mean')
-merge['user_max_items_diff'] = merge['user_max_items'] - merge['mean_items_by_user_type']
-merge.drop(['mean_items_by_user_type', 'user_id'], axis=1, inplace=True)
-dim = train.shape[0]
-train_fe = pd.DataFrame(merge.values[:dim, :], columns = merge.columns)
-test_fe = pd.DataFrame(merge.values[dim:, :], columns = merge.columns)
 
 print('~~~~~~~~~~~~~~~~~~~~~~~~~~~')
 print_step('Converting to category')
@@ -553,15 +589,15 @@ pdb.set_trace()
 
 print('~~~~~~~~~~')
 print_step('Cache')
-save_in_cache('lgb_preds', pd.DataFrame({'lgb': results['train']}),
-                           pd.DataFrame({'lgb': results['test']}))
+save_in_cache('lgb_preds8', pd.DataFrame({'lgb': results['train']}),
+                            pd.DataFrame({'lgb': results['test']}))
 
 print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
 print_step('Prepping submission file')
 submission = pd.DataFrame()
 submission['item_id'] = test_id
 submission['deal_probability'] = results['test'].clip(0.0, 1.0)
-submission.to_csv('submit/submit_lgb7.csv', index=False)
+submission.to_csv('submit/submit_lgb8.csv', index=False)
 print_step('Done!')
 
 # LOG (Comp start 25 Apr, merge deadline 20 June @ 7pm EDT, end 27 June @ 7pm EDT) (26/60 submits used as of 7 May UTC) -- Average Delta 0.0035, Safety Margin 0.002
@@ -588,116 +624,26 @@ print_step('Done!')
 # LGB: +lat/lon of cities                                                          - Dim 101,   5CV 0.21766, Submit ?0.2212?               <a3d9005>
 # LGB: +parent_cat_count, region_X_cat_count                                       - Dim 103,   5CV 0.21763, Submit ?0.2211?
 # LGB: +city_count                                                                 - Dim 104,   5CV 0.21747, Submit ?0.2210?
+# LGB: +Region macro +improve title-text Ridge +Text char Ridge                    - Dim 108,   5CV 0.21733, Submit 0.2206, Delta -.00327
 
 # CURRENT
-# [2018-05-09 22:39:42.778227] lgb cv scores : [0.21805966540045607, 0.21705929484738665, 0.21742744041563333, 0.21706854552504978, 0.2177181188036843]
-# [2018-05-09 22:39:42.779709] lgb mean cv score : 0.21746661299844203
-# [2018-05-09 22:39:42.781332] lgb std cv score : 0.0003849328778894197
+# [2018-05-13 18:12:21.999449] lgb cv scores : [0.21795107333591332, 0.2169474422868605, 0.21729129069136152, 0.21694322110783407, 0.21754004093027587]
+# [2018-05-13 18:12:22.001001] lgb mean cv score : 0.21733461367044904
+# [2018-05-13 18:12:22.002238] lgb std cv score : 0.00038136323291095936
 
-
-# Title Ridge      OOF 0.2337
-# Text Ridge       OOF 0.2360
-# Title-Text Ridge OOF 0.2340
+# Title Ridge      OOF 0.23366
+# Text Ridge       OOF 0.23600
+# Title-Text Ridge OOF 0.23304
+# Text Char Ridge  OOF 0.23497
 # Deep Text LGB    OOF 0.22196
 
-# [100]   training's rmse: 0.217158       valid_1's rmse: 0.220805
-# [200]   training's rmse: 0.213181       valid_1's rmse: 0.219241
-# [300]   training's rmse: 0.2108         valid_1's rmse: 0.218764
-# [400]   training's rmse: 0.208745       valid_1's rmse: 0.218526
-# [500]   training's rmse: 0.207019       valid_1's rmse: 0.218346
-# [600]   training's rmse: 0.205422       valid_1's rmse: 0.218263
-# [700]   training's rmse: 0.204084       valid_1's rmse: 0.218185
-# [800]   training's rmse: 0.202819       valid_1's rmse: 0.218122
-# [900]   training's rmse: 0.201698       valid_1's rmse: 0.218091
-# [1000]  training's rmse: 0.200674       valid_1's rmse: 0.21806
-
-# TODO
-# Handle price outliers
-    # Call on the number that is indicated on the "price"
-    # train[train.price == train.price.max()]['description'].values
-
-# Predict log price to impute missing, also look at difference between predicted and actual price (careful!)
-
-# Macroeconomic data for locations?
-
-# Population encode region/city?
-	# Is this different from count encoding?
-
-# Image analysis
-    # https://www.kaggle.com/peterhurford/image-feature-engineering
-    # Try to get color, contrast, exposure, saturation, temperature, tint, etc. as features
-        # https://dsp.stackexchange.com/questions/3309/measuring-the-contrast-of-an-image
-	# https://www.kaggle.com/classtag/extract-avito-image-features-via-keras-vgg16
-	# https://www.kaggle.com/bguberfain/vgg16-train-features/code
-	# https://www.pyimagesearch.com/2016/08/10/imagenet-classification-with-python-and-keras/
-    # Add pic2vec SVD to main model, make separate embedding model
-    # DR pic2vec
-    # Deep image model
-        # https://www.kaggle.com/bguberfain/naive-lgb-with-text-images
-
-# Char n-grams https://www.kaggle.com/c/avito-demand-prediction/discussion/56061#325063
-
-# Start doing text embedding corrections; add SVD of embedding to main model, full embedding to OHE model, and make separate embedding model
-    # https://www.kaggle.com/gunnvant/russian-word-embeddings-for-fun-and-for-profit
-    # https://github.com/nlpub/russe-evaluation/tree/master/russe/measures/word2vec
-    # https://www.kaggle.com/jagangupta/understanding-approval-donorschoose-eda-fe-eli5
-    # https://docs.google.com/document/d/1ply0qHqUN6fumuNeJ_xAaz9kAlHyjbIU0mNDhdrFmv8/edit
-# Model on combination of SVD(text), embedding, SVD(embedding) model encoding, and raw text (SelectKBest)
-
-# Look at supplementary data
-
-# https://github.com/mxbi/ftim
-
-# if any lazy people used the same or similar entries for the title/description fields
-
-# Check feature impact and tuning in DR
-# Tune models some
-    # Dart?
-
-# Understand and apply https://www.kaggle.com/rdizzl3/stage-2-lgbm-stacker-8th-place-solution/code
-    #tr['title_first'] = tr['title'].apply(lambda ss: ss.translate(ss.maketrans('', '', russian_punct)).replace('\n', ' ').lower().split(' ')[0])
-    #get_last_two = lambda elem: (elem[-2] if len(elem) >= 2 else '') + ' ' + elem[-1]
-    #tr['title_last_two'] = tr['title'].apply(lambda ss: get_last_two(ss.translate(ss.maketrans('', '', russian_punct)).replace('\n', ' ').lower().split(' ')))
-    #get_first_two = lambda elem: elem[0] + ' ' + (elem[-2] if len(elem) >= 2 else ''))
-    #tr['title_first_two'] = tr['title'].apply(lambda ss: get_first_two(ss.translate(ss.maketrans('', '', russian_punct)).replace('\n', ' ').lower().split(' ')))
-    # Words in other words (e.g., param_1 or title in descripton)?
-
-# Overall Ridge
-# Ridges for each parent_category
-# FM
-# Check averaging vs. including for https://www.kaggle.com/nicapotato/bow-meta-text-and-dense-features-lgbm/code
-# Check averaging vs. including for https://www.kaggle.com/kailex/xgb-text2vec-tfidf-0-2248/code
-# Check including submodels vs. including boosted model vs. averaging boosted model for https://www.kaggle.com/peterhurford/boosting-mlp-lb-0-2297/
-# LibFFM
-# KNN
-
-# Classification models
-    # MNB (didn't work in this model but may work in a different ensemble that can be averaged together -- worked well in Mercari)
-
-# Can we do a two stage classification + regression?
-    # Train best model as classification, try including in Regression, or using output to decide whether to send to regression versus set as 0
-
-# Try different ensembling strategies and check feature impact using submodels and tuning in DR
-
-# Vary model
-    # Take LGB, add text with SVD + embedding
-    # OHE everything into LGB except text, then use text and residuals and boost with Ridge
-    # Train classification model with AUC
-	# Include region_X_cat, region_X_cat_price_mean, region_X_cat_price_diff (doesn't work in current model, but has high feature importance and might work with different tuning)
-	# Treat img_top_1 as numeric
-
-# Russian NLP http://www.redhenlab.org/home/the-cognitive-core-research-topics-in-red-hen/the-barnyard/russian-nlp
-
-# Make NNs
-
-# Look to DonorsChoose
-    # https://www.kaggle.com/qinhui1999/deep-learning-is-all-you-need-lb-0-80x/code
-    # https://www.kaggle.com/fizzbuzz/the-all-in-one-model
-    # https://www.kaggle.com/fizzbuzz/beginner-s-guide-to-capsule-networks
-    # https://www.kaggle.com/shadowwarrior/1st-place-solution
-
-# https://www.kaggle.com/c/avito-duplicate-ads-detection/discussion
-# https://www.kaggle.com/c/two-sigma-connect-rental-listing-inquiries/discussion
-# https://www.kaggle.com/c/cdiscount-image-classification-challenge/discussion
-
-# Denoising autoencoder? https://github.com/phdowling/mSDA
+# [100]   training's rmse: 0.21618        valid_1's rmse: 0.220464
+# [200]   training's rmse: 0.212424       valid_1's rmse: 0.219032
+# [300]   training's rmse: 0.210268       valid_1's rmse: 0.2186
+# [400]   training's rmse: 0.208348       valid_1's rmse: 0.218341
+# [500]   training's rmse: 0.206718       valid_1's rmse: 0.218193
+# [600]   training's rmse: 0.205155       valid_1's rmse: 0.218108
+# [700]   training's rmse: 0.203849       valid_1's rmse: 0.218038
+# [800]   training's rmse: 0.202587       valid_1's rmse: 0.217998
+# [900]   training's rmse: 0.201465       valid_1's rmse: 0.21796
+# [1000]  training's rmse: 0.200333       valid_1's rmse: 0.217951
