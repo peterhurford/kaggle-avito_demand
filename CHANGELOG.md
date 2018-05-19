@@ -24,7 +24,7 @@ LGB: +lat/lon of cities                                                         
 LGB: +parent_cat_count, region_X_cat_count                                       - Dim 103,   5CV 0.21763, Submit ?0.2211?
 LGB: +city_count                                                                 - Dim 104,   5CV 0.21747, Submit ?0.2210?
 LGB: +Region macro +improve title/text Ridge +Text char Ridge                    - Dim 108,   5CV 0.21733, Submit 0.2206, Delta -.00327  <4c18106>
-LGB: -title/text Ridge and SVD, +improve Ridges                                  - Dim 97,    5CV 0.21723, Subnit ?0.2207?
-LGB: +All text Ridge                                                             - Dim 98,    5CV ?
+LGB: -title/text Ridge and SVD, +improve Ridges                                  - Dim 97,    5CV 0.21723, Subnit ?0.2207?               <e840c9e>
+LGB: +All text Ridge                                                             - Dim 98,    5CV 0.21717, Submit ?0.2207?
 LGB: +Add sentence length mean and std                                           - Dim 100,   5CV ?
 ```
