@@ -42,7 +42,7 @@ def runLGB(train_X, train_y, test_X, test_y, test_X2):
 
 
 print('~~~~~~~~~~~~~~~~~~~~~~~')
-print_step('Importing Data 1/6')
+print_step('Importing Data 1/7')
 train, test = get_data()
 
 print('~~~~~~~~~~~~~~~')
@@ -53,22 +53,40 @@ test_id = test['item_id']
 train.drop(['deal_probability', 'item_id'], axis=1, inplace=True)
 test.drop(['item_id'], axis=1, inplace=True)
 
-print('~~~~~~~~~~~~~~~~~~~~~~~')
-print_step('Importing Data 2/6')
-train_fe, test_fe = load_cache('ohe_data')
+if not is_in_cache('50k_best'):
+    print('~~~~~~~~~~~~~~~~~~~~~~~')
+    print_step('Importing Data 2/7')
+    train_fe, test_fe = load_cache('ohe_data')
 
-print_step('Importing Data 3/6')
-tfidf_train, tfidf_test = load_cache('titlecat_tfidf')
+    print_step('Importing Data 3/7')
+    tfidf_train, tfidf_test = load_cache('titlecat_tfidf')
 
-print_step('Importing Data 4/6')
-tfidf_train2, tfidf_test2 = load_cache('text_tfidf')
+    print_step('Importing Data 4/7')
+    tfidf_train2, tfidf_test2 = load_cache('text_tfidf')
 
-print_step('Importing Data 5/6')
-train = hstack((train_fe, tfidf_train, tfidf_train2)).tocsr()
-print_step('Importing Data 6/6')
-test = hstack((test_fe, tfidf_test, tfidf_test2)).tocsr()
-print(train.shape)
-print(test.shape)
+    print_step('Importing Data 5/7')
+    tfidf_train3, tfidf_test3 = load_cache('text_char_tfidf')
+
+    print_step('Importing Data 6/7')
+    train = hstack((train_fe, tfidf_train, tfidf_train2, tfidf_train3)).tocsr()
+    print_step('Importing Data 7/7')
+    test = hstack((test_fe, tfidf_test, tfidf_test2, tfidf_test3)).tocsr()
+    print(train.shape)
+    print(test.shape)
+
+    print_step('SelectKBest 1/2')
+    fselect = SelectKBest(f_regression, k=50000)
+    train = fselect.fit_transform(train, target)
+    print_step('SelectKBest 2/2')
+    test = fselect.transform(test)
+    print(train.shape)
+    print(test.shape)
+
+    print_step('Saving to cache...')
+    save_in_cache('50k_best', train, test)
+else:
+    print_step('Loading from cache...')
+    train, test = load_cache('50k_best')
 
 
 print('~~~~~~~~~~~~')

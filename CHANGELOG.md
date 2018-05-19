@@ -26,8 +26,8 @@ LGB: +city_count                                                                
 LGB: +Region macro +improve title/text Ridge +Text char Ridge                    - Dim 108,   5CV 0.21733, Submit 0.2206, Delta -.00327  <4c18106>
 LGB: -title/text Ridge and SVD, +improve Ridges                                  - Dim 97,    5CV 0.21723, Subnit ?0.2207?               <e840c9e>
 LGB: +All text Ridge                                                             - Dim 98,    5CV 0.21717, Submit ?0.2207?               <c8e9ada>
-LGB: +Add sentence basic NLP                                                     - Dim 101,   5CV 0.21719, Submit ?0.2207?
-LGB: +Add parent cat Ridges                                                      - Dim 105,   5CV ?
+LGB: +Add sentence basic NLP                                                     - Dim 101,   5CV 0.21719, Submit ?0.2207?               <528cece>
+LGB: +Add parent cat Ridges                                                      - Dim 105,   5CV 0.21679, Submit ?0.2203?
 LGB: +Add parent_catXregion Ridges                                               - Dim 109,   5CV ?
 LGB: +Add cat_bin                                                                - Dim 110,   5CV ?
 LGB: +Add cat_bin Ridges                                                         - Dim 114,   5CV ?
