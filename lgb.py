@@ -157,17 +157,17 @@ submission.to_csv('submit/submit_lgb8.csv', index=False)
 print_step('Done!')
 
 # CURRENT
-# [2018-05-19 21:09:40.938245] lgb cv scores : [0.21787936297485425, 0.21680265596424525, 0.21702673237299142, 0.2167803010118106, 0.21737315442383998]
-# [2018-05-19 21:09:40.938315] lgb mean cv score : 0.2171724413495483
-# [2018-05-19 21:09:40.938422] lgb std cv score : 0.00041273970102979966
+# [2018-05-19 23:08:19.655373] lgb cv scores : [0.21788512234167973, 0.21677335990572674, 0.21711440838000526, 0.21680686334842272, 0.217376267239575]
+# [2018-05-19 23:08:19.655440] lgb mean cv score : 0.21719120424308186
+# [2018-05-19 23:08:19.655542] lgb std cv score : 0.00041084791794178665
 
-# [100]   training's rmse: 0.216104       valid_1's rmse: 0.220025
-# [200]   training's rmse: 0.212693       valid_1's rmse: 0.218906
-# [300]   training's rmse: 0.210309       valid_1's rmse: 0.218514
-# [400]   training's rmse: 0.208319       valid_1's rmse: 0.218286
-# [500]   training's rmse: 0.206718       valid_1's rmse: 0.218156
-# [600]   training's rmse: 0.205213       valid_1's rmse: 0.218059
-# [700]   training's rmse: 0.20399        valid_1's rmse: 0.217989
-# [800]   training's rmse: 0.202788       valid_1's rmse: 0.217955
-# [900]   training's rmse: 0.201661       valid_1's rmse: 0.217917
-# [1000]  training's rmse: 0.200566       valid_1's rmse: 0.217879
+# [100]   training's rmse: 0.216373       valid_1's rmse: 0.220122
+# [200]   training's rmse: 0.212377       valid_1's rmse: 0.218825
+# [300]   training's rmse: 0.210059       valid_1's rmse: 0.218405
+# [400]   training's rmse: 0.208209       valid_1's rmse: 0.218224
+# [500]   training's rmse: 0.206465       valid_1's rmse: 0.2181
+# [600]   training's rmse: 0.205043       valid_1's rmse: 0.218018
+# [700]   training's rmse: 0.203779       valid_1's rmse: 0.217959
+# [800]   training's rmse: 0.20255        valid_1's rmse: 0.217916
+# [900]   training's rmse: 0.201482       valid_1's rmse: 0.217901
+# [1000]  training's rmse: 0.200337       valid_1's rmse: 0.217885
