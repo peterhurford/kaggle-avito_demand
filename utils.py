@@ -11,6 +11,8 @@ import pandas as pd
 import numpy as np
 
 from sklearn.metrics import mean_squared_error, roc_auc_score
+from sklearn.preprocessing import StandardScaler
+from sklearn.base import BaseEstimator, TransformerMixin
 
 
 def print_step(step):
@@ -35,6 +37,23 @@ def normalize_text(text):
     text = retoken.findall(text.lower())
     text = [morph.parse(x)[0].normal_form for x in text]
     return ' '.join(text)
+
+
+# https://stackoverflow.com/questions/37685412/avoid-scaling-binary-columns-in-sci-kit-learn-standsardscaler
+class Scaler(BaseEstimator, TransformerMixin): 
+    def __init__(self, columns, copy=True, with_mean=True, with_std=True):
+        self.scaler = StandardScaler(copy, with_mean, with_std)
+        self.columns = columns
+
+    def fit(self, X, y=None):
+        self.scaler.fit(X[self.columns], y)
+        return self
+
+    def transform(self, X, y=None, copy=None):
+        init_col_order = X.columns
+        X_scaled = pd.DataFrame(self.scaler.transform(X[self.columns]), columns=self.columns)
+        X_not_scaled = X.ix[:,~X.columns.isin(self.columns)]
+        return pd.concat([X_not_scaled, X_scaled], axis=1)[init_col_order]
 
 
 class TargetEncoder:
