@@ -30,10 +30,9 @@ LGB: +Add sentence basic NLP                                                    
 LGB: +Add parent cat Ridges                                                      - Dim 105,   5CV 0.21679, Submit ?0.2201?               <6b70f46>
 LGB: +Add parent_catXregion Ridges                                               - Dim 109,   5CV 0.21650, Submit ?0.2198?               <a40f84e>
 LGB: +Some tuning                                                                - Dim 109,   5CV 0.21640, Submit 0.2202, Delta -.00380  <867c0df>
-LGB: +Add cat_bin                                                                - Dim 110,   5CV 0.21636, Submit ?0.2202?
-LGB: +Add cat_bin Ridges                                                         - Dim 114,   5CV ?
-LGB: +Add image_top_1 Ridges                                                     - Dim 118,   5CV ?
-LGB: +Add city Ridges                                                            - Dim 122,   5CV ?
-LGB: -Some vars?                                                                 - Dim ?,     5CV ?
-LGB: +cat_bin_price_mean, cat_bin_price_diff                                     - Dim ?,     5CV ?
+LGB: +Add cat_bin                                                                - Dim 110,   5CV 0.21636, Submit ?0.2202?               <b038ddd>
+LGB: +Add cat_bin Ridges, LR 0.04->0.03                                          - Dim 114,   5CV 0.21611, Submit 0.2200, Delta -.00389
+LGB: +cat_bin_price_mean, cat_bin_price_diff                                     - Dim 116,   5CV ?
+LGB: +Add image_top_1 Ridges                                                     - Dim 120,   5CV ?
+LGB: +Add city Ridges                                                            - Dim 124,   5CV ?
 ```

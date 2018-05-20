@@ -17,7 +17,7 @@ def runLGB(train_X, train_y, test_X, test_y, test_X2):
     d_train = lgb.Dataset(train_X, label=train_y)
     d_valid = lgb.Dataset(test_X, label=test_y)
     watchlist = [d_train, d_valid]
-    params = {'learning_rate': 0.04,
+    params = {'learning_rate': 0.03,
               'application': 'regression',
               'num_leaves': 118,
               'verbosity': -1,
@@ -44,8 +44,8 @@ def runLGB(train_X, train_y, test_X, test_y, test_X2):
     return pred_test_y, pred_test_y2
 
 
-print('~~~~~~~~~~~~~~~~~~~~~~~')
-print_step('Importing Data 1/9')
+print('~~~~~~~~~~~~~~~~~~~~~~~~')
+print_step('Importing Data 1/10')
 train, test = get_data()
 
 print('~~~~~~~~~~~~~~~')
@@ -56,68 +56,78 @@ test_id = test['item_id']
 train.drop(['deal_probability', 'item_id'], axis=1, inplace=True)
 test.drop(['item_id'], axis=1, inplace=True)
 
-print('~~~~~~~~~~~~~~~~~~~~~~~')
-print_step('Importing Data 2/9')
+print('~~~~~~~~~~~~~~~~~~~~~~~~')
+print_step('Importing Data 2/10')
 train_fe, test_fe = load_cache('data_with_fe')
 
-print_step('Importing Data 3/9 1/3')
+print_step('Importing Data 3/10 1/3')
 train_ridge, test_ridge = load_cache('tfidf_ridges')
-print_step('Importing Data 3/9 2/3')
+print_step('Importing Data 3/10 2/3')
 train_fe = pd.concat([train_fe, train_ridge], axis=1)
-print_step('Importing Data 3/9 3/3')
+print_step('Importing Data 3/10 3/3')
 test_fe = pd.concat([test_fe, test_ridge], axis=1)
 
-print_step('Importing Data 4/9 1/3')
+print_step('Importing Data 4/10 1/3')
 train_deep_text_lgb, test_deep_text_lgb = load_cache('deep_text_lgb')
-print_step('Importing Data 4/9 2/3')
+print_step('Importing Data 4/10 2/3')
 train_fe['deep_text_lgb'] = train_deep_text_lgb['deep_text_lgb']
-print_step('Importing Data 4/9 3/3')
+print_step('Importing Data 4/10 3/3')
 test_fe['deep_text_lgb'] = test_deep_text_lgb['deep_text_lgb']
 
-print_step('Importing Data 5/9 1/3')
+print_step('Importing Data 5/10 1/3')
 train_full_text_ridge, test_full_text_ridge = load_cache('full_text_ridge')
-print_step('Importing Data 5/9 2/3')
+print_step('Importing Data 5/10 2/3')
 train_fe['full_text_ridge'] = train_full_text_ridge['full_text_ridge']
-print_step('Importing Data 5/9 3/3')
+print_step('Importing Data 5/10 3/3')
 test_fe['full_text_ridge'] = test_full_text_ridge['full_text_ridge']
 
-print_step('Importing Data 6/9 1/4')
+print_step('Importing Data 6/10 1/4')
 train_pcat_ridge, test_pcat_ridge = load_cache('parent_cat_ridges')
-print_step('Importing Data 6/9 2/4')
+print_step('Importing Data 6/10 2/4')
 train_pcat_ridge = train_pcat_ridge[[c for c in train_pcat_ridge.columns if 'ridge' in c]]
 test_pcat_ridge = test_pcat_ridge[[c for c in test_pcat_ridge.columns if 'ridge' in c]]
-print_step('Importing Data 6/9 3/4')
+print_step('Importing Data 6/10 3/4')
 train_fe = pd.concat([train_fe, train_pcat_ridge], axis=1)
-print_step('Importing Data 6/9 4/4')
+print_step('Importing Data 6/10 4/4')
 test_fe = pd.concat([test_fe, test_pcat_ridge], axis=1)
 
-print_step('Importing Data 7/9 1/4')
+print_step('Importing Data 7/10 1/4')
 train_rcat_ridge, test_rcat_ridge = load_cache('parent_regioncat_ridges')
-print_step('Importing Data 7/9 2/4')
+print_step('Importing Data 7/10 2/4')
 train_rcat_ridge = train_rcat_ridge[[c for c in train_rcat_ridge.columns if 'ridge' in c]]
 test_rcat_ridge = test_rcat_ridge[[c for c in test_rcat_ridge.columns if 'ridge' in c]]
-print_step('Importing Data 7/9 3/4')
+print_step('Importing Data 7/10 3/4')
 train_fe = pd.concat([train_fe, train_rcat_ridge], axis=1)
-print_step('Importing Data 7/9 4/4')
+print_step('Importing Data 7/10 4/4')
 test_fe = pd.concat([test_fe, test_rcat_ridge], axis=1)
 
-print_step('Importing Data 8/9 1/4')
+print_step('Importing Data 8/10 1/4')
+train_catb_ridge, test_catb_ridge = load_cache('cat_bin_ridges')
+print_step('Importing Data 8/10 2/4')
+train_catb_ridge = train_catb_ridge[[c for c in train_catb_ridge.columns if 'ridge' in c]]
+test_catb_ridge = test_catb_ridge[[c for c in test_catb_ridge.columns if 'ridge' in c]]
+print_step('Importing Data 8/10 3/4')
+train_fe = pd.concat([train_fe, train_catb_ridge], axis=1)
+print_step('Importing Data 8/10 4/4')
+test_fe = pd.concat([test_fe, test_catb_ridge], axis=1)
+
+print_step('Importing Data 9/10 1/4')
 # HT: https://www.kaggle.com/jpmiller/russian-cities/data
 # HT: https://www.kaggle.com/jpmiller/exploring-geography-for-1-5m-deals/notebook
 locations = pd.read_csv('city_latlons.csv')
-print_step('Importing Data 8/9 2/4')
+print_step('Importing Data 9/10 2/4')
 train_fe = train_fe.merge(locations, how='left', left_on='city', right_on='location')
-print_step('Importing Data 8/9 3/4')
+print_step('Importing Data 9/10 3/4')
 test_fe = test_fe.merge(locations, how='left', left_on='city', right_on='location')
-print_step('Importing Data 8/9 4/4')
+print_step('Importing Data 9/10 4/4')
 train_fe.drop('location', axis=1, inplace=True)
 test_fe.drop('location', axis=1, inplace=True)
 
-print_step('Importing Data 9/9 1/3')
+print_step('Importing Data 10/10 1/3')
 region_macro = pd.read_csv('region_macro.csv')
-print_step('Importing Data 9/9 2/3')
+print_step('Importing Data 10/10 2/3')
 train_fe = train_fe.merge(region_macro, how='left', on='region')
-print_step('Importing Data 9/9 3/3')
+print_step('Importing Data 10/10 3/3')
 test_fe = test_fe.merge(region_macro, how='left', on='region')
 
 print('~~~~~~~~~~~~~~~~~~~~~~~~~~~')
@@ -170,37 +180,37 @@ pdb.set_trace()
 
 print('~~~~~~~~~~')
 print_step('Cache')
-save_in_cache('lgb_preds9', pd.DataFrame({'lgb': results['train']}),
-                            pd.DataFrame({'lgb': results['test']}))
+save_in_cache('lgb_preds10', pd.DataFrame({'lgb': results['train']}),
+                             pd.DataFrame({'lgb': results['test']}))
 
 print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
 print_step('Prepping submission file')
 submission = pd.DataFrame()
 submission['item_id'] = test_id
 submission['deal_probability'] = results['test'].clip(0.0, 1.0)
-submission.to_csv('submit/submit_lgb9.csv', index=False)
+submission.to_csv('submit/submit_lgb10.csv', index=False)
 print_step('Done!')
 
 # CURRENT
-# [2018-05-20 03:05:25.687106] lgb cv scores : [0.21701610163690963, 0.21594176818265345, 0.21618200973088905, 0.21602695045932716, 0.21663239840969173]
-# [2018-05-20 03:05:25.687175] lgb mean cv score : 0.21635984568389421
-# [2018-05-20 03:05:25.687279] lgb std cv score : 0.0004055096837246542
+# [2018-05-20 04:05:14.703896] lgb cv scores : [0.21674826847603967, 0.21573736270494542, 0.21589183018235863, 0.2157746267953122, 0.2163931814325298]
+# [2018-05-20 04:05:14.703964] lgb mean cv score : 0.21610905391823715
+# [2018-05-20 04:05:14.704066] lgb std cv score : 0.0003966120788125226
 
-# [100]   training's rmse: 0.216721       valid_1's rmse: 0.220144
-# [200]   training's rmse: 0.212984       valid_1's rmse: 0.218648
-# [300]   training's rmse: 0.210772       valid_1's rmse: 0.218002
-# [400]   training's rmse: 0.209201       valid_1's rmse: 0.217694
-# [500]   training's rmse: 0.207664       valid_1's rmse: 0.21749
-# [600]   training's rmse: 0.206291       valid_1's rmse: 0.217347
-# [700]   training's rmse: 0.205155       valid_1's rmse: 0.217271
-# [800]   training's rmse: 0.204055       valid_1's rmse: 0.21722
-# [900]   training's rmse: 0.202962       valid_1's rmse: 0.217186
-# [1000]  training's rmse: 0.201966       valid_1's rmse: 0.217135
-# [1100]  training's rmse: 0.201004       valid_1's rmse: 0.217098
-# [1200]  training's rmse: 0.200207       valid_1's rmse: 0.21707
-# [1300]  training's rmse: 0.199448       valid_1's rmse: 0.217058
-# [1400]  training's rmse: 0.198656       valid_1's rmse: 0.217046
-# [1500]  training's rmse: 0.197856       valid_1's rmse: 0.217031
-# [1600]  training's rmse: 0.197154       valid_1's rmse: 0.217018
-# [1700]  training's rmse: 0.19636        valid_1's rmse: 0.21701
-# [1800]  training's rmse: 0.195624       valid_1's rmse: 0.217016
+# [100]   training's rmse: 0.217929       valid_1's rmse: 0.220626
+# [200]   training's rmse: 0.214561       valid_1's rmse: 0.218866
+# [300]   training's rmse: 0.212496       valid_1's rmse: 0.21814
+# [400]   training's rmse: 0.210815       valid_1's rmse: 0.217721
+# [500]   training's rmse: 0.209356       valid_1's rmse: 0.217452
+# [600]   training's rmse: 0.2081         valid_1's rmse: 0.217261
+# [700]   training's rmse: 0.207018       valid_1's rmse: 0.217155
+# [800]   training's rmse: 0.205988       valid_1's rmse: 0.21705
+# [900]   training's rmse: 0.205139       valid_1's rmse: 0.216992
+# [1000]  training's rmse: 0.204311       valid_1's rmse: 0.216938
+# [1100]  training's rmse: 0.203576       valid_1's rmse: 0.216888
+# [1200]  training's rmse: 0.202838       valid_1's rmse: 0.216848
+# [1300]  training's rmse: 0.202089       valid_1's rmse: 0.216827
+# [1400]  training's rmse: 0.2014         valid_1's rmse: 0.216804
+# [1500]  training's rmse: 0.200774       valid_1's rmse: 0.216791
+# [1600]  training's rmse: 0.200097       valid_1's rmse: 0.216779
+# [1700]  training's rmse: 0.199492       valid_1's rmse: 0.216763
+# [1800]  training's rmse: 0.198878       valid_1's rmse: 0.216748
