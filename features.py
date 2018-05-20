@@ -1,3 +1,4 @@
+import re
 import string
 
 import pandas as pd
@@ -154,6 +155,23 @@ if not is_in_cache('data_with_fe'):
     print_step('Basic NLP 44/44')
     merge.drop(['sentence', 'num_sentence'], axis=1, inplace=True)
 
+    print('~~~~~~~~~~~~~~~~')
+    print_step('Cat Bin 1/5')
+    merge['cat_bin'] = (merge['category_name'] + merge['param_1'].fillna('') + merge['param_2'].fillna('') + merge['param_3'].fillna(''))
+    merge['cat_bin_count'] = merge.groupby('cat_bin')['cat_bin'].transform('count')
+    print_step('Cat Bin 2/5')
+    merge.loc[merge['cat_bin_count'] < 300, 'cat_bin'] = (merge.loc[merge['cat_bin_count'] < 300, 'category_name'] + merge.loc[merge['cat_bin_count'] < 300, 'param_1'].fillna('') + merge.loc[merge['cat_bin_count'] < 300, 'param_2'].fillna(''))
+    merge['cat_bin_count'] = merge.groupby('cat_bin')['cat_bin'].transform('count')
+    print_step('Cat Bin 3/5')
+    merge.loc[merge['cat_bin_count'] < 300, 'cat_bin'] = (merge.loc[merge['cat_bin_count'] < 300, 'category_name'] + merge.loc[merge['cat_bin_count'] < 300, 'param_1'].fillna(''))
+    merge['cat_bin_count'] = merge.groupby('cat_bin')['cat_bin'].transform('count')
+    print_step('Cat Bin 4/5')
+    merge.loc[merge['cat_bin_count'] < 300, 'cat_bin'] = merge.loc[merge['cat_bin_count'] < 300, 'category_name']
+    merge['cat_bin_count'] = merge.groupby('cat_bin')['cat_bin'].transform('count')
+    print_step('Cat Bin 5/5')
+    merge.loc[merge['cat_bin_count'] < 300, 'cat_bin'] = merge.loc[merge['cat_bin_count'] < 300, 'parent_category_name']
+    merge.drop('cat_bin_count', axis=1, inplace=True)
+
     print('~~~~~~~~~~~~')
     print_step('Unmerge')
     dim = train.shape[0]
@@ -253,7 +271,7 @@ if not is_in_cache('ohe_data'):
     print('~~~~~~~~~~~~~~~~')
     print_step('Dummies 1/2')
     dummy_cols = ['parent_category_name', 'category_name', 'user_type', 'image_top_1',
-                  'day_of_week', 'region', 'city', 'param_1', 'param_2', 'param_3']
+                  'day_of_week', 'region', 'city', 'param_1', 'param_2', 'param_3', 'cat_bin']
     numeric_cols = ['price', 'num_words_description', 'num_words_title', 'num_chars_description',
                     'num_chars_title', 'num_capital_description', 'num_capital_title', 'num_lowercase_title',
                     'capital_per_char_description', 'capital_per_char_title', 'num_punctuations_description',

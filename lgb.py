@@ -124,7 +124,7 @@ print('~~~~~~~~~~~~~~~~~~~~~~~~~~~')
 print_step('Converting to category')
 train_fe['image_top_1'] = train_fe['image_top_1'].astype('str').fillna('missing')
 test_fe['image_top_1'] = test_fe['image_top_1'].astype('str').fillna('missing')
-cat_cols = ['region', 'city', 'parent_category_name', 'category_name',
+cat_cols = ['region', 'city', 'parent_category_name', 'category_name', 'cat_bin',
             'param_1', 'param_2', 'param_3', 'user_type', 'image_top_1', 'day_of_week']
 for col in train_fe.columns:
     print(col)
@@ -182,25 +182,25 @@ submission.to_csv('submit/submit_lgb9.csv', index=False)
 print_step('Done!')
 
 # CURRENT
-# [2018-05-20 01:27:57.879341] lgb cv scores : [0.21711470321353785, 0.21597072467768005, 0.21622184184188303, 0.21601442557699368, 0.2166605947250333]
-# [2018-05-20 01:27:57.879407] lgb mean cv score : 0.2163964580070256
-# [2018-05-20 01:27:57.879510] lgb std cv score : 0.00043435764823898876
+# [2018-05-20 03:05:25.687106] lgb cv scores : [0.21701610163690963, 0.21594176818265345, 0.21618200973088905, 0.21602695045932716, 0.21663239840969173]
+# [2018-05-20 03:05:25.687175] lgb mean cv score : 0.21635984568389421
+# [2018-05-20 03:05:25.687279] lgb std cv score : 0.0004055096837246542
 
-# [100]   training's rmse: 0.217242       valid_1's rmse: 0.220207
-# [200]   training's rmse: 0.213888       valid_1's rmse: 0.218671
-# [300]   training's rmse: 0.211814       valid_1's rmse: 0.21811
-# [400]   training's rmse: 0.210254       valid_1's rmse: 0.217832
-# [500]   training's rmse: 0.208661       valid_1's rmse: 0.217586
-# [600]   training's rmse: 0.207362       valid_1's rmse: 0.21748
-# [700]   training's rmse: 0.20634        valid_1's rmse: 0.217399
-# [800]   training's rmse: 0.205244       valid_1's rmse: 0.217311
-# [900]   training's rmse: 0.204291       valid_1's rmse: 0.217272
-# [1000]  training's rmse: 0.203376       valid_1's rmse: 0.217246
-# [1100]  training's rmse: 0.202466       valid_1's rmse: 0.217197
-# [1200]  training's rmse: 0.201712       valid_1's rmse: 0.217179
-# [1300]  training's rmse: 0.200892       valid_1's rmse: 0.21715
-# [1400]  training's rmse: 0.200171       valid_1's rmse: 0.217141
-# [1500]  training's rmse: 0.199376       valid_1's rmse: 0.217138
-# [1600]  training's rmse: 0.198574       valid_1's rmse: 0.217125
-# [1700]  training's rmse: 0.197852       valid_1's rmse: 0.217119
-# [1800]  training's rmse: 0.197158       valid_1's rmse: 0.217115
+# [100]   training's rmse: 0.216721       valid_1's rmse: 0.220144
+# [200]   training's rmse: 0.212984       valid_1's rmse: 0.218648
+# [300]   training's rmse: 0.210772       valid_1's rmse: 0.218002
+# [400]   training's rmse: 0.209201       valid_1's rmse: 0.217694
+# [500]   training's rmse: 0.207664       valid_1's rmse: 0.21749
+# [600]   training's rmse: 0.206291       valid_1's rmse: 0.217347
+# [700]   training's rmse: 0.205155       valid_1's rmse: 0.217271
+# [800]   training's rmse: 0.204055       valid_1's rmse: 0.21722
+# [900]   training's rmse: 0.202962       valid_1's rmse: 0.217186
+# [1000]  training's rmse: 0.201966       valid_1's rmse: 0.217135
+# [1100]  training's rmse: 0.201004       valid_1's rmse: 0.217098
+# [1200]  training's rmse: 0.200207       valid_1's rmse: 0.21707
+# [1300]  training's rmse: 0.199448       valid_1's rmse: 0.217058
+# [1400]  training's rmse: 0.198656       valid_1's rmse: 0.217046
+# [1500]  training's rmse: 0.197856       valid_1's rmse: 0.217031
+# [1600]  training's rmse: 0.197154       valid_1's rmse: 0.217018
+# [1700]  training's rmse: 0.19636        valid_1's rmse: 0.21701
+# [1800]  training's rmse: 0.195624       valid_1's rmse: 0.217016

@@ -1,5 +1,5 @@
 ```
-LOG (Comp start 25 Apr, merge deadline 20 June @ 7pm EDT, end 27 June @ 7pm EDT) (26/60 submits used as of 7 May UTC) -- Average Delta 0.0035, Safety Margin 0.002
+LOG (Comp start 25 Apr, merge deadline 20 June @ 7pm EDT, end 27 June @ 7pm EDT) (26/60 submits used as of 7 May UTC)
 LGB: no text, geo, date, image, param data, or item_seq_number                   - Dim 51,    5CV 0.23129, Submit 0.2355, Delta -.00421
 LGB: +missing data, +OHE params (no text, geo, date, image, or item_seq_number)  - Dim 5057,  5CV 0.22694, Submit 0.2305, Delta -.00356
 LGB: +basic NLP (no other text, geo, date, image, or item_seq_number)            - Dim 5078,  5CV 0.22607, Submit 0.2299, Delta -.00383  <a9e424c>
@@ -17,20 +17,23 @@ LGB: +normalize desc                                                            
 LGB: +text/title ridge                                                           - Dim 54,    5CV 0.21991, Submit ?                      <abd76a4>
 LGB: +SVD(title, 10) +SVD(description, 10) +SVD(titlecat, 10) +SVD(text/title)   - Dim 94,    5CV 0.21967, Submit 0.2230, Delta -.00333  <6e94776>
 LGB: +Deep text LGB                                                              - Dim 95,    5CV 0.21862, Submit 0.2217, Delta -.00308  <be831c5>
-LGB: +Some tuning                                                                - Dim 95,    5CV 0.21778, Submit ?0.2213?               <627d398>
-LGB: +Num unique words +Unique words ratio                                       - Dim 97,    5CV 0.21782, Submit ?0.2214?               <2bcd64e>
+LGB: +Some tuning                                                                - Dim 95,    5CV 0.21778, Submit ?0.2209?               <627d398>
+LGB: +Num unique words +Unique words ratio                                       - Dim 97,    5CV 0.21782, Submit ?0.2209?               <2bcd64e>
 LGB: +cat_price_mean +cat_price_diff                                             - Dim 99,    5CV 0.21768, Submit 0.2209, Delta -.00322  <0c9e1e4>
-LGB: +lat/lon of cities                                                          - Dim 101,   5CV 0.21766, Submit ?0.2212?               <a3d9005>
-LGB: +parent_cat_count, region_X_cat_count                                       - Dim 103,   5CV 0.21763, Submit ?0.2211?
-LGB: +city_count                                                                 - Dim 104,   5CV 0.21747, Submit ?0.2210?
+LGB: +lat/lon of cities                                                          - Dim 101,   5CV 0.21766, Submit ?0.2209?               <a3d9005>
+LGB: +parent_cat_count, region_X_cat_count                                       - Dim 103,   5CV 0.21763, Submit ?0.2209?
+LGB: +city_count                                                                 - Dim 104,   5CV 0.21747, Submit ?0.2207?
 LGB: +Region macro +improve title/text Ridge +Text char Ridge                    - Dim 108,   5CV 0.21733, Submit 0.2206, Delta -.00327  <4c18106>
-LGB: -title/text Ridge and SVD, +improve Ridges                                  - Dim 97,    5CV 0.21723, Subnit ?0.2207?               <e840c9e>
-LGB: +All text Ridge                                                             - Dim 98,    5CV 0.21717, Submit ?0.2207?               <c8e9ada>
-LGB: +Add sentence basic NLP                                                     - Dim 101,   5CV 0.21719, Submit ?0.2207?               <528cece>
-LGB: +Add parent cat Ridges                                                      - Dim 105,   5CV 0.21679, Submit ?0.2203?               <6b70f46>
-LGB: +Add parent_catXregion Ridges                                               - Dim 109,   5CV 0.21650, Submit ?0.2200?               <a40f84e>
-LGB: +Some tuning                                                                - Dim 109,   5CV 0.21640, Submit 0.2202, Delta -.00380
-LGB: +Add cat_bin                                                                - Dim 110,   5CV ?
+LGB: -title/text Ridge and SVD, +improve Ridges                                  - Dim 97,    5CV 0.21723, Subnit ?0.2205?               <e840c9e>
+LGB: +All text Ridge                                                             - Dim 98,    5CV 0.21717, Submit ?0.2205?               <c8e9ada>
+LGB: +Add sentence basic NLP                                                     - Dim 101,   5CV 0.21719, Submit ?0.2205?               <528cece>
+LGB: +Add parent cat Ridges                                                      - Dim 105,   5CV 0.21679, Submit ?0.2201?               <6b70f46>
+LGB: +Add parent_catXregion Ridges                                               - Dim 109,   5CV 0.21650, Submit ?0.2198?               <a40f84e>
+LGB: +Some tuning                                                                - Dim 109,   5CV 0.21640, Submit 0.2202, Delta -.00380  <867c0df>
+LGB: +Add cat_bin                                                                - Dim 110,   5CV 0.21636, Submit ?0.2202?
 LGB: +Add cat_bin Ridges                                                         - Dim 114,   5CV ?
+LGB: +Add image_top_1 Ridges                                                     - Dim 118,   5CV ?
+LGB: +Add city Ridges                                                            - Dim 122,   5CV ?
 LGB: -Some vars?                                                                 - Dim ?,     5CV ?
+LGB: +cat_bin_price_mean, cat_bin_price_diff                                     - Dim ?,     5CV ?
 ```
