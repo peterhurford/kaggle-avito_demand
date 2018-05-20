@@ -45,7 +45,7 @@ def runLGB(train_X, train_y, test_X, test_y, test_X2):
 
 
 print('~~~~~~~~~~~~~~~~~~~~~~~')
-print_step('Importing Data 1/8')
+print_step('Importing Data 1/9')
 train, test = get_data()
 
 print('~~~~~~~~~~~~~~~')
@@ -57,57 +57,67 @@ train.drop(['deal_probability', 'item_id'], axis=1, inplace=True)
 test.drop(['item_id'], axis=1, inplace=True)
 
 print('~~~~~~~~~~~~~~~~~~~~~~~')
-print_step('Importing Data 2/8')
+print_step('Importing Data 2/9')
 train_fe, test_fe = load_cache('data_with_fe')
 
-print_step('Importing Data 3/8 1/3')
+print_step('Importing Data 3/9 1/3')
 train_ridge, test_ridge = load_cache('tfidf_ridges')
-print_step('Importing Data 3/8 2/3')
+print_step('Importing Data 3/9 2/3')
 train_fe = pd.concat([train_fe, train_ridge], axis=1)
-print_step('Importing Data 3/8 3/3')
+print_step('Importing Data 3/9 3/3')
 test_fe = pd.concat([test_fe, test_ridge], axis=1)
 
-print_step('Importing Data 4/8 1/3')
+print_step('Importing Data 4/9 1/3')
 train_deep_text_lgb, test_deep_text_lgb = load_cache('deep_text_lgb')
-print_step('Importing Data 4/8 2/3')
+print_step('Importing Data 4/9 2/3')
 train_fe['deep_text_lgb'] = train_deep_text_lgb['deep_text_lgb']
-print_step('Importing Data 4/8 3/3')
+print_step('Importing Data 4/9 3/3')
 test_fe['deep_text_lgb'] = test_deep_text_lgb['deep_text_lgb']
 
-print_step('Importing Data 5/8 1/3')
+print_step('Importing Data 5/9 1/3')
 train_full_text_ridge, test_full_text_ridge = load_cache('full_text_ridge')
-print_step('Importing Data 5/8 2/3')
+print_step('Importing Data 5/9 2/3')
 train_fe['full_text_ridge'] = train_full_text_ridge['full_text_ridge']
-print_step('Importing Data 5/8 3/3')
+print_step('Importing Data 5/9 3/3')
 test_fe['full_text_ridge'] = test_full_text_ridge['full_text_ridge']
 
-print_step('Importing Data 6/8 1/4')
+print_step('Importing Data 6/9 1/4')
 train_pcat_ridge, test_pcat_ridge = load_cache('parent_cat_ridges')
-print_step('Importing Data 6/8 2/4')
+print_step('Importing Data 6/9 2/4')
 train_pcat_ridge = train_pcat_ridge[[c for c in train_pcat_ridge.columns if 'ridge' in c]]
 test_pcat_ridge = test_pcat_ridge[[c for c in test_pcat_ridge.columns if 'ridge' in c]]
-print_step('Importing Data 6/8 3/4')
+print_step('Importing Data 6/9 3/4')
 train_fe = pd.concat([train_fe, train_pcat_ridge], axis=1)
-print_step('Importing Data 6/8 4/4')
+print_step('Importing Data 6/9 4/4')
 test_fe = pd.concat([test_fe, test_pcat_ridge], axis=1)
 
-print_step('Importing Data 7/8 1/4')
+print_step('Importing Data 7/9 1/4')
+train_rcat_ridge, test_rcat_ridge = load_cache('parent_regioncat_ridges')
+print_step('Importing Data 7/9 2/4')
+train_rcat_ridge = train_rcat_ridge[[c for c in train_rcat_ridge.columns if 'ridge' in c]]
+test_rcat_ridge = test_rcat_ridge[[c for c in test_rcat_ridge.columns if 'ridge' in c]]
+print_step('Importing Data 7/9 3/4')
+train_fe = pd.concat([train_fe, train_rcat_ridge], axis=1)
+print_step('Importing Data 7/9 4/4')
+test_fe = pd.concat([test_fe, test_rcat_ridge], axis=1)
+
+print_step('Importing Data 8/9 1/4')
 # HT: https://www.kaggle.com/jpmiller/russian-cities/data
 # HT: https://www.kaggle.com/jpmiller/exploring-geography-for-1-5m-deals/notebook
 locations = pd.read_csv('city_latlons.csv')
-print_step('Importing Data 7/8 2/4')
+print_step('Importing Data 8/9 2/4')
 train_fe = train_fe.merge(locations, how='left', left_on='city', right_on='location')
-print_step('Importing Data 7/8 3/4')
+print_step('Importing Data 8/9 3/4')
 test_fe = test_fe.merge(locations, how='left', left_on='city', right_on='location')
-print_step('Importing Data 7/8 4/4')
+print_step('Importing Data 8/9 4/4')
 train_fe.drop('location', axis=1, inplace=True)
 test_fe.drop('location', axis=1, inplace=True)
 
-print_step('Importing Data 8/8 1/3')
+print_step('Importing Data 9/9 1/3')
 region_macro = pd.read_csv('region_macro.csv')
-print_step('Importing Data 8/8 2/3')
+print_step('Importing Data 9/9 2/3')
 train_fe = train_fe.merge(region_macro, how='left', on='region')
-print_step('Importing Data 8/8 3/3')
+print_step('Importing Data 9/9 3/3')
 test_fe = test_fe.merge(region_macro, how='left', on='region')
 
 print('~~~~~~~~~~~~~~~~~~~~~~~~~~~')
@@ -172,17 +182,17 @@ submission.to_csv('submit/submit_lgb8.csv', index=False)
 print_step('Done!')
 
 # CURRENT
-# [2018-05-19 23:42:27.321263] lgb cv scores : [0.21751854013724833, 0.2163455473967455, 0.21668289194397744, 0.2163994173864054, 0.21702319845251097]
-# [2018-05-19 23:42:27.321342] lgb mean cv score : 0.21679391906337755
-# [2018-05-19 23:42:27.321454] lgb std cv score : 0.0004351184861146632
+# [2018-05-20 00:19:18.892722] lgb cv scores : [0.21713559773780977, 0.2160778319540221, 0.21637948896433293, 0.21612102531265265, 0.2167616678279186]
+# [2018-05-20 00:19:18.892787] lgb mean cv score : 0.2164951223593472
+# [2018-05-20 00:19:18.892890] lgb std cv score : 0.0004021706508429523
 
-# [100]   training's rmse: 0.214915       valid_1's rmse: 0.219354
-# [200]   training's rmse: 0.211569       valid_1's rmse: 0.218337
-# [300]   training's rmse: 0.208964       valid_1's rmse: 0.217965
-# [400]   training's rmse: 0.207145       valid_1's rmse: 0.217814
-# [500]   training's rmse: 0.205467       valid_1's rmse: 0.217716
-# [600]   training's rmse: 0.203994       valid_1's rmse: 0.217648
-# [700]   training's rmse: 0.202653       valid_1's rmse: 0.217595
-# [800]   training's rmse: 0.201368       valid_1's rmse: 0.217552
-# [900]   training's rmse: 0.200222       valid_1's rmse: 0.217549
-# [1000]  training's rmse: 0.199166       valid_1's rmse: 0.217519
+# [100]   training's rmse: 0.215325       valid_1's rmse: 0.219194
+# [200]   training's rmse: 0.211388       valid_1's rmse: 0.218012
+# [300]   training's rmse: 0.209077       valid_1's rmse: 0.217657
+# [400]   training's rmse: 0.207028       valid_1's rmse: 0.217454
+# [500]   training's rmse: 0.205398       valid_1's rmse: 0.217326
+# [600]   training's rmse: 0.203949       valid_1's rmse: 0.217242
+# [700]   training's rmse: 0.202597       valid_1's rmse: 0.217187
+# [800]   training's rmse: 0.201378       valid_1's rmse: 0.217155
+# [900]   training's rmse: 0.200265       valid_1's rmse: 0.217147
+# [1000]  training's rmse: 0.199135       valid_1's rmse: 0.217136
