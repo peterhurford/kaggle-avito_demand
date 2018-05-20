@@ -23,6 +23,7 @@ unzip train.csv
 unzip test.csv
 
 mkdir cache
+mkdir submit
 
 python3 features.py
 python3 ridge.py

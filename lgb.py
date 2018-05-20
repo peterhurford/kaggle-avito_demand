@@ -17,22 +17,22 @@ def runLGB(train_X, train_y, test_X, test_y, test_X2):
     d_train = lgb.Dataset(train_X, label=train_y)
     d_valid = lgb.Dataset(test_X, label=test_y)
     watchlist = [d_train, d_valid]
-    params = {'learning_rate': 0.05,
+    params = {'learning_rate': 0.04,
               'application': 'regression',
               'num_leaves': 118,
               'verbosity': -1,
               'metric': 'rmse',
               'data_random_seed': 3,
               'bagging_fraction': 0.8,
-              'feature_fraction': 0.2,
+              'feature_fraction': 0.15,
               'nthread': max(mp.cpu_count() - 2, 2),
-              'lambda_l1': 5,
-              'lambda_l2': 5,
+              'lambda_l1': 6,
+              'lambda_l2': 6,
               'min_data_in_leaf': 40}
     print_step('Train LGB')
     model = lgb.train(params,
                       train_set=d_train,
-                      num_boost_round=1000,
+                      num_boost_round=1800,
                       valid_sets=watchlist,
                       verbose_eval=100)
     print_step('Feature importance')
@@ -170,7 +170,7 @@ pdb.set_trace()
 
 print('~~~~~~~~~~')
 print_step('Cache')
-save_in_cache('lgb_preds8', pd.DataFrame({'lgb': results['train']}),
+save_in_cache('lgb_preds9', pd.DataFrame({'lgb': results['train']}),
                             pd.DataFrame({'lgb': results['test']}))
 
 print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
@@ -178,21 +178,29 @@ print_step('Prepping submission file')
 submission = pd.DataFrame()
 submission['item_id'] = test_id
 submission['deal_probability'] = results['test'].clip(0.0, 1.0)
-submission.to_csv('submit/submit_lgb8.csv', index=False)
+submission.to_csv('submit/submit_lgb9.csv', index=False)
 print_step('Done!')
 
 # CURRENT
-# [2018-05-20 00:19:18.892722] lgb cv scores : [0.21713559773780977, 0.2160778319540221, 0.21637948896433293, 0.21612102531265265, 0.2167616678279186]
-# [2018-05-20 00:19:18.892787] lgb mean cv score : 0.2164951223593472
-# [2018-05-20 00:19:18.892890] lgb std cv score : 0.0004021706508429523
+# [2018-05-20 01:27:57.879341] lgb cv scores : [0.21711470321353785, 0.21597072467768005, 0.21622184184188303, 0.21601442557699368, 0.2166605947250333]
+# [2018-05-20 01:27:57.879407] lgb mean cv score : 0.2163964580070256
+# [2018-05-20 01:27:57.879510] lgb std cv score : 0.00043435764823898876
 
-# [100]   training's rmse: 0.215325       valid_1's rmse: 0.219194
-# [200]   training's rmse: 0.211388       valid_1's rmse: 0.218012
-# [300]   training's rmse: 0.209077       valid_1's rmse: 0.217657
-# [400]   training's rmse: 0.207028       valid_1's rmse: 0.217454
-# [500]   training's rmse: 0.205398       valid_1's rmse: 0.217326
-# [600]   training's rmse: 0.203949       valid_1's rmse: 0.217242
-# [700]   training's rmse: 0.202597       valid_1's rmse: 0.217187
-# [800]   training's rmse: 0.201378       valid_1's rmse: 0.217155
-# [900]   training's rmse: 0.200265       valid_1's rmse: 0.217147
-# [1000]  training's rmse: 0.199135       valid_1's rmse: 0.217136
+# [100]   training's rmse: 0.217242       valid_1's rmse: 0.220207
+# [200]   training's rmse: 0.213888       valid_1's rmse: 0.218671
+# [300]   training's rmse: 0.211814       valid_1's rmse: 0.21811
+# [400]   training's rmse: 0.210254       valid_1's rmse: 0.217832
+# [500]   training's rmse: 0.208661       valid_1's rmse: 0.217586
+# [600]   training's rmse: 0.207362       valid_1's rmse: 0.21748
+# [700]   training's rmse: 0.20634        valid_1's rmse: 0.217399
+# [800]   training's rmse: 0.205244       valid_1's rmse: 0.217311
+# [900]   training's rmse: 0.204291       valid_1's rmse: 0.217272
+# [1000]  training's rmse: 0.203376       valid_1's rmse: 0.217246
+# [1100]  training's rmse: 0.202466       valid_1's rmse: 0.217197
+# [1200]  training's rmse: 0.201712       valid_1's rmse: 0.217179
+# [1300]  training's rmse: 0.200892       valid_1's rmse: 0.21715
+# [1400]  training's rmse: 0.200171       valid_1's rmse: 0.217141
+# [1500]  training's rmse: 0.199376       valid_1's rmse: 0.217138
+# [1600]  training's rmse: 0.198574       valid_1's rmse: 0.217125
+# [1700]  training's rmse: 0.197852       valid_1's rmse: 0.217119
+# [1800]  training's rmse: 0.197158       valid_1's rmse: 0.217115
