@@ -12,6 +12,8 @@ from utils import rmse, print_step
 from cache import get_data, is_in_cache, load_cache, save_in_cache
 
 
+NCOMP = 20
+
 def runRidge5(train_X, train_y, test_X, test_y, test_X2):
     model = Ridge(alpha=5.0)
     print_step('Fit Ridge')
@@ -61,15 +63,15 @@ if not is_in_cache('tfidf_ridges') or not is_in_cache('titlecat_tfidf') or not i
     print(tfidf_test.shape)
 
     print_step('Title SVD 1/4')
-    svd = TruncatedSVD(n_components=10, algorithm='arpack')
+    svd = TruncatedSVD(n_components=NCOMP, algorithm='arpack')
     svd.fit(tfidf_train)
     print_step('Title SVD 2/4')
     train_svd = pd.DataFrame(svd.transform(tfidf_train))
     print_step('Title SVD 3/4')
     test_svd = pd.DataFrame(svd.transform(tfidf_test))
     print_step('Title SVD 4/4')
-    train_svd.columns = ['svd_title_'+str(i+1) for i in range(10)]
-    test_svd.columns = ['svd_title_'+str(i+1) for i in range(10)]
+    train_svd.columns = ['svd_title_'+str(i+1) for i in range(NCOMP)]
+    test_svd.columns = ['svd_title_'+str(i+1) for i in range(NCOMP)]
     train = pd.concat([train, train_svd], axis=1)
     test = pd.concat([test, test_svd], axis=1)
 
@@ -96,15 +98,15 @@ if not is_in_cache('tfidf_ridges') or not is_in_cache('titlecat_tfidf') or not i
         tfidf_train, tfidf_test = load_cache('titlecat_tfidf')
 
     print_step('Titlecat SVD 1/4')
-    svd = TruncatedSVD(n_components=10, algorithm='arpack')
+    svd = TruncatedSVD(n_components=NCOMP, algorithm='arpack')
     svd.fit(tfidf_train)
     print_step('Titlecat SVD 2/4')
     train_svd = pd.DataFrame(svd.transform(tfidf_train))
     print_step('Titlecat SVD 3/4')
     test_svd = pd.DataFrame(svd.transform(tfidf_test))
     print_step('Titlecat SVD 4/4')
-    train_svd.columns = ['svd_titlecat_'+str(i+1) for i in range(10)]
-    test_svd.columns = ['svd_titlecat_'+str(i+1) for i in range(10)]
+    train_svd.columns = ['svd_titlecat_'+str(i+1) for i in range(NCOMP)]
+    test_svd.columns = ['svd_titlecat_'+str(i+1) for i in range(NCOMP)]
     train = pd.concat([train, train_svd], axis=1)
     test = pd.concat([test, test_svd], axis=1)
 
@@ -131,15 +133,15 @@ if not is_in_cache('tfidf_ridges') or not is_in_cache('titlecat_tfidf') or not i
     print(tfidf_test.shape)
 
     print_step('Description SVD 1/4')
-    svd = TruncatedSVD(n_components=10, algorithm='arpack')
+    svd = TruncatedSVD(n_components=NCOMP, algorithm='arpack')
     svd.fit(tfidf_train)
     print_step('Description SVD 2/4')
     train_svd = pd.DataFrame(svd.transform(tfidf_train))
     print_step('Description SVD 3/4')
     test_svd = pd.DataFrame(svd.transform(tfidf_test))
     print_step('Description SVD 4/4')
-    train_svd.columns = ['svd_description_'+str(i+1) for i in range(10)]
-    test_svd.columns = ['svd_description_'+str(i+1) for i in range(10)]
+    train_svd.columns = ['svd_description_'+str(i+1) for i in range(NCOMP)]
+    test_svd.columns = ['svd_description_'+str(i+1) for i in range(NCOMP)]
     train = pd.concat([train, train_svd], axis=1)
     test = pd.concat([test, test_svd], axis=1)
 

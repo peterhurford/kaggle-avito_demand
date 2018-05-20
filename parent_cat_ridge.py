@@ -138,10 +138,11 @@ def run_ridge_on_cat(cat):
         print(cat + ' already in cache! Skipping...')
     return True
 
-parent_cats = list(set(train['parent_category_name'].values))
+print_step('Compiling set')
+parent_cats = train['parent_category_name'].unique()
 n_cpu = mp.cpu_count()
 n_nodes = max(n_cpu - 3, 2)
-print('Starting a jobs server with %d nodes' % n_nodes)
+print_step('Starting a jobs server with %d nodes' % n_nodes)
 pool = mp.ProcessingPool(n_nodes, maxtasksperchild=500)
 res = pool.map(run_ridge_on_cat, parent_cats)
 pool.close()

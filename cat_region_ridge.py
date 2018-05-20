@@ -140,10 +140,11 @@ def run_ridge_on_regioncat(regioncat):
         print(regioncat + ' already in cache! Skipping...')
     return True
 
-parent_regioncats = list(set(train['region_X_cat'].values))
+print_step('Compiling set')
+parent_regioncats = train['region_X_cat'].unique()
 n_cpu = mp.cpu_count()
 n_nodes = max(n_cpu - 3, 2)
-print('Starting a jobs server with %d nodes' % n_nodes)
+print_step('Starting a jobs server with %d nodes' % n_nodes)
 pool = mp.ProcessingPool(n_nodes, maxtasksperchild=500)
 res = pool.map(run_ridge_on_regioncat, parent_regioncats)
 pool.close()
