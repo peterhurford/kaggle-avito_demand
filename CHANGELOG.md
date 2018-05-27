@@ -1,5 +1,4 @@
 ```
-LOG (Comp start 25 Apr, merge deadline 20 June @ 7pm EDT, end 27 June @ 7pm EDT) (26/60 submits used as of 7 May UTC)
 LGB: no text, geo, date, image, param data, or item_seq_number                   - Dim 51,    5CV 0.23129, Submit 0.2355, Delta -.00421
 LGB: +missing data, +OHE params (no text, geo, date, image, or item_seq_number)  - Dim 5057,  5CV 0.22694, Submit 0.2305, Delta -.00356
 LGB: +basic NLP (no other text, geo, date, image, or item_seq_number)            - Dim 5078,  5CV 0.22607, Submit 0.2299, Delta -.00383  <a9e424c>
@@ -32,6 +31,7 @@ LGB: +Add parent_catXregion Ridges                                              
 LGB: +Some tuning                                                                - Dim 109,   5CV 0.21640, Submit 0.2202, Delta -.00380  <867c0df>
 LGB: +Add cat_bin                                                                - Dim 110,   5CV 0.21636, Submit ?0.2202?               <b038ddd>
 LGB: +Add cat_bin Ridges, LR 0.04->0.03                                          - Dim 114,   5CV 0.21611, Submit 0.2200, Delta -.00389  <df0d5e9>
-LGB: +Add 10 more SVD dimensions                                                 - Dim 144,   5CV 0.21611, Ssubmit ?0.2200?
-LGB: +Add region Ridges                                                          - Dim 148,   5CV ?
+LGB: +Add 10 more SVD dimensions                                                 - Dim 144,   5CV 0.21611, Submit ?0.2200?               <ef3f318>
+LGB: +Image stats                                                                - Dim 171,   5CV 0.21522, Submit 0.2191, Delta -.00388
+LGB: -image_missing, +tuning
 ```

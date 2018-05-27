@@ -156,19 +156,22 @@ if not is_in_cache('data_with_fe'):
     merge.drop(['sentence', 'num_sentence'], axis=1, inplace=True)
 
     print('~~~~~~~~~~~~~~~~')
-    print_step('Cat Bin 1/5')
-    merge['cat_bin'] = (merge['category_name'] + merge['param_1'].fillna('') + merge['param_2'].fillna('') + merge['param_3'].fillna(''))
+    print_step('Cat Bin 1/6')
+    merge['cat_bin'] = (merge['category_name'] + merge['param_1'].fillna('') + merge['param_2'].fillna('') + merge['param_3'].fillna('') + merge['title'].fillna(''))
     merge['cat_bin_count'] = merge.groupby('cat_bin')['cat_bin'].transform('count')
-    print_step('Cat Bin 2/5')
+    print_step('Cat Bin 2/6')
+    merge.loc[merge['cat_bin_count'] < 300, 'cat_bin'] = (merge.loc[merge['cat_bin_count'] < 300, 'category_name'] + merge.loc[merge['cat_bin_count'] < 300, 'param_1'].fillna('') + merge.loc[merge['cat_bin_count'] < 300, 'param_2'].fillna('') + merge.loc[merge['cat_bin_count'] < 300, 'param_3'].fillna(''))
+    merge['cat_bin_count'] = merge.groupby('cat_bin')['cat_bin'].transform('count')
+    print_step('Cat Bin 3/6')
     merge.loc[merge['cat_bin_count'] < 300, 'cat_bin'] = (merge.loc[merge['cat_bin_count'] < 300, 'category_name'] + merge.loc[merge['cat_bin_count'] < 300, 'param_1'].fillna('') + merge.loc[merge['cat_bin_count'] < 300, 'param_2'].fillna(''))
     merge['cat_bin_count'] = merge.groupby('cat_bin')['cat_bin'].transform('count')
-    print_step('Cat Bin 3/5')
+    print_step('Cat Bin 4/6')
     merge.loc[merge['cat_bin_count'] < 300, 'cat_bin'] = (merge.loc[merge['cat_bin_count'] < 300, 'category_name'] + merge.loc[merge['cat_bin_count'] < 300, 'param_1'].fillna(''))
     merge['cat_bin_count'] = merge.groupby('cat_bin')['cat_bin'].transform('count')
-    print_step('Cat Bin 4/5')
+    print_step('Cat Bin 5/6')
     merge.loc[merge['cat_bin_count'] < 300, 'cat_bin'] = merge.loc[merge['cat_bin_count'] < 300, 'category_name']
     merge['cat_bin_count'] = merge.groupby('cat_bin')['cat_bin'].transform('count')
-    print_step('Cat Bin 5/5')
+    print_step('Cat Bin 6/6')
     merge.loc[merge['cat_bin_count'] < 300, 'cat_bin'] = merge.loc[merge['cat_bin_count'] < 300, 'parent_category_name']
     merge.drop('cat_bin_count', axis=1, inplace=True)
 
