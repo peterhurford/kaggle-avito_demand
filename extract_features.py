@@ -40,7 +40,6 @@ if not is_in_cache('data_with_fe'):
     merge['price_missing'] = merge['price'].isna().astype(int)
     merge['price'].fillna(0, inplace=True)
     print_step('Imputation 5/7')
-    merge['image_missing'] = merge['image'].isna().astype(int)
     merge['image_top_1'] = merge['image_top_1'].astype('str').fillna('missing')
     print_step('Imputation 6/7')
     merge['description'].fillna('', inplace=True)

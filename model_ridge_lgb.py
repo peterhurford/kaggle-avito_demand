@@ -21,12 +21,12 @@ def runLGB(train_X, train_y, test_X, test_y, test_X2):
     watchlist = [d_train, d_valid]
     params = {'learning_rate': 0.03,
               'application': 'regression',
-              'num_leaves': 118,
+              'num_leaves': 250,
               'verbosity': -1,
               'metric': 'rmse',
               'data_random_seed': 3,
               'bagging_fraction': 0.8,
-              'feature_fraction': 0.15,
+              'feature_fraction': 0.1, # 0.15
               'nthread': 16, #max(mp.cpu_count() - 2, 2),
               'lambda_l1': 6,
               'lambda_l2': 6,
@@ -145,6 +145,8 @@ train_fe = train_fe.merge(region_macro, how='left', on='region')
 print_step('Importing Data 11/11 3/3')
 test_fe = test_fe.merge(region_macro, how='left', on='region')
 
+print_step('Importing Data 12/12')
+
 print('~~~~~~~~~~~~~~~~~~~~~~~~~~~')
 print_step('Converting to category')
 train_fe['image_top_1'] = train_fe['image_top_1'].astype('str').fillna('missing')
@@ -208,25 +210,25 @@ submission.to_csv('submit/submit_lgb11.csv', index=False)
 print_step('Done!')
 
 # CURRENT
-# [2018-05-27 18:56:56.513893] lgb cv scores : [0.2157931515559845, 0.21493726557980244, 0.21500352177432994, 0.21488987989661862, 0.21547022347172792]
-# [2018-05-27 18:56:56.513954] lgb mean cv score : 0.21521880845569266
-# [2018-05-27 18:56:56.514025] lgb std cv score : 0.00035408706563558177
+# [2018-05-27 22:28:36.387923] lgb cv scores : [0.21562687068232714, 0.2148162984655894, 0.2148758783867712, 0.21473358513711044, 0.21538069861717493]
+# [2018-05-27 22:28:36.387991] lgb mean cv score : 0.2150866662577946
+# [2018-05-27 22:28:36.388096] lgb std cv score : 0.0003522704631567566
 
-# [100]   training's rmse: 0.217519       valid_1's rmse: 0.220439
-# [200]   training's rmse: 0.21333        valid_1's rmse: 0.218448
-# [300]   training's rmse: 0.211055       valid_1's rmse: 0.217649
-# [400]   training's rmse: 0.209003       valid_1's rmse: 0.217112
-# [500]   training's rmse: 0.207408       valid_1's rmse: 0.216796
-# [600]   training's rmse: 0.205947       valid_1's rmse: 0.216562
-# [700]   training's rmse: 0.204645       valid_1's rmse: 0.21638
-# [800]   training's rmse: 0.203424       valid_1's rmse: 0.216275
-# [900]   training's rmse: 0.202265       valid_1's rmse: 0.216189
-# [1000]  training's rmse: 0.201302       valid_1's rmse: 0.216121
-# [1100]  training's rmse: 0.200336       valid_1's rmse: 0.216051
-# [1200]  training's rmse: 0.199419       valid_1's rmse: 0.215987
-# [1300]  training's rmse: 0.198516       valid_1's rmse: 0.215933
-# [1400]  training's rmse: 0.197729       valid_1's rmse: 0.215887
-# [1500]  training's rmse: 0.196957       valid_1's rmse: 0.215861
-# [1600]  training's rmse: 0.196183       valid_1's rmse: 0.215838
-# [1700]  training's rmse: 0.195426       valid_1's rmse: 0.215814
-# [1800]  training's rmse: 0.194701       valid_1's rmse: 0.215793
+# [100]   training's rmse: 0.217525       valid_1's rmse: 0.221153
+# [200]   training's rmse: 0.212468       valid_1's rmse: 0.218706
+# [300]   training's rmse: 0.209461       valid_1's rmse: 0.217718
+# [400]   training's rmse: 0.206843       valid_1's rmse: 0.217104
+# [500]   training's rmse: 0.204659       valid_1's rmse: 0.216745
+# [600]   training's rmse: 0.202713       valid_1's rmse: 0.21649
+# [700]   training's rmse: 0.200889       valid_1's rmse: 0.216282
+# [800]   training's rmse: 0.199156       valid_1's rmse: 0.216113
+# [900]   training's rmse: 0.197487       valid_1's rmse: 0.216
+# [1000]  training's rmse: 0.195959       valid_1's rmse: 0.215909
+# [1100]  training's rmse: 0.194442       valid_1's rmse: 0.215832
+# [1200]  training's rmse: 0.193012       valid_1's rmse: 0.215778
+# [1300]  training's rmse: 0.191715       valid_1's rmse: 0.215713
+# [1400]  training's rmse: 0.190413       valid_1's rmse: 0.215688
+# [1500]  training's rmse: 0.189144       valid_1's rmse: 0.215662
+# [1600]  training's rmse: 0.187913       valid_1's rmse: 0.215657
+# [1700]  training's rmse: 0.186795       valid_1's rmse: 0.215632
+# [1800]  training's rmse: 0.185702       valid_1's rmse: 0.215627
