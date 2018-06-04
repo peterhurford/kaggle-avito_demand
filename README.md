@@ -1,3 +1,5 @@
+## Solution to the Avito Demand Competition by Peter Hurford, Learnmower, and RDizzl3
+
 Additions to the model are done in commits and tracked in CHANGELOG with their impact on the model.
 
 Everything so far is run on a r4.4xlarge (16 core, 120 GB RAM)
