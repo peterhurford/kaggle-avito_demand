@@ -1,0 +1,8 @@
+- Multinomial Naive Bayes
+- city X region interaction
+- items per day, items per day per category
+- parent_cat X region price mean / diff
+- cat count
+- SVD of image histogram
+- img_std_color, img_sum_color, img_rms_color, img_var_color
+- img_average_pixel_width

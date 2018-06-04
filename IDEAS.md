@@ -1,0 +1,53 @@
+- # of items a user put up for sale *per day*
+- Run initial overall Ridge
+- Run initial FMs
+- Add OHE price to Ridge / FM
+- Add more macroeconomic data
+- Start doing text embeddings + corrections
+- Add text normalization
+- Add LDA
+- More text features (RDizzl3 style, see https://www.kaggle.com/rdizzl3/stage-2-lgbm-stacker-8th-place-solution/code)
+	- Cooc - parent_category_name X text
+	- Cooc - parent_category_name X title
+	- Cooc - parent_category_name X region
+	- Cooc - cat_bin X text
+	- Cooc - cat_bin X title
+	- Cooc - cat_bin X region
+	- title_first_word
+	- title_second_word
+	- title_third_word
+	- title_last_word
+	- title_first_bigram
+	- title_last_bigram
+	- desc_first_bigram
+	- desc_last_bigram
+	- title_first_trigram
+	- title_last_trigram
+	- desc_first_trigram
+	- desc_last_trigram
+	- Means, sums, skew, kurtosis of TFIDF
+- POS tagging
+- Sentiment analysis
+- Understand and apply FE from https://www.kaggle.com/shadowwarrior/1st-place-solution
+- Pic2Vec (github.com/datarobot/pic2vec)
+- Neural image assessment (https://github.com/titu1994/neural-image-assessment)
+- Image labeling confidence
+- Dominant color
+- Handle price outliers / Try to predict price
+- https://github.com/mxbi/ftim
+- Try `tv = TfidfVectorizer(max_features=None, ngram_range=(1, 3), min_df=2, token_pattern=r'(?u)\b\w+\b')` in Ridges
+- Re-do existing ridges / FMs
+- Finish VP
+- Make additional FMs, FTRL
+- Make LGBs/XGBs
+- Make NNs
+- Understand and apply models from https://www.kaggle.com/shadowwarrior/1st-place-solution
+- Add Cat2Vec
+- Add Olivier TargetEncoding (do inside CV)
+- Add Entity embedding
+- Look more at Mercari competition, DonorsChoose competition, Porto competition
+- Tune models some
+- Try to predict category
+- Try to predict image_top_1
+- Look at fail cases
+- Classification models
