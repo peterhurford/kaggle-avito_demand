@@ -9,7 +9,7 @@ Everything so far is run on a r4.4xlarge (16 core, 120 GB RAM)
 
 1.) Install kaggle.json
 
-2.) Upload `city_latlons.csv` and `region_macro.csv`
+2.) Upload [`city_latlons.csv`](https://s3.amazonaws.com/avito-demand-kaggle/city_latlons.csv) and [`region_macro.csv`](https://s3.amazonaws.com/avito-demand-kaggle/region_macro.csv).
 
 3.) To run:
 
