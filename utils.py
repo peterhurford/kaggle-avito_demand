@@ -10,8 +10,10 @@ import pathos.multiprocessing as mp
 import pandas as pd
 import numpy as np
 
+from scipy.sparse import csr_matrix, hstack
+
 from sklearn.metrics import mean_squared_error, roc_auc_score
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import MinMaxScaler, LabelBinarizer
 from sklearn.base import BaseEstimator, TransformerMixin
 
 
@@ -33,26 +35,37 @@ def univariate_analysis(target, feature):
 morph = pymorphy2.MorphAnalyzer()
 retoken = re.compile(r'[\'\w\-]+')
 
-def normalize_text(text):
+def normalize_form(text):
     text = retoken.findall(text.lower())
     text = [morph.parse(x)[0].normal_form for x in text]
     return ' '.join(text)
 
 
+def normalize_text(text):
+    text = text.lower().strip()
+    for s in string.punctuation:
+        text = text.replace(s, ' ')
+    text = text.strip().split(' ')
+    return u' '.join(x for x in text if len(x) > 1 and x not in stopwords)
+
+
 # https://stackoverflow.com/questions/37685412/avoid-scaling-binary-columns-in-sci-kit-learn-standsardscaler
 class Scaler(BaseEstimator, TransformerMixin): 
-    def __init__(self, columns, copy=True, with_mean=True, with_std=True):
-        self.scaler = StandardScaler(copy, with_mean, with_std)
+    def __init__(self, columns, copy=True, feature_range=(0, 1)):
+        self.scalers = [MinMaxScaler(feature_range=feature_range, copy=copy)]
         self.columns = columns
 
     def fit(self, X, y=None):
-        self.scaler.fit(X[self.columns], y)
+        for scaler in self.scalers:
+            scaler.fit(X[self.columns], y)
         return self
 
     def transform(self, X, y=None, copy=None):
         init_col_order = X.columns
-        X_scaled = pd.DataFrame(self.scaler.transform(X[self.columns]), columns=self.columns)
-        X_not_scaled = X.ix[:,~X.columns.isin(self.columns)]
+        X_scaled = X[self.columns]
+        for scaler in self.scalers:
+            X_scaled = pd.DataFrame(scaler.transform(X_scaled), columns=self.columns, index=X.index)
+        X_not_scaled = X[list(set(init_col_order) - set(self.columns))]
         return pd.concat([X_not_scaled, X_scaled], axis=1)[init_col_order]
 
 
@@ -118,3 +131,41 @@ class TargetEncoder:
         # pd.merge does not keep the index so restore it
         ft_tst_series.index = tst_series.index
         return self.add_noise(ft_trn_series, self.noise_level), self.add_noise(ft_tst_series, self.noise_level)
+
+
+def bin_and_ohe_data(train, test, numeric_cols=None, dummy_cols=None, nbins=4):
+    if numeric_cols:
+        print_step('Scaling numerics')
+        scaler = Scaler(columns=numeric_cols)
+        train = scaler.fit_transform(train)
+        test = scaler.transform(test)
+
+        print_step('Binning numerics')
+        train_ohe = None
+        test_ohe = None
+        for col in numeric_cols:
+            print(col)
+            train[col] = pd.qcut(train[col], nbins, labels=False, duplicates='drop')
+            test[col] = pd.qcut(test[col], nbins, labels=False, duplicates='drop')
+            lb = LabelBinarizer(sparse_output=True)
+            if train_ohe is not None:
+                train_ohe = hstack((train_ohe, lb.fit_transform(train[col].fillna('').astype('str')))).tocsr()
+                print(train_ohe.shape)
+                test_ohe = hstack((test_ohe, lb.transform(test[col].fillna('').astype('str')))).tocsr()
+                print(test_ohe.shape)
+            else:
+                train_ohe = lb.fit_transform(train[col].fillna('').astype('str')).tocsr()
+                print(train_ohe.shape)
+                test_ohe = lb.transform(test[col].fillna('').astype('str')).tocsr()
+                print(test_ohe.shape)
+
+    if dummy_cols:
+        print_step('Dummies')
+        for col in dummy_cols:
+            print(col)
+            lb = LabelBinarizer(sparse_output=True)
+            train_ohe = hstack((train_ohe, lb.fit_transform(train[col].fillna('').astype('str')))).tocsr()
+            print(train_ohe.shape)
+            test_ohe = hstack((test_ohe, lb.transform(test[col].fillna('').astype('str')))).tocsr()
+            print(test_ohe.shape)
+    return train_ohe, test_ohe

@@ -6,9 +6,7 @@ import numpy as np
 
 from nltk.corpus import stopwords
 
-from sklearn.preprocessing import LabelBinarizer
-
-from utils import print_step, Scaler
+from utils import print_step, bin_and_ohe_data
 from cache import get_data, is_in_cache, load_cache, save_in_cache
 
 
@@ -265,6 +263,7 @@ if not is_in_cache('ohe_data'):
     print('~~~~~~~~~~~~~~~~~~')
     print_step('Cache loading')
     train_fe, test_fe = load_cache('data_with_fe')
+
     dummy_cols = ['parent_category_name', 'category_name', 'user_type', 'image_top_1',
                   'day_of_week', 'region', 'city', 'param_1', 'param_2', 'param_3', 'cat_bin']
     numeric_cols = ['price', 'num_words_description', 'num_words_title', 'num_chars_description',
@@ -278,25 +277,10 @@ if not is_in_cache('ohe_data'):
                     'max_word_length_description', 'max_word_length_title', 'mean_word_length_description', 'mean_word_length_title',
                     'num_stopwords_description', 'number_count_description', 'number_count_title', 'num_unique_words_description',
                     'unique_words_per_word_description', 'item_seq_number', 'adjusted_seq_num', 'user_num_days', 'user_days_range',
-                    'cat_price_mean', 'cat_price_diff', 'parent_cat_count', 'region_X_cat_count', 'city_count']
-
-    print_step('Scaling')
-    scaler = Scaler(columns=numeric_cols)
-    train_fe = scaler.fit_transform(train_fe)
-    test_fe = scaler.transform(test_fe)
-
-    print_step('Dummies')
-    train_ohe = lb.fit_transform(train_fe[[dummy_cols[0]]])
-    test_ohe = lb.transform(test_fe[[dummy_cols[0]]])
-    print(train_ohe.shape)
-    print(test_ohe.shape)
-    for col in dummy_cols[1:]:
-        print(col)
-        lb = LabelBinarizer(sparse_output=True)
-        train_ohe = hstack((train_ohe, lb.fit_transform(train_fe[[col]].fillna('')))).tocsr()
-        print(train_ohe.shape)
-        test_ohe = hstack((test_ohe, lb.transform(test_fe[[col]].fillna('')))).tocsr()
-        print(test_ohe.shape)
+                    'cat_price_mean', 'cat_price_diff', 'parent_cat_count', 'region_X_cat_count', 'city_count',
+					'num_lowercase_description', 'num_punctuations_title', 'sentence_mean', 'sentence_std',
+					'words_per_sentence']
+    train_ohe, test_ohe = bin_and_ohe_data(train_fe, test_fe, numeric_cols=numeric_cols, dummy_cols=dummy_cols)
 
     print_step('Caching')
     save_in_cache('ohe_data', train_ohe, test_ohe)
