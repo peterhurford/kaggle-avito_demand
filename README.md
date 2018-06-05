@@ -11,7 +11,7 @@ Everything so far is run on a r4.4xlarge (16 core, 120 GB RAM)
 
 2.) Upload [`city_latlons.csv`](https://s3.amazonaws.com/avito-demand-kaggle/city_latlons.csv) and [`region_macro.csv`](https://s3.amazonaws.com/avito-demand-kaggle/region_macro.csv).
 
-3.) To run:
+3.) Install:
 
 ```
 sudo apt update
@@ -53,7 +53,15 @@ rm -rf data
 
 mkdir cache
 mkdir submit
+```
 
+4.) Set up AWS credentials via `aws configure`.
+
+5.) Optionally download existing cache files via `python3 sync_cache.py --down`.
+
+6.) Run:
+
+```
 python3 extract_features.py
 python3 extract_images.py
 python3 extract_active.py
@@ -63,3 +71,5 @@ python3 model_cat_region_ridge.py
 python3 model_parent_cat_ridge.py
 python3 model_ridge_lgb.py
 ```
+
+7.) Optionally upload cache files via `python3 sync_cache.py --up`.
