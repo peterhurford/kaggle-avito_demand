@@ -117,8 +117,6 @@ print_step('Importing Data 9/12 1/4')
 train_img, test_img = load_cache('img_data')
 print_step('Importing Data 9/12 2/4')
 cols = ['img_size_x', 'img_size_y', 'img_file_size', 'img_mean_color', 'img_dullness_light_percent', 'img_dullness_dark_percent', 'img_blur', 'img_blue_mean', 'img_green_mean', 'img_red_mean', 'img_blue_std', 'img_green_std', 'img_red_std', 'img_average_red', 'img_average_green', 'img_average_blue', 'img_average_color', 'img_sobel00', 'img_sobel10', 'img_sobel20', 'img_sobel01', 'img_sobel11', 'img_sobel21', 'img_kurtosis', 'img_skew', 'thing1', 'thing2']
-train_hist = train_img[[c for c in train_img.columns if 'histogram' in c]].fillna(0)
-test_hist = test_img[[c for c in test_img.columns if 'histogram' in c]].fillna(0)
 train_img = train_img[cols].fillna(0)
 test_img = test_img[cols].fillna(0)
 print_step('Importing Data 9/12 3/4')
@@ -145,15 +143,20 @@ train_fe = train_fe.merge(region_macro, how='left', on='region')
 print_step('Importing Data 11/12 3/3')
 test_fe = test_fe.merge(region_macro, how='left', on='region')
 
-print_step('Importing Data 12/12 1/4')
+print_step('Importing Data 12/12 1/5')
 train_active_feats, test_active_feats = load_cache('active_feats')
-print_step('Importing Data 12/12 2/4')
-train_active_feats.drop('user_id', axis=1, inplace=True)
-test_active_feats.drop('user_id', axis=1, inplace=True)
-print_step('Importing Data 12/12 3/4')
+train_active_feats.fillna(0, inplace=True)
+test_active_feats.fillna(0, inplace=True)
+print_step('Importing Data 12/12 2/5')
 train_fe = pd.concat([train_fe, train_active_feats], axis=1)
-print_step('Importing Data 12/12 3/4')
+print_step('Importing Data 12/12 3/5')
 test_fe = pd.concat([test_fe, test_active_feats], axis=1)
+print_step('Importing Data 12/12 4/5')
+train_fe['user_items_per_day'] = train_fe['n_user_items'] / train_fe['user_num_days']
+test_fe['user_items_per_day'] = test_fe['n_user_items'] / test_fe['user_num_days']
+print_step('Importing Data 12/12 5/5')
+train_fe.drop('user_id', axis=1, inplace=True)
+test_fe.drop('user_id', axis=1, inplace=True)
 
 print('~~~~~~~~~~~~~~~~~~~~~~~~~~~')
 print_step('Converting to category')
@@ -218,25 +221,25 @@ submission.to_csv('submit/submit_lgb12.csv', index=False)
 print_step('Done!')
 
 # CURRENT
-# [2018-05-28 02:26:09.920393] lgb cv scores : [0.21469048839471144, 0.21380327230845902, 0.2138388386785356, 0.2137308459589358, 0.21429875684372357]
-# [2018-05-28 02:26:09.920463] lgb mean cv score : 0.2140724404368731
-# [2018-05-28 02:26:09.920567] lgb std cv score : 0.0003679430511390113
+# [2018-06-05 07:18:56.323652] lgb cv scores : [0.2146730064221512, 0.21376177181661674, 0.21379189592981926, 0.21370342767525743, 0.21433893170260715]
+# [2018-06-05 07:18:56.323719] lgb mean cv score : 0.21405380670929036
+# [2018-06-05 07:18:56.323821] lgb std cv score : 0.00038505886527977765
 
-# [100]   training's rmse: 0.216676       valid_1's rmse: 0.220363
-# [200]   training's rmse: 0.211711       valid_1's rmse: 0.217885
-# [300]   training's rmse: 0.208408       valid_1's rmse: 0.216851
-# [400]   training's rmse: 0.205916       valid_1's rmse: 0.216251
-# [500]   training's rmse: 0.203571       valid_1's rmse: 0.215851
-# [600]   training's rmse: 0.201495       valid_1's rmse: 0.215541
-# [700]   training's rmse: 0.199626       valid_1's rmse: 0.21533
-# [800]   training's rmse: 0.197779       valid_1's rmse: 0.215173
-# [900]   training's rmse: 0.19621        valid_1's rmse: 0.215069
-# [1000]  training's rmse: 0.19467        valid_1's rmse: 0.214991
-# [1100]  training's rmse: 0.193204       valid_1's rmse: 0.214914
-# [1200]  training's rmse: 0.191844       valid_1's rmse: 0.214879
-# [1300]  training's rmse: 0.190496       valid_1's rmse: 0.214832
-# [1400]  training's rmse: 0.189183       valid_1's rmse: 0.214819
-# [1500]  training's rmse: 0.187879       valid_1's rmse: 0.214757
-# [1600]  training's rmse: 0.18666        valid_1's rmse: 0.214725
-# [1700]  training's rmse: 0.18551        valid_1's rmse: 0.214701
-# [1800]  training's rmse: 0.184437       valid_1's rmse: 0.21469
+# [100]   training's rmse: 0.216394       valid_1's rmse: 0.220122
+# [200]   training's rmse: 0.211595       valid_1's rmse: 0.217954
+# [300]   training's rmse: 0.208198       valid_1's rmse: 0.216807
+# [400]   training's rmse: 0.205633       valid_1's rmse: 0.216277
+# [500]   training's rmse: 0.203395       valid_1's rmse: 0.215857
+# [600]   training's rmse: 0.201337       valid_1's rmse: 0.215559
+# [700]   training's rmse: 0.199464       valid_1's rmse: 0.215342
+# [800]   training's rmse: 0.19762        valid_1's rmse: 0.215195
+# [900]   training's rmse: 0.195887       valid_1's rmse: 0.215089
+# [1000]  training's rmse: 0.194335       valid_1's rmse: 0.214995
+# [1100]  training's rmse: 0.192901       valid_1's rmse: 0.214918
+# [1200]  training's rmse: 0.191478       valid_1's rmse: 0.214859
+# [1300]  training's rmse: 0.190074       valid_1's rmse: 0.214791
+# [1400]  training's rmse: 0.188738       valid_1's rmse: 0.214769
+# [1500]  training's rmse: 0.187484       valid_1's rmse: 0.21475
+# [1600]  training's rmse: 0.186231       valid_1's rmse: 0.214725
+# [1700]  training's rmse: 0.185118       valid_1's rmse: 0.214694
+# [1800]  training's rmse: 0.183971       valid_1's rmse: 0.214673

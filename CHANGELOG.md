@@ -34,14 +34,6 @@ LGB: +Add cat_bin Ridges, LR 0.04->0.03                                         
 LGB: +Add 10 more SVD dimensions                                                  - Dim 144,   5CV 0.21611, Submit ?0.2200?               <ef3f318>
 LGB: +Image stats                                                                 - Dim 171,   5CV 0.21522, Submit 0.2191, Delta -.00388  <4d1d645>
 LGB: -image_missing, +tuning                                                      - Dim 170,   5CV 0.21509, Submit ?0.2190?               <ef8b654>
-LGB: +avg_times_up_user, +n_user_items                                            - Dim 172,   5CV 0.21407, Submit 0.2184, Delta -.00433
-LGB: +items_for_day                                                               - Dim 173,
-LGB: +parent_cat_count_for_day                                                    - Dim 174,
-LGB: +category_count_for_day                                                      - Dim 175,
-LGB: +region_X_cat_count_for_day                                                  - Dim 176,
-LGB: +city_count_for_day                                                          - Dim 177,
-LGB: +cat_bin_for_day                                                             - Dim 178,
-LGB: +category_count (active)                                                     - Dim 179,
-LGB: +cat_price_mean (active)                                                     - Dim 179,
-LGB: +parent_cat_count (active), +region_X_cat_count (active), +city_count (actv) - Dim 179,
+LGB: +avg_times_up_user, +n_user_items                                            - Dim 172,   5CV 0.21407, Submit 0.2184, Delta -.00433  <1998840>
+LGB: +user_items_per_day                                                          - Dim 173,   5CV 0.21405, Submit ?0.2184?
 ```

@@ -6,7 +6,7 @@ import numpy as np
 
 from nltk.corpus import stopwords
 
-from sklearn.preprocessing import OneHotEncoder, LabelEncoder
+from sklearn.preprocessing import LabelBinarizer
 
 from utils import print_step, Scaler
 from cache import get_data, is_in_cache, load_cache, save_in_cache
@@ -117,7 +117,7 @@ if not is_in_cache('data_with_fe'):
     merge['english_chars_per_char_title'] = merge['num_english_chars_title'] / merge['num_chars_title']
     merge['english_chars_per_char_title'].fillna(0, inplace=True)
     print_step('Basic NLP 28/44')
-    merge['num_english_words_description'] = merge['description'].apply(lambda ss: len([w for w in ss.lower().translate(ss.maketrans('', '', russian_punct)).replace('\n', ' ').split(' ') if all([s in string.ascii_lowercase for s in w]) and len(w) > 0]))
+    merge['num_english_words_description'] = merge['description'].apply(lambda ss: len([w for w in ss.lower().translate(ss.maketrans(' ', ' ', russian_punct)).replace('\n', ' ').split(' ') if all([s in string.ascii_lowercase for s in w]) and len(w) > 0]))
     print_step('Basic NLP 29/44')
     merge['english_words_per_word_description'] = merge['num_english_words_description'] / merge['num_words_description']
     merge['english_words_per_word_description'].fillna(0, inplace=True)
@@ -265,13 +265,6 @@ if not is_in_cache('ohe_data'):
     print('~~~~~~~~~~~~~~~~~~')
     print_step('Cache loading')
     train_fe, test_fe = load_cache('data_with_fe')
-
-    print('~~~~~~~~~~~~')
-    print_step('Merging')
-    merge = pd.concat([train_fe, test_fe])
-
-    print('~~~~~~~~~~~~~~~~')
-    print_step('Dummies 1/2')
     dummy_cols = ['parent_category_name', 'category_name', 'user_type', 'image_top_1',
                   'day_of_week', 'region', 'city', 'param_1', 'param_2', 'param_3', 'cat_bin']
     numeric_cols = ['price', 'num_words_description', 'num_words_title', 'num_chars_description',
@@ -286,26 +279,24 @@ if not is_in_cache('ohe_data'):
                     'num_stopwords_description', 'number_count_description', 'number_count_title', 'num_unique_words_description',
                     'unique_words_per_word_description', 'item_seq_number', 'adjusted_seq_num', 'user_num_days', 'user_days_range',
                     'cat_price_mean', 'cat_price_diff', 'parent_cat_count', 'region_X_cat_count', 'city_count']
-    for col in dummy_cols:
-        le = LabelEncoder()
-        merge[col] = le.fit_transform(merge[col])
-    print_step('Scaler')
+
+    print_step('Scaling')
     scaler = Scaler(columns=numeric_cols)
     train_fe = scaler.fit_transform(train_fe)
-    print_step('Dummies 2/2')
-    ohe = OneHotEncoder(categorical_features=[merge.columns.get_loc(c) for c in dummy_cols])
-    merge = ohe.fit_transform(merge)
-    print(merge.shape)
+    test_fe = scaler.transform(test_fe)
 
-    print('~~~~~~~~~~~')
-    print_step('Unmerge')
-    merge = merge.tocsr()
-    dim = train.shape[0]
-    train_ohe = merge[:dim]
-    test_ohe = merge[dim:]
+    print_step('Dummies')
+    train_ohe = lb.fit_transform(train_fe[[dummy_cols[0]]])
+    test_ohe = lb.transform(test_fe[[dummy_cols[0]]])
     print(train_ohe.shape)
     print(test_ohe.shape)
+    for col in dummy_cols[1:]:
+        print(col)
+        lb = LabelBinarizer(sparse_output=True)
+        train_ohe = hstack((train_ohe, lb.fit_transform(train_fe[[col]].fillna('')))).tocsr()
+        print(train_ohe.shape)
+        test_ohe = hstack((test_ohe, lb.transform(test_fe[[col]].fillna('')))).tocsr()
+        print(test_ohe.shape)
 
-    print('~~~~~~~~~~~~')
     print_step('Caching')
     save_in_cache('ohe_data', train_ohe, test_ohe)
