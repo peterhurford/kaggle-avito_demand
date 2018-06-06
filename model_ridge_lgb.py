@@ -237,15 +237,15 @@ pdb.set_trace()
 
 print('~~~~~~~~~~')
 print_step('Cache')
-save_in_cache('lgb_preds12', pd.DataFrame({'lgb': results['train']}),
-                             pd.DataFrame({'lgb': results['test']}))
+save_in_cache('ridge_lgb', pd.DataFrame({'ridge_lgb': results['train']}),
+                           pd.DataFrame({'ridge_lgb': results['test']}))
 
 print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
 print_step('Prepping submission file')
 submission = pd.DataFrame()
 submission['item_id'] = test_id
 submission['deal_probability'] = results['test'].clip(0.0, 1.0)
-submission.to_csv('submit/submit_lgb12.csv', index=False)
+submission.to_csv('submit/submit_ridge_lgb.csv', index=False)
 print_step('Done!')
 
 # CURRENT

@@ -25,10 +25,12 @@ def runLGB(train_X, train_y, test_X, test_y, test_X2):
               'data_random_seed': 3,
               'bagging_fraction': 0.8,
               'feature_fraction': 0.2,
-              'nthread': 3,
+              'nthread': 16,
               'lambda_l1': 1,
               'lambda_l2': 1,
               'min_data_in_leaf': 40}
+	import pdb
+	pdb.set_trace()
     model = lgb.train(params,
                       train_set=d_train,
                       num_boost_round=1000,
@@ -42,7 +44,7 @@ def runLGB(train_X, train_y, test_X, test_y, test_X2):
 
 
 print('~~~~~~~~~~~~~~~~~~~~~~~')
-print_step('Importing Data 1/7')
+print_step('Importing Data 1/2')
 train, test = get_data()
 
 print('~~~~~~~~~~~~~~~')
@@ -55,22 +57,8 @@ test.drop(['item_id'], axis=1, inplace=True)
 
 if not is_in_cache('50k_best'):
     print('~~~~~~~~~~~~~~~~~~~~~~~')
-    print_step('Importing Data 2/7')
-    train_fe, test_fe = load_cache('ohe_data')
-
-    print_step('Importing Data 3/7')
-    tfidf_train, tfidf_test = load_cache('titlecat_tfidf')
-
-    print_step('Importing Data 4/7')
-    tfidf_train2, tfidf_test2 = load_cache('text_tfidf')
-
-    print_step('Importing Data 5/7')
-    tfidf_train3, tfidf_test3 = load_cache('text_char_tfidf')
-
-    print_step('Importing Data 6/7')
-    train = hstack((train_fe, tfidf_train, tfidf_train2, tfidf_train3)).tocsr()
-    print_step('Importing Data 7/7')
-    test = hstack((test_fe, tfidf_test, tfidf_test2, tfidf_test3)).tocsr()
+    print_step('Importing Data 2/2')
+    train, test = load_cache('complete_ridge_data')
     print(train.shape)
     print(test.shape)
 
@@ -91,38 +79,24 @@ else:
 
 print('~~~~~~~~~~~~')
 print_step('Run LGB')
-results = run_cv_model(train, test, target, runLGB, rmse, 'lgb')
+results = run_cv_model(train, test, target, runLGB, rmse, 'deep_text_lgb2')
 import pdb
 pdb.set_trace()
 
 print('~~~~~~~~~~')
 print_step('Cache')
-save_in_cache('deep_text_lgb', pd.DataFrame({'deep_text_lgb': results['train']}),
-							   pd.DataFrame({'deep_text_lgb': results['test']}))
+save_in_cache('deep_text_lgb2', pd.DataFrame({'deep_text_lgb2': results['train']}),
+							    pd.DataFrame({'deep_text_lgb2': results['test']}))
 
 print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
 print_step('Prepping submission file')
 submission = pd.DataFrame()
 submission['item_id'] = test_id
 submission['deal_probability'] = results['test'].clip(0.0, 1.0)
-submission.to_csv('submit/submit_lgb7.csv', index=False)
+submission.to_csv('submit/submit_deep_text_lgb2.csv', index=False)
 print_step('Done!')
 
-# Deep LGB                                                       - Dim 195673, 5CV 0.22196
-
 # CURRENT
-# [2018-05-03 09:16:12.670379] lgb cv scores : [0.22257689498410263, 0.22140350676341775, 0.22190683421601698, 0.22168666577421173, 0.22221717818648018]
-# [2018-05-03 09:16:12.671351] lgb mean cv score : 0.22195821598484583
-# [2018-05-03 09:16:12.672767] lgb std cv score : 0.00040838879744612577
-
-# [10]    training's rmse: 0.240701       valid_1's rmse: 0.241443
-# [100]   training's rmse: 0.224196       valid_1's rmse: 0.227253
-# [200]   training's rmse: 0.221323       valid_1's rmse: 0.225548
-# [300]   training's rmse: 0.21958        valid_1's rmse: 0.224654
-# [400]   training's rmse: 0.218335       valid_1's rmse: 0.224104
-# [500]   training's rmse: 0.217273       valid_1's rmse: 0.223712
-# [600]   training's rmse: 0.216378       valid_1's rmse: 0.223389
-# [700]   training's rmse: 0.215555       valid_1's rmse: 0.223133
-# [800]   training's rmse: 0.214814       valid_1's rmse: 0.222927
-# [900]   training's rmse: 0.21409        valid_1's rmse: 0.222717
-# [1000]  training's rmse: 0.213506       valid_1's rmse: 0.222577
+# [2018-06-06 21:16:40.327713] deep_text_lgb2 cv scores : [0.2218181252183542, 0.22115275787193545, 0.2211522340086538, 0.22123956148843887, 0.22168721776583822]
+# [2018-06-06 21:16:40.327784] deep_text_lgb2 mean cv score : 0.2214099792706441
+# [2018-06-06 21:16:40.327883] deep_text_lgb2 std cv score : 0.0002846337950326723

@@ -9,7 +9,7 @@ Everything so far is run on a r4.4xlarge (16 core, 120 GB RAM)
 
 1.) Install kaggle.json
 
-2.) Upload [`city_latlons.csv`](https://s3.amazonaws.com/avito-demand-kaggle/city_latlons.csv) and [`region_macro.csv`](https://s3.amazonaws.com/avito-demand-kaggle/region_macro.csv).
+2.) `scp` this repo
 
 3.) Install:
 
@@ -22,11 +22,9 @@ sudo apt install -y htop
 sudo apt install -y libsm6 libxext6
 
 pip3 install Cython
+pip3 install numpy
 pip3 install git+https://github.com/anttttti/Wordbatch
 pip3 install -r requirements.txt
-pip install Cython
-pip install git+https://github.com/anttttti/Wordbatch
-pip install -r requirements.txt
 python3 -c "import nltk; nltk.download('stopwords')"
 
 sudo apt-get -y install build-essential clang-3.5 llvm
@@ -39,6 +37,8 @@ make && sudo make install && cd ..
 pip install git+https://github.com/peterhurford/vowpal_platypus.git@v2.2
 pip install retrying
 
+wget https://s3.amazonaws.com/avito-demand-kaggle/city_latlons.csv
+wget https://s3.amazonaws.com/avito-demand-kaggle/region_macro.csv
 kaggle competitions download -c avito-demand-prediction -p .
 unzip train.csv
 unzip test.csv
@@ -57,11 +57,9 @@ mkdir cache
 mkdir submit
 ```
 
-4.) Set up AWS credentials via `aws configure`.
+4.) Optionally set up AWS credentials via `aws configure` and download existing cache files via `python3 sync_cache.py --down`.
 
-5.) Optionally download existing cache files via `python3 sync_cache.py --down`.
-
-6.) Run:
+5.) Build the features and models. Run in this order:
 
 ```
 python3 extract_features.py
@@ -77,4 +75,4 @@ python3 model_ridge_lgb.py
 python2 vp.py  # ...Not available in Python3 yet.
 ```
 
-7.) Optionally upload cache files via `python3 sync_cache.py --up`.
+6.) Optionally upload cache files via `python3 sync_cache.py --up`.

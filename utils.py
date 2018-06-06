@@ -139,6 +139,8 @@ class TargetEncoder:
 
 
 def bin_and_ohe_data(train, test, numeric_cols=None, dummy_cols=None, nbins=4):
+    train_ohe = None
+    test_ohe = None
     if numeric_cols:
         print_step('Scaling numerics')
         scaler = Scaler(columns=numeric_cols)
@@ -146,31 +148,23 @@ def bin_and_ohe_data(train, test, numeric_cols=None, dummy_cols=None, nbins=4):
         test = scaler.transform(test)
 
         print_step('Binning numerics')
-        train_ohe = None
-        test_ohe = None
         for col in numeric_cols:
             print(col)
             train[col] = pd.qcut(train[col], nbins, labels=False, duplicates='drop')
             test[col] = pd.qcut(test[col], nbins, labels=False, duplicates='drop')
-            lb = LabelBinarizer(sparse_output=True)
-            if train_ohe is not None:
-                train_ohe = hstack((train_ohe, lb.fit_transform(train[col].fillna('').astype('str')))).tocsr()
-                print(train_ohe.shape)
-                test_ohe = hstack((test_ohe, lb.transform(test[col].fillna('').astype('str')))).tocsr()
-                print(test_ohe.shape)
-            else:
-                train_ohe = lb.fit_transform(train[col].fillna('').astype('str')).tocsr()
-                print(train_ohe.shape)
-                test_ohe = lb.transform(test[col].fillna('').astype('str')).tocsr()
-                print(test_ohe.shape)
 
-    if dummy_cols:
-        print_step('Dummies')
-        for col in dummy_cols:
-            print(col)
-            lb = LabelBinarizer(sparse_output=True)
+    print_step('Dummies')
+    for col in numeric_cols + dummy_cols:
+        print(col)
+        lb = LabelBinarizer(sparse_output=True)
+        if train_ohe is not None:
             train_ohe = hstack((train_ohe, lb.fit_transform(train[col].fillna('').astype('str')))).tocsr()
             print(train_ohe.shape)
             test_ohe = hstack((test_ohe, lb.transform(test[col].fillna('').astype('str')))).tocsr()
+            print(test_ohe.shape)
+        else:
+            train_ohe = lb.fit_transform(train[col].fillna('').astype('str')).tocsr()
+            print(train_ohe.shape)
+            test_ohe = lb.transform(test[col].fillna('').astype('str')).tocsr()
             print(test_ohe.shape)
     return train_ohe, test_ohe

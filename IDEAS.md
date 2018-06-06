@@ -1,5 +1,3 @@
-- Run initial FMs
-- Add complete Ridge
 - number of days between activation and from date
 - Days up median, min, max (https://github.com/tyokota/kaggle-avito/blob/master/code_features/make%20-%20time%20features%20v.2.ipynb)
 - how many renewals per user
