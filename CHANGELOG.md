@@ -37,4 +37,8 @@ LGB: -image_missing, +tuning                                                    
 LGB: +avg_times_up_user, +n_user_items                                            - Dim 172,   5CV 0.21407, Submit 0.2184, Delta -.00433  <1998840>
 LGB: +user_items_per_day                                                          - Dim 173,   5CV 0.21405, Submit ?0.2184?               <3ca9d36>
 LGB: +avg_times_up_user, +n_user_items                                            - Dim 172,   5CV 0.21407, Submit 0.2184, Delta -.00433
+LGB: +Complete Ridge                                                              - Dim 173,   5CV ?
+LGB: +TFFM2                                                                       - Dim 174,   5CV ?
+LGB: +FM                                                                          - Dim 175,   5CV ?
+LGB: +TFFM3                                                                       - Dim 176,   5CV ?
 ```
