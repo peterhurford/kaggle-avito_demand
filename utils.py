@@ -1,4 +1,5 @@
 import re
+import string
 import pymorphy2
 
 from math import sqrt
@@ -9,6 +10,8 @@ import pathos.multiprocessing as mp
 
 import pandas as pd
 import numpy as np
+
+from nltk.corpus import stopwords
 
 from scipy.sparse import csr_matrix, hstack
 
@@ -41,12 +44,14 @@ def normalize_form(text):
     return ' '.join(text)
 
 
+stop_words = stopwords.words('russian')
+
 def normalize_text(text):
     text = text.lower().strip()
     for s in string.punctuation:
         text = text.replace(s, ' ')
-    text = text.strip().split(' ')
-    return u' '.join(x for x in text if len(x) > 1 and x not in stopwords)
+    text = text.split(' ')
+    return u' '.join(x for x in text if len(x) > 1 and x not in stop_words)
 
 
 # https://stackoverflow.com/questions/37685412/avoid-scaling-binary-columns-in-sci-kit-learn-standsardscaler

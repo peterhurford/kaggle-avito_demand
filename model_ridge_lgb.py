@@ -26,7 +26,7 @@ def runLGB(train_X, train_y, test_X, test_y, test_X2):
               'metric': 'rmse',
               'data_random_seed': 3,
               'bagging_fraction': 0.8,
-              'feature_fraction': 0.1, # 0.15
+              'feature_fraction': 0.1,
               'nthread': 16, #max(mp.cpu_count() - 2, 2),
               'lambda_l1': 6,
               'lambda_l2': 6,

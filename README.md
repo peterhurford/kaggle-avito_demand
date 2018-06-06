@@ -22,8 +22,10 @@ sudo apt install -y htop
 sudo apt install -y libsm6 libxext6
 
 pip3 install Cython
+pip3 install git+https://github.com/anttttti/Wordbatch
 pip3 install -r requirements.txt
 pip install Cython
+pip install git+https://github.com/anttttti/Wordbatch
 pip install -r requirements.txt
 python3 -c "import nltk; nltk.download('stopwords')"
 
@@ -66,10 +68,13 @@ python3 extract_features.py
 python3 extract_images.py
 python3 extract_active.py
 python3 model_ridge.py
+python3 model_fm.py
+python3 model_tffm.py
 python3 model_cat_bin_ridge.py
 python3 model_cat_region_ridge.py
 python3 model_parent_cat_ridge.py
 python3 model_ridge_lgb.py
+python2 vp.py  # ...Not available in Python3 yet.
 ```
 
 7.) Optionally upload cache files via `python3 sync_cache.py --up`.

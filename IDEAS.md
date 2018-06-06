@@ -1,8 +1,14 @@
-- # of items a user put up for sale *per day*
-- Run initial overall Ridge
 - Run initial FMs
-- Add OHE price to Ridge / FM
+- Add complete Ridge
+- number of days between activation and from date
+- Days up median, min, max (https://github.com/tyokota/kaggle-avito/blob/master/code_features/make%20-%20time%20features%20v.2.ipynb)
+- how many renewals per user
+- avg time between renewals
+- average price of items per user
+- average price of renewed items per user
+- Num special chars, num emoji, ratios (https://github.com/tyokota/kaggle-avito/blob/master/code_features/make%20-%20string%20stats.ipynb)
 - Add more macroeconomic data
+- BayesOpt (https://github.com/tyokota/kaggle-avito/blob/master/LGB%20framework%20v.3.2.ipynb)
 - Start doing text embeddings + corrections
 - Add text normalization
 - Add LDA

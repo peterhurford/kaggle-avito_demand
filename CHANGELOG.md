@@ -35,5 +35,5 @@ LGB: +Add 10 more SVD dimensions                                                
 LGB: +Image stats                                                                 - Dim 171,   5CV 0.21522, Submit 0.2191, Delta -.00388  <4d1d645>
 LGB: -image_missing, +tuning                                                      - Dim 170,   5CV 0.21509, Submit ?0.2190?               <ef8b654>
 LGB: +avg_times_up_user, +n_user_items                                            - Dim 172,   5CV 0.21407, Submit 0.2184, Delta -.00433  <1998840>
-LGB: +user_items_per_day                                                          - Dim 173,   5CV 0.21405, Submit ?0.2184?
+LGB: +user_items_per_day                                                          - Dim 173,   5CV 0.21405, Submit ?0.2184?               <3ca9d36>
 ```
