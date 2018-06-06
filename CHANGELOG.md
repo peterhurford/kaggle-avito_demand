@@ -4,7 +4,7 @@ LGB: +missing data, +OHE params (no text, geo, date, image, or item_seq_number) 
 LGB: +basic NLP (no other text, geo, date, image, or item_seq_number)             - Dim 5078,  5CV 0.22607, Submit 0.2299, Delta -.00383  <a9e424c>
 LGB: +date (no other text, geo, image, or item_seq_number)                        - Dim 5086,  5CV 0.22610, Submit ?                      <f6c28f2>
 LGB: +OHE city and region (no other text, image, or item_seq_number)              - Dim 6866,  5CV 0.22540, Submit ?                      <531df17>
-LGB: +item_seq_numbur (no other text or image)                                    - Dim 6867,  5CV 0.22517, Submit ?                      <624f1a4>
+LGB: +item_seq_number (no other text or image)                                    - Dim 6867,  5CV 0.22517, Submit ?                      <624f1a4>
 LGB: +more basic NLP (no other text or image)                                     - Dim 6877,  5CV 0.22508, Submit 0.2290, Delta -.00392  <f47d17d>
 LGB: +SelectKBest TFIDF description + text (no image)                             - Dim 54877, 5CV 0.22206, Submit 0.2257, Delta -.00364  <7002d68>
 LGB: +LGB Encode Cats and Ridge Encode text, -some missing vars, -weekend         - Dim 46,    5CV 0.22120, Submit ?
@@ -36,4 +36,5 @@ LGB: +Image stats                                                               
 LGB: -image_missing, +tuning                                                      - Dim 170,   5CV 0.21509, Submit ?0.2190?               <ef8b654>
 LGB: +avg_times_up_user, +n_user_items                                            - Dim 172,   5CV 0.21407, Submit 0.2184, Delta -.00433  <1998840>
 LGB: +user_items_per_day                                                          - Dim 173,   5CV 0.21405, Submit ?0.2184?               <3ca9d36>
+LGB: +avg_times_up_user, +n_user_items                                            - Dim 172,   5CV 0.21407, Submit 0.2184, Delta -.00433
 ```
