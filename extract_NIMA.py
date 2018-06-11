@@ -69,8 +69,8 @@ if args.train:
     for i in range(mobileNet_scores.shape[0]):
         mobile_mean.append(mean_score(mobileNet_scores[i, :]))
         mobile_std.append(std_score(mobileNet_scores[i, :]))
-    mobile_df = pd.DataFrame({'file_name':train_generator.filenames})
-    mobile_df["file_name"] = mobile_df["file_name"].apply(lambda x: x[:-4].split("/")[1])
+    mobile_df = pd.DataFrame({'image':train_generator.filenames})
+    mobile_df["image"] = mobile_df["image"].apply(lambda x: x[:-4].split("/")[1])
     mobile_df['mobile_mean'] = mobile_mean
     mobile_df['mobile_std'] = mobile_std
     ################################################################################
@@ -99,8 +99,8 @@ if args.train:
     for i in range(nasnet_scores.shape[0]):
         nasnet_mean.append(mean_score(nasnet_scores[i, :]))
         nasnet_std.append(std_score(nasnet_scores[i, :]))
-    nasnet_df = pd.DataFrame({'file_name':train_generator.filenames})
-    nasnet_df["file_name"] = nasnet_df["file_name"].apply(lambda x: x[:-4].split("/")[1])
+    nasnet_df = pd.DataFrame({'image':train_generator.filenames})
+    nasnet_df["image"] = nasnet_df["image"].apply(lambda x: x[:-4].split("/")[1])
     nasnet_df['nasnet_mean'] = nasnet_mean
     nasnet_df['nasnet_std'] = nasnet_std
     ################################################################################
@@ -128,17 +128,17 @@ if args.train:
     for i in range(inception_scores.shape[0]):
         inception_mean.append(mean_score(inception_scores[i, :]))
         inception_std.append(std_score(inception_scores[i, :]))
-    inception_df = pd.DataFrame({'file_name':train_generator.filenames})
-    inception_df["file_name"] = inception_df["file_name"].apply(lambda x: x[:-4].split("/")[1])
+    inception_df = pd.DataFrame({'image':train_generator.filenames})
+    inception_df["image"] = inception_df["image"].apply(lambda x: x[:-4].split("/")[1])
     inception_df['inception_mean'] = inception_mean
     inception_df['inception_std'] = inception_std
     ################################################################################
     print("Joining Results")
     total_df = (mobile_df
-            .merge(inception_df, on = "file_name")
-            .merge(nasnet_df, on = "file_name"))
+            .merge(inception_df, on = "image")
+            .merge(nasnet_df, on = "image"))
     print("Saving to results to cache/train_img_nima.csv")
-    total_df.to_csv("cache/train_img_nima.csv")
+    total_df.to_csv("cache/train_img_nima.csv", index = False)
 if args.test:
     print("Running Test Images")
     ################################################################################
@@ -169,8 +169,8 @@ if args.test:
     for i in range(mobileNet_scores.shape[0]):
         mobile_mean.append(mean_score(mobileNet_scores[i, :]))
         mobile_std.append(std_score(mobileNet_scores[i, :]))
-    mobile_df = pd.DataFrame({'file_name':train_generator.filenames})
-    mobile_df["file_name"] = mobile_df["file_name"].apply(lambda x: x[:-4].split("/")[1])
+    mobile_df = pd.DataFrame({'image':train_generator.filenames})
+    mobile_df["image"] = mobile_df["image"].apply(lambda x: x[:-4].split("/")[1])
     mobile_df['mobile_mean'] = mobile_mean
     mobile_df['mobile_std'] = mobile_std
     ################################################################################
@@ -199,8 +199,8 @@ if args.test:
     for i in range(nasnet_scores.shape[0]):
         nasnet_mean.append(mean_score(nasnet_scores[i, :]))
         nasnet_std.append(std_score(nasnet_scores[i, :]))
-    nasnet_df = pd.DataFrame({'file_name':train_generator.filenames})
-    nasnet_df["file_name"] = nasnet_df["file_name"].apply(lambda x: x[:-4].split("/")[1])
+    nasnet_df = pd.DataFrame({'image':train_generator.filenames})
+    nasnet_df["image"] = nasnet_df["image"].apply(lambda x: x[:-4].split("/")[1])
     nasnet_df['nasnet_mean'] = nasnet_mean
     nasnet_df['nasnet_std'] = nasnet_std
     ################################################################################
@@ -228,14 +228,14 @@ if args.test:
     for i in range(inception_scores.shape[0]):
         inception_mean.append(mean_score(inception_scores[i, :]))
         inception_std.append(std_score(inception_scores[i, :]))
-    inception_df = pd.DataFrame({'file_name':train_generator.filenames})
-    inception_df["file_name"] = inception_df["file_name"].apply(lambda x: x[:-4].split("/")[1])
+    inception_df = pd.DataFrame({'image':train_generator.filenames})
+    inception_df["image"] = inception_df["image"].apply(lambda x: x[:-4].split("/")[1])
     inception_df['inception_mean'] = inception_mean
     inception_df['inception_std'] = inception_std
     ################################################################################
     print("Joining Results")
     total_df = (mobile_df
-            .merge(inception_df, on = "file_name")
-            .merge(nasnet_df, on = "file_name"))
+            .merge(inception_df, on = "image")
+            .merge(nasnet_df, on = "image"))
     print("Saving to results to cache/test_img_nima.csv")
-    total_df.to_csv("cache/test_img_nima.csv")
+    total_df.to_csv("cache/test_img_nima.csv", index = False)
