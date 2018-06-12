@@ -361,6 +361,15 @@ if not is_in_cache('complete_ridge'):
     print_step('Cache')
     save_in_cache('complete_ridge', pd.DataFrame({'complete_ridge': results['train']}),
                                     pd.DataFrame({'complete_ridge': results['test']}))
+
+    print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+    print_step('Prepping submission file')
+    submission = pd.DataFrame()
+    submission['item_id'] = test_id
+    submission['deal_probability'] = results['test'].clip(0.0, 1.0)
+    submission.to_csv('submit/submit_complete_ridge.csv', index=False)
+    print_step('Done!')
+
 # [2018-06-05 21:47:05.054174] complete-ridge cv scores : [0.22481497797006353, 0.22409152529039147, 0.22410818210527936, 0.22406284281957914, 0.22472168320897423]
 # [2018-06-05 21:47:05.054259] complete-ridge mean cv score : 0.22435984227885752
 # [2018-06-05 21:47:05.054364] complete-ridge std cv score : 0.00033514560542958886

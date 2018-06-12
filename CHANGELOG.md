@@ -34,7 +34,8 @@ LGB: +Add cat_bin Ridges, LR 0.04->0.03                                         
 LGB: +Add 10 more SVD dimensions                                                  - Dim 144,   5CV 0.21611, Submit ?0.2200?               <ef3f318>
 LGB: +Image stats                                                                 - Dim 171,   5CV 0.21522, Submit 0.2191, Delta -.00388  <4d1d645>
 LGB: -image_missing, +tuning                                                      - Dim 170,   5CV 0.21509, Submit ?0.2190?               <ef8b654>
-LGB: +avg_times_up_user, +n_user_items                                            - Dim 172,   5CV 0.21407, Submit 0.2184, Delta -.00433  <1998840>
-LGB: +user_items_per_day                                                          - Dim 173,   5CV 0.21405, Submit ?0.2184?               <3ca9d36>
-LGB: +avg_times_up_user, +n_user_items                                            - Dim 172,   5CV 0.21407, Submit 0.2184, Delta -.00433
+LGB: +avg_times_up_user, +n_user_items, +avg_days_up_user                         - Dim 173,   5CV 0.21407, Submit 0.2184, Delta -.00433  <1998840>
+LGB: +user_items_per_day                                                          - Dim 174,   5CV 0.21405, Submit ?0.2184?               <3ca9d36>
+LGB: +retrain deep LGB with new features, +complete Ridge                         - Dim 174,   5CV 0.21388, Submit ?.21821?
+BLEND: +FM models                                                                 - Dim 85,    5CV 0.21342, Submit 0.2178, Delta -.00438
 ```

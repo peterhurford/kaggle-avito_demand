@@ -18,22 +18,22 @@ def runLGB(train_X, train_y, test_X, test_y, test_X2):
     d_train = lgb.Dataset(train_X, label=train_y)
     d_valid = lgb.Dataset(test_X, label=test_y)
     watchlist = [d_train, d_valid]
-    params = {'learning_rate': 0.1,
+    params = {'learning_rate': 0.05,
               'application': 'regression',
               'max_depth': 9,
-              'num_leaves': 2 ** 9,
+              'num_leaves': 300,
               'verbosity': -1,
               'metric': 'rmse',
               'data_random_seed': 3,
               'bagging_fraction': 0.8,
-              'feature_fraction': 0.2,
-              'nthread': 3,
+              'feature_fraction': 0.4,
+              'nthread': 16,
               'lambda_l1': 1,
               'lambda_l2': 1,
               'min_data_in_leaf': 40}
     model = lgb.train(params,
                       train_set=d_train,
-                      num_boost_round=1000,
+                      num_boost_round=4800,
                       valid_sets=watchlist,
                       verbose_eval=10)
     print_step('Predict 1/2')
@@ -55,7 +55,7 @@ test_id = test['item_id']
 train.drop(['deal_probability', 'item_id'], axis=1, inplace=True)
 test.drop(['item_id'], axis=1, inplace=True)
 
-if not is_in_cache('deep_text_feats'):
+if not is_in_cache('deep_text_feats3'):
     print('~~~~~~~~~~~~~~~~~~~~~~~')
     print_step('Importing Data 2/6')
     tfidf_train, tfidf_test = load_cache('titlecat_tfidf')
@@ -75,7 +75,7 @@ if not is_in_cache('deep_text_feats'):
     print(test.shape)
 
     print_step('SelectKBest 1/2')
-    fselect = SelectKBest(f_regression, k=40000)
+    fselect = SelectKBest(f_regression, k=100000)
     train = fselect.fit_transform(train, target)
     print_step('SelectKBest 2/2')
     test = fselect.transform(test)
@@ -182,45 +182,30 @@ if not is_in_cache('deep_text_feats'):
     gc.collect()
 
     print_step('Caching')
-    save_in_cache('deep_text_feats', train, test)
+    save_in_cache('deep_text_feats3', train, test)
 else:
-    train, test = load_cache('deep_text_feats')
+    train, test = load_cache('deep_text_feats3')
 
 
 print('~~~~~~~~~~~~')
 print_step('Run LGB')
-results = run_cv_model(train, test, target, runLGB, rmse, 'lgb')
+results = run_cv_model(train, test, target, runLGB, rmse, 'deep_lgb')
 import pdb
 pdb.set_trace()
 
 print('~~~~~~~~~~')
 print_step('Cache')
-save_in_cache('deep_text_lgb', pd.DataFrame({'deep_text_lgb': results['train']}),
-                               pd.DataFrame({'deep_text_lgb': results['test']}))
+save_in_cache('deep_lgb', pd.DataFrame({'deep_lgb': results['train']}),
+                          pd.DataFrame({'deep_lgb': results['test']}))
 
 print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
 print_step('Prepping submission file')
 submission = pd.DataFrame()
 submission['item_id'] = test_id
 submission['deal_probability'] = results['test'].clip(0.0, 1.0)
-submission.to_csv('submit/submit_lgb7.csv', index=False)
+submission.to_csv('submit/submit_deep_lgb.csv', index=False)
 print_step('Done!')
 
-# Deep LGB                                                       - Dim 195673, 5CV 0.22196
-
-# CURRENT
-# [2018-05-03 09:16:12.670379] lgb cv scores : [0.22257689498410263, 0.22140350676341775, 0.22190683421601698, 0.22168666577421173, 0.22221717818648018]
-# [2018-05-03 09:16:12.671351] lgb mean cv score : 0.22195821598484583
-# [2018-05-03 09:16:12.672767] lgb std cv score : 0.00040838879744612577
-
-# [10]    training's rmse: 0.240701       valid_1's rmse: 0.241443
-# [100]   training's rmse: 0.224196       valid_1's rmse: 0.227253
-# [200]   training's rmse: 0.221323       valid_1's rmse: 0.225548
-# [300]   training's rmse: 0.21958        valid_1's rmse: 0.224654
-# [400]   training's rmse: 0.218335       valid_1's rmse: 0.224104
-# [500]   training's rmse: 0.217273       valid_1's rmse: 0.223712
-# [600]   training's rmse: 0.216378       valid_1's rmse: 0.223389
-# [700]   training's rmse: 0.215555       valid_1's rmse: 0.223133
-# [800]   training's rmse: 0.214814       valid_1's rmse: 0.222927
-# [900]   training's rmse: 0.21409        valid_1's rmse: 0.222717
-# [1000]  training's rmse: 0.213506       valid_1's rmse: 0.222577
+# [2018-06-08 10:35:04.661110] lgb cv scores : [0.21780504041940127, 0.21681461786715062, 0.21690422843478088, 0.2170641135832974, 0.21757371806331538]
+# [2018-06-08 10:35:04.661735] lgb mean cv score : 0.21723234367358915
+# [2018-06-08 10:35:04.663950] lgb std cv score : 0.00038858045735915296

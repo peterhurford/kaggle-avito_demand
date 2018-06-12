@@ -1,15 +1,33 @@
-- number of days between activation and from date
-- Days up median, min, max (https://github.com/tyokota/kaggle-avito/blob/master/code_features/make%20-%20time%20features%20v.2.ipynb)
-- how many renewals per user
-- avg time between renewals
-- average price of items per user
-- average price of renewed items per user
-- Num special chars, num emoji, ratios (https://github.com/tyokota/kaggle-avito/blob/master/code_features/make%20-%20string%20stats.ipynb)
+- Add VP to blender LGB
+- Try adding user_num_days, user_num_days, n_user_items, user_items_per_day one at a time, to final blend
+- Try adding num_words_description to final blend
+- Try adding img_dullness_light_percent and img_dullness_dark_percent to final blend
+- Try making LGB with no submodels
+- image_top_1 overfitting?
+
+- Are image_x and image_y always the same?
+- Add NIMA to Ridge LGB
+- Make embedding LGBs
+- LGB for just text?
+
 - Add more macroeconomic data
-- BayesOpt (https://github.com/tyokota/kaggle-avito/blob/master/LGB%20framework%20v.3.2.ipynb)
+- Dominant color
+- Pic2Vec (github.com/datarobot/pic2vec)
+- Image labeling confidence
+- Days up median, min, max (https://github.com/tyokota/kaggle-avito/blob/master/code_features/make%20-%20time%20features%20v.2.ipynb)
+- Num special chars, num emoji, ratios (https://github.com/tyokota/kaggle-avito/blob/master/code_features/make%20-%20string%20stats.ipynb)
+- Handle price outliers / Try to predict price
+- Number of times the item has been posted before
+- Average price of user
+- Diff between price and average price of user
 - Start doing text embeddings + corrections
-- Add text normalization
+- Embeddings in LGBs
 - Add LDA
+- Add Cat2Vec
+- Add Olivier TargetEncoding (do inside CV)
+- Add Entity embedding
+- POS tagging
+- Sentiment analysis
 - More text features (RDizzl3 style, see https://www.kaggle.com/rdizzl3/stage-2-lgbm-stacker-8th-place-solution/code)
 	- Cooc - parent_category_name X text
 	- Cooc - parent_category_name X title
@@ -30,27 +48,12 @@
 	- desc_first_trigram
 	- desc_last_trigram
 	- Means, sums, skew, kurtosis of TFIDF
-- POS tagging
-- Sentiment analysis
-- Understand and apply FE from https://www.kaggle.com/shadowwarrior/1st-place-solution
-- Pic2Vec (github.com/datarobot/pic2vec)
-- Neural image assessment (https://github.com/titu1994/neural-image-assessment)
-- Image labeling confidence
-- Dominant color
-- Handle price outliers / Try to predict price
-- https://github.com/mxbi/ftim
-- Try `tv = TfidfVectorizer(max_features=None, ngram_range=(1, 3), min_df=2, token_pattern=r'(?u)\b\w+\b')` in Ridges
-- Re-do existing ridges / FMs
-- Finish VP
-- Make additional FMs, FTRL
-- Make LGBs/XGBs
-- Make NNs
-- Understand and apply models from https://www.kaggle.com/shadowwarrior/1st-place-solution
-- Add Cat2Vec
-- Add Olivier TargetEncoding (do inside CV)
-- Add Entity embedding
-- Look more at Mercari competition, DonorsChoose competition, Porto competition
+- Docfreq stats (see https://github.com/Wrosinski/Kaggle-Quora/blob/master/features/Extraction%20-%20Textacy%20Features%2017.05.ipynb)
+- Skew and kurtosis of sent2vec (see https://github.com/abhishekkrthakur/is_that_a_duplicate_quora_question/blob/master/feature_engineering.py)
 - Tune models some
+- BayesOpt (https://github.com/tyokota/kaggle-avito/blob/master/LGB%20framework%20v.3.2.ipynb)
+- Understand and apply models from https://www.kaggle.com/shadowwarrior/1st-place-solution
+- Look more at Mercari competition, DonorsChoose competition, Porto competition
 - Try to predict category
 - Try to predict image_top_1
 - Look at fail cases

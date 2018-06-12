@@ -36,6 +36,7 @@ if not is_in_cache('active_feats'):
         periods_test
     ])
 
+
     print('~~~~~~~~~~~~~~~~~~~~~')
     print_step('Grouping 1/4 1/3')
     all_periods['date_to'] = pd.to_datetime(all_periods['date_to'])
@@ -43,6 +44,7 @@ if not is_in_cache('active_feats'):
     all_periods['date_from'] = pd.to_datetime(all_periods['date_from'])
     print_step('Grouping 1/4 3/3')
     all_periods['days_up'] = all_periods['date_to'].dt.dayofyear - all_periods['date_from'].dt.dayofyear
+    all_periods['item_count'] = all_periods.groupby('item_id')['item_id'].transform('count')
 
 
     print_step('Grouping 2/4 1/5')

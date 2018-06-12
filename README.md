@@ -71,8 +71,9 @@ python3 model_tffm.py
 python3 model_cat_bin_ridge.py
 python3 model_cat_region_ridge.py
 python3 model_parent_cat_ridge.py
-python3 model_ridge_lgb.py
-python2 vp.py  # ...Not available in Python3 yet.
+python3 model_deep_lgb.py
+python3 model_stack_lgb.py
+python3 model_lgb_blender.py
 ```
 
 6.) Optionally upload cache files via `python3 sync_cache.py --up`.
