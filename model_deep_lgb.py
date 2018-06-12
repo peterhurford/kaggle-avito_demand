@@ -44,7 +44,7 @@ def runLGB(train_X, train_y, test_X, test_y, test_X2):
 
 
 print('~~~~~~~~~~~~~~~~~~~~~~~')
-print_step('Importing Data 1/6')
+print_step('Importing Data 1/11')
 train, test = get_data()
 
 print('~~~~~~~~~~~~~~~')
@@ -57,19 +57,19 @@ test.drop(['item_id'], axis=1, inplace=True)
 
 if not is_in_cache('deep_text_feats3'):
     print('~~~~~~~~~~~~~~~~~~~~~~~')
-    print_step('Importing Data 2/6')
+    print_step('Importing Data 2/11')
     tfidf_train, tfidf_test = load_cache('titlecat_tfidf')
 
-    print_step('Importing Data 3/6')
+    print_step('Importing Data 3/11')
     tfidf_train2, tfidf_test2 = load_cache('text_tfidf')
 
-    print_step('Importing Data 4/6')
+    print_step('Importing Data 4/11')
     tfidf_train3, tfidf_test3 = load_cache('text_char_tfidf')
 
 
-    print_step('Importing Data 5/6')
+    print_step('Importing Data 5/11')
     train = hstack((tfidf_train, tfidf_train2, tfidf_train3)).tocsr()
-    print_step('Importing Data 6/6')
+    print_step('Importing Data 6/11')
     test = hstack((tfidf_test, tfidf_test2, tfidf_test3)).tocsr()
     print(train.shape)
     print(test.shape)
@@ -91,7 +91,7 @@ if not is_in_cache('deep_text_feats3'):
     del tfidf_train3
     gc.collect()
 
-    print_step('Importing Data 7/7')
+    print_step('Importing Data 7/11')
     train_fe, test_fe = load_cache('data_with_fe')
     dummy_cols = ['parent_category_name', 'category_name', 'user_type', 'image_top_1',
                   'day_of_week', 'region', 'city', 'param_1', 'param_2', 'param_3', 'cat_bin']
@@ -110,43 +110,47 @@ if not is_in_cache('deep_text_feats3'):
                     'num_lowercase_description', 'num_punctuations_title', 'sentence_mean', 'sentence_std',
                     'words_per_sentence', 'price_missing']
 
-    print_step('Importing Data 8/5 1/5')
+    print_step('Importing Data 8/11 1/3')
     train_img, test_img = load_cache('img_data')
-    print_step('Importing Data 8/5 2/5')
+    print_step('Importing Data 8/11 2/3')
     drops = ['item_id', 'img_path', 'img_std_color', 'img_sum_color', 'img_rms_color',
              'img_var_color', 'img_average_color', 'deal_probability']
     drops += [c for c in train_img if 'hist' in c]
     img_dummy_cols = ['img_average_color']
     img_numeric_cols = list(set(train_img.columns) - set(drops) - set(dummy_cols))
+    print_step('Importing Data 8/11 3/3')
     train_img = train_img[img_numeric_cols + img_dummy_cols].fillna(0)
     test_img = test_img[img_numeric_cols + img_dummy_cols].fillna(0)
     dummy_cols += img_dummy_cols
     numeric_cols += img_numeric_cols
 
-    print_step('Importing Data 9/5 2/8')
+    print_step('Importing Data 9/11 1/3')
 # HT: https://www.kaggle.com/jpmiller/russian-cities/data
 # HT: https://www.kaggle.com/jpmiller/exploring-geography-for-1-5m-deals/notebook
     locations = pd.read_csv('city_latlons.csv')
-    print_step('Importing Data 9/5 3/8')
+    print_step('Importing Data 9/11 2/3')
     train_fe = train_fe.merge(locations, how='left', left_on='city', right_on='location')
-    print_step('Importing Data 9/5 4/8')
+    print_step('Importing Data 9/11 3/3')
     test_fe = test_fe.merge(locations, how='left', left_on='city', right_on='location')
     numeric_cols += ['lat', 'lon']
 
-    print_step('Importing Data 10/5 2/8')
+    print_step('Importing Data 10/11 1/3')
     region_macro = pd.read_csv('region_macro.csv')
-    print_step('Importing Data 10/5 3/8')
+    print_step('Importing Data 10/11 2/3')
     train_fe = train_fe.merge(region_macro, how='left', on='region')
-    print_step('Importing Data 10/5 4/8')
+    print_step('Importing Data 10/11 3/3')
     test_fe = test_fe.merge(region_macro, how='left', on='region')
     numeric_cols += ['unemployment_rate', 'GDP_PC_PPP', 'HDI']
 
-    print_step('Importing Data 11/5 1/4')
+    print_step('Importing Data 11/11 1/4')
     train_active, test_active = load_cache('active_feats')
+    print_step('Importing Data 11/11 2/4')
     train_active.fillna(0, inplace=True)
     test_active.fillna(0, inplace=True)
+    print_step('Importing Data 11/11 3/4')
     train_active.drop('user_id', axis=1, inplace=True)
     test_active.drop('user_id', axis=1, inplace=True)
+    print_step('Importing Data 11/11 4/4')
     numeric_cols += train_active.columns.values.tolist()
 
     print_step('CSR 1/7')
