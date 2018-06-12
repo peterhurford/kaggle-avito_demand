@@ -158,6 +158,19 @@ print_step('Importing Data 12/12 5/5')
 train_fe.drop('user_id', axis=1, inplace=True)
 test_fe.drop('user_id', axis=1, inplace=True)
 
+
+print_step('Importing Data 16/15 1/4 NIMA Features')
+train, test = get_data()
+train_nima, test_nima = load_cache('img_nima')
+train = train.merge(train_nima, on = 'image', how = 'left')
+test = test.merge(test_nima, on = 'image', how = 'left')
+cols = ["mobile_mean", "mobile_std","inception_mean", "inception_std", "nasnet_mean", "nasnet_std"]
+train_fe[cols] = train[cols].fillna(0)
+test_fe[cols] = test[cols].fillna(0)
+del train, test, train_nima, test_nima
+
+
+
 print('~~~~~~~~~~~~~~~~~~~~~~~~~~~')
 print_step('Converting to category')
 train_fe['image_top_1'] = train_fe['image_top_1'].astype('str').fillna('missing')
@@ -246,8 +259,18 @@ submission['deal_probability'] = results['test'].clip(0.0, 1.0)
 submission.to_csv('submit/submit_stack_lgb.csv', index=False)
 print_step('Done!')
 
+
+# Changed By Sijun
+# + NIMA features
+# Public LB 0.2187
+# [2018-06-11 00:29:35.356944] lgb cv score 5 : 0.21435439465470424
+# [2018-06-11 00:29:35.357184] lgb cv scores : [0.214839234040873, 0.21397466737613413, 0.21390426736833554, 0.21385081987088378, 0.21435439465470424]
+# [2018-06-11 00:29:35.357588] lgb mean cv score : 0.21418467666218613
+# [2018-06-11 00:29:35.358510] lgb std cv score : 0.0003718718027445342
+
+
 # CURRENT
-# [2018-06-06 17:32:25.455448] lgb cv scores : [0.21492464321752142, 0.21407966462295236, 0.21400264246446363, 0.21395136575143095, 0.2146172980164727]
+# [2018-06-06 17:32:25.455448] lgb cv scores : [0.  21492464321752142, 0.21407966462295236, 0.21400264246446363, 0.21395136575143095, 0.2146172980164727]
 # [2018-06-06 17:32:25.455516] lgb mean cv score : 0.2143151228145682
 # [2018-06-06 17:32:25.455621] lgb std cv score : 0.00038684071772371374
 
