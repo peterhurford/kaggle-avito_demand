@@ -1,12 +1,12 @@
-- Add VP to blender LGB
+- Add NIMA to LGBs
+
+- Are image_x and image_y always the same?
 - Try adding user_num_days, user_num_days, n_user_items, user_items_per_day one at a time, to final blend
 - Try adding num_words_description to final blend
 - Try adding img_dullness_light_percent and img_dullness_dark_percent to final blend
 - Try making LGB with no submodels
 - image_top_1 overfitting?
 
-- Are image_x and image_y always the same?
-- Add NIMA to Ridge LGB
 - Make embedding LGBs
 - LGB for just text?
 
