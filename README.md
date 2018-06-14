@@ -55,7 +55,7 @@ mkdir submit
 python3 extract_features.py
 python3 extract_images.py
 python3 extract_active.py
-python3 extract_NIMA.py
+python3 extract_NIMA.py --train --test
 python3 model_ridge.py
 python3 model_fm.py
 python3 model_tffm.py

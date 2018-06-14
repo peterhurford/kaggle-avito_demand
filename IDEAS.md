@@ -1,60 +1,21 @@
-- Add NIMA to LGBs
-
-- Are image_x and image_y always the same?
-- Try adding user_num_days, user_num_days, n_user_items, user_items_per_day one at a time, to final blend
-- Try adding num_words_description to final blend
-- Try adding img_dullness_light_percent and img_dullness_dark_percent to final blend
-- Try making LGB with no submodels
-- image_top_1 overfitting?
-
-- Make embedding LGBs
-- LGB for just text?
-
-- Add more macroeconomic data
-- Dominant color
-- Pic2Vec (github.com/datarobot/pic2vec)
-- Image labeling confidence
-- Days up median, min, max (https://github.com/tyokota/kaggle-avito/blob/master/code_features/make%20-%20time%20features%20v.2.ipynb)
-- Num special chars, num emoji, ratios (https://github.com/tyokota/kaggle-avito/blob/master/code_features/make%20-%20string%20stats.ipynb)
-- Handle price outliers / Try to predict price
-- Number of times the item has been posted before
-- Average price of user
-- Diff between price and average price of user
-- Start doing text embeddings + corrections
-- Embeddings in LGBs
-- Add LDA
-- Add Cat2Vec
-- Add Olivier TargetEncoding (do inside CV)
-- Add Entity embedding
+- Means, sums, skew, kurtosis of TFIDF
+- Skew and kurtosis of sent2vec (see https://github.com/abhishekkrthakur/is_that_a_duplicate_quora_question/blob/master/feature_engineering.py)
+- Docfreq stats (see https://github.com/Wrosinski/Kaggle-Quora/blob/master/features/Extraction%20-%20Textacy%20Features%2017.05.ipynb)
 - POS tagging
 - Sentiment analysis
-- More text features (RDizzl3 style, see https://www.kaggle.com/rdizzl3/stage-2-lgbm-stacker-8th-place-solution/code)
-	- Cooc - parent_category_name X text
-	- Cooc - parent_category_name X title
-	- Cooc - parent_category_name X region
-	- Cooc - cat_bin X text
-	- Cooc - cat_bin X title
-	- Cooc - cat_bin X region
-	- title_first_word
-	- title_second_word
-	- title_third_word
-	- title_last_word
-	- title_first_bigram
-	- title_last_bigram
-	- desc_first_bigram
-	- desc_last_bigram
-	- title_first_trigram
-	- title_last_trigram
-	- desc_first_trigram
-	- desc_last_trigram
-	- Means, sums, skew, kurtosis of TFIDF
-- Docfreq stats (see https://github.com/Wrosinski/Kaggle-Quora/blob/master/features/Extraction%20-%20Textacy%20Features%2017.05.ipynb)
-- Skew and kurtosis of sent2vec (see https://github.com/abhishekkrthakur/is_that_a_duplicate_quora_question/blob/master/feature_engineering.py)
-- Tune models some
-- BayesOpt (https://github.com/tyokota/kaggle-avito/blob/master/LGB%20framework%20v.3.2.ipynb)
-- Understand and apply models from https://www.kaggle.com/shadowwarrior/1st-place-solution
-- Look more at Mercari competition, DonorsChoose competition, Porto competition
-- Try to predict category
-- Try to predict image_top_1
-- Look at fail cases
-- Classification models
+- Add more macroeconomic data
+- Handle price outliers / Try to predict price
+
+- Lower learning rate, more rounds, vary seed
+- Tune LGB encoding -- defaults are min_data_per_group=100 max_cat_threshold=32 cat_l2=10.0 cat_smooth=10.0 max_cat_to_onehot=4
+
+- LGB with CountVectorizer title (see https://www.kaggle.com/him4318/lightgbm-with-aggregated-features-v-2-0)
+- Make embedding LGBs
+- Dart
+- XGB
+- RF
+
+- Add RDizzl3 LGB
+- Add RDizzle3 Ridge
+- Image labeling confidence
+- Add Entity embedding

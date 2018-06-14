@@ -6,3 +6,4 @@
 - img_std_color, img_sum_color, img_rms_color, img_var_color
 - img_average_pixel_width
 - standard deviation of user submission dates in train/test
+- train_img['img_size_ratio'] = train_img['img_file_size'] / (train_img['img_size_x'] * train_img['img_size_y'])

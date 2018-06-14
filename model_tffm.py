@@ -67,6 +67,14 @@ results = run_cv_model(train, test, target, runTFFM2, rmse, 'tffm2')
 print_step('Cache')
 save_in_cache('tffm2', pd.DataFrame({'tffm2': results['train']}),
                        pd.DataFrame({'tffm2': results['test']}))
+
+print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+print_step('Prepping submission file')
+submission = pd.DataFrame()
+submission['item_id'] = test_id
+submission['deal_probability'] = results['test'].clip(0.0, 1.0)
+submission.to_csv('submit/submit_tffm2.csv', index=False)
+print_step('Done!')
 # [2018-06-06 05:26:11.306486] tffm2 cv scores : [0.22541019023816908, 0.22463933727489538, 0.22452885067937228, 0.2245032642720666, 0.22523463698732962]
 # [2018-06-06 05:26:11.306561] tffm2 mean cv score : 0.22486325589036663
 # [2018-06-06 05:26:11.306664] tffm2 std cv score : 0.0003817385117403105

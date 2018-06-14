@@ -38,4 +38,6 @@ LGB: +avg_times_up_user, +n_user_items, +avg_days_up_user                       
 LGB: +user_items_per_day                                                          - Dim 174,   5CV 0.21405, Submit ?0.2184?               <3ca9d36>
 LGB: +retrain deep LGB with new features, +complete Ridge                         - Dim 174,   5CV 0.21388, Submit ?.21821?
 BLEND: +FM models                                                                 - Dim 85,    5CV 0.21342, Submit 0.2178, Delta -.00438  <8c01031>
+BLEND: +Add NIMA to LGBs                                                          - Dim 89,    5CV 0.21332, Submit 0.2177, Delta -.00438
+BLEND: +Add Base LGB                                                              - Dim 90,    5CV 0.21324, Submit ?0.2176?
 ```
