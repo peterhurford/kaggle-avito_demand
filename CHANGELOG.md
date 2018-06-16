@@ -40,4 +40,5 @@ LGB: +retrain deep LGB with new features, +complete Ridge                       
 BLEND: +FM models                                                                 - Dim 85,    5CV 0.21342, Submit 0.2178, Delta -.00438  <8c01031>
 BLEND: +Add NIMA to LGBs                                                          - Dim 89,    5CV 0.21332, Submit 0.2177, Delta -.00438
 BLEND: +Add Base LGB                                                              - Dim 90,    5CV 0.21324, Submit ?0.2176?
+BLEND: +Add CNN FT, +Add TFIDF stats                                              - Dim ?,     5CV 0.21309, Submit ?0.2175?
 ```
