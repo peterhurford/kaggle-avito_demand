@@ -240,6 +240,14 @@ if not is_in_cache('complete_fm'):
     print_step('Cache')
     save_in_cache('complete_fm', pd.DataFrame({'complete_fm': results['train']}),
                                  pd.DataFrame({'complete_fm': results['test']}))
+
+    print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+    print_step('Prepping submission file')
+    submission = pd.DataFrame()
+    submission['item_id'] = test_id
+    submission['deal_probability'] = results['test'].clip(0.0, 1.0)
+    submission.to_csv('submit/submit_fm.csv', index=False)
+    print_step('Done!')
 # [2018-06-06 00:32:04.610346] complete-fm cv scores : [0.22574842632640188, 0.22496819763704198, 0.22500458473036733, 0.22493600574130557, 0.22553416531004894]
 # [2018-06-06 00:32:04.610419] complete-fm mean cv score : 0.22523827594903315
 # [2018-06-06 00:32:04.610518] complete-fm std cv score : 0.00033666751558799967

@@ -152,23 +152,23 @@ for col in train_fe.columns:
 print('-')
 
 
-print('~~~~~~~~~~~~')
-print_step('Run LGB')
-results = run_cv_model(train_fe, test_fe, target, runLGB, rmse, 'base_lgb')
-import pdb
-pdb.set_trace()
+# print('~~~~~~~~~~~~')
+# print_step('Run LGB')
+# results = run_cv_model(train_fe, test_fe, target, runLGB, rmse, 'base_lgb')
+# import pdb
+# pdb.set_trace()
 
-print('~~~~~~~~~~')
-print_step('Cache')
-save_in_cache('base_lgb', pd.DataFrame({'base_lgb': results['train']}),
-                          pd.DataFrame({'base_lgb': results['test']}))
+# print('~~~~~~~~~~')
+# print_step('Cache')
+# save_in_cache('base_lgb', pd.DataFrame({'base_lgb': results['train']}),
+#                           pd.DataFrame({'base_lgb': results['test']}))
 
-print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
-print_step('Prepping submission file')
-submission = pd.DataFrame()
-submission['item_id'] = test_id
-submission['deal_probability'] = results['test'].clip(0.0, 1.0)
-submission.to_csv('submit/submit_base_lgb.csv', index=False)
+# print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+# print_step('Prepping submission file')
+# submission = pd.DataFrame()
+# submission['item_id'] = test_id
+# submission['deal_probability'] = results['test'].clip(0.0, 1.0)
+# submission.to_csv('submit/submit_base_lgb.csv', index=False)
 
 print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
 print_step('Importing Data 8/15')
@@ -299,50 +299,50 @@ print_step('Done!')
 
 
 # RIDGE LGB
-# [2018-06-13 21:06:33.307233] ridge_lgb cv scores : [0.21481023099930235, 0.21397466737613413, 0.21390426736833568, 0.21385081987088378, 0.21435439465470424]
-# [2018-06-13 21:06:33.307298] ridge_lgb mean cv score : 0.214178876053872
-# [2018-06-13 21:06:33.307399] ridge_lgb std cv score : 0.0003617036963564816
+# [2018-06-15 04:56:50.288476] ridge_lgb cv scores : [0.2147783829876306, 0.21395614971673593, 0.2138701184179281, 0.21380657669625333, 0.21439726308695933]
+# [2018-06-15 04:56:50.288546] ridge_lgb mean cv score : 0.21416169818110148
+# [2018-06-15 04:56:50.288657] ridge_lgb std cv score : 0.00037126033291255727
 
-# [100]   training's rmse: 0.216785       valid_1's rmse: 0.220499
-# [200]   training's rmse: 0.212039       valid_1's rmse: 0.218252
-# [300]   training's rmse: 0.208943       valid_1's rmse: 0.217347
-# [400]   training's rmse: 0.206321       valid_1's rmse: 0.216727
-# [500]   training's rmse: 0.204102       valid_1's rmse: 0.216338
-# [600]   training's rmse: 0.201907       valid_1's rmse: 0.215948
-# [700]   training's rmse: 0.200053       valid_1's rmse: 0.215731
-# [800]   training's rmse: 0.198012       valid_1's rmse: 0.215524
-# [900]   training's rmse: 0.19636        valid_1's rmse: 0.215367
-# [1000]  training's rmse: 0.194721       valid_1's rmse: 0.215224
-# [1100]  training's rmse: 0.193234       valid_1's rmse: 0.215152
-# [1200]  training's rmse: 0.191779       valid_1's rmse: 0.215059
-# [1300]  training's rmse: 0.190345       valid_1's rmse: 0.215
-# [1400]  training's rmse: 0.189003       valid_1's rmse: 0.21494
-# [1500]  training's rmse: 0.187796       valid_1's rmse: 0.214898
-# [1600]  training's rmse: 0.186545       valid_1's rmse: 0.214885
-# [1700]  training's rmse: 0.185354       valid_1's rmse: 0.214834
-# [1800]  training's rmse: 0.18423        valid_1's rmse: 0.21481
+# [100]   training's rmse: 0.216829       valid_1's rmse: 0.220427
+# [200]   training's rmse: 0.212227       valid_1's rmse: 0.218217
+# [300]   training's rmse: 0.208823       valid_1's rmse: 0.217209
+# [400]   training's rmse: 0.2061 valid_1's rmse: 0.216543
+# [500]   training's rmse: 0.203779       valid_1's rmse: 0.216114
+# [600]   training's rmse: 0.201708       valid_1's rmse: 0.2158
+# [700]   training's rmse: 0.199802       valid_1's rmse: 0.215607
+# [800]   training's rmse: 0.197992       valid_1's rmse: 0.215438
+# [900]   training's rmse: 0.19635        valid_1's rmse: 0.215269
+# [1000]  training's rmse: 0.194769       valid_1's rmse: 0.215163
+# [1100]  training's rmse: 0.193348       valid_1's rmse: 0.215067
+# [1200]  training's rmse: 0.19194        valid_1's rmse: 0.214993
+# [1300]  training's rmse: 0.190427       valid_1's rmse: 0.214965
+# [1400]  training's rmse: 0.189121       valid_1's rmse: 0.214912
+# [1500]  training's rmse: 0.187851       valid_1's rmse: 0.214862
+# [1600]  training's rmse: 0.186619       valid_1's rmse: 0.214822
+# [1700]  training's rmse: 0.185392       valid_1's rmse: 0.214793
+# [1800]  training's rmse: 0.18423        valid_1's rmse: 0.214778
 
 
 # WITH LGB
-# [2018-06-13 22:56:14.977763] stack_lgb cv scores : [0.21445831192298195, 0.2135156996792157, 0.21343223308771092, 0.21356783859418368, 0.21405113908072435]
-# [2018-06-13 22:56:14.977830] stack_lgb mean cv score : 0.21380504447296328
-# [2018-06-13 22:56:14.977935] stack_lgb std cv score : 0.00039148340572575814
+# [2018-06-15 06:27:37.917003] stack_lgb cv scores : [0.21435706607494084, 0.21355795065997074, 0.2134008730635741, 0.21346079057184786, 0.21400001188721424]
+# [2018-06-15 06:27:37.917069] stack_lgb mean cv score : 0.21375533845150957
+# [2018-06-15 06:27:37.917175] stack_lgb std cv score : 0.00036696248523406254
 
-# [100]   training's rmse: 0.215772       valid_1's rmse: 0.219468
-# [200]   training's rmse: 0.210742       valid_1's rmse: 0.216861
-# [300]   training's rmse: 0.207539       valid_1's rmse: 0.215862
-# [400]   training's rmse: 0.204946       valid_1's rmse: 0.215364
-# [500]   training's rmse: 0.202645       valid_1's rmse: 0.215013
-# [600]   training's rmse: 0.200699       valid_1's rmse: 0.214837
-# [700]   training's rmse: 0.198963       valid_1's rmse: 0.214733
-# [800]   training's rmse: 0.197231       valid_1's rmse: 0.214655
-# [900]   training's rmse: 0.195496       valid_1's rmse: 0.214603
-# [1000]  training's rmse: 0.193909       valid_1's rmse: 0.214567
-# [1100]  training's rmse: 0.192581       valid_1's rmse: 0.214539
-# [1200]  training's rmse: 0.191275       valid_1's rmse: 0.214518
-# [1300]  training's rmse: 0.18995        valid_1's rmse: 0.21451
-# [1400]  training's rmse: 0.188685       valid_1's rmse: 0.214474
-# [1500]  training's rmse: 0.187465       valid_1's rmse: 0.214458
-# [1600]  training's rmse: 0.186386       valid_1's rmse: 0.214457
-# [1700]  training's rmse: 0.185242       valid_1's rmse: 0.214448
-# [1800]  training's rmse: 0.184096       valid_1's rmse: 0.214458
+# [100]   training's rmse: 0.21588        valid_1's rmse: 0.219561
+# [200]   training's rmse: 0.210884       valid_1's rmse: 0.216986
+# [300]   training's rmse: 0.2075 valid_1's rmse: 0.21588
+# [400]   training's rmse: 0.204813       valid_1's rmse: 0.215324
+# [500]   training's rmse: 0.202693       valid_1's rmse: 0.215015
+# [600]   training's rmse: 0.200695       valid_1's rmse: 0.214843
+# [700]   training's rmse: 0.198797       valid_1's rmse: 0.214715
+# [800]   training's rmse: 0.197068       valid_1's rmse: 0.214627
+# [900]   training's rmse: 0.195469       valid_1's rmse: 0.214562
+# [1000]  training's rmse: 0.19397        valid_1's rmse: 0.2145
+# [1100]  training's rmse: 0.192422       valid_1's rmse: 0.214478
+# [1200]  training's rmse: 0.191044       valid_1's rmse: 0.214446
+# [1300]  training's rmse: 0.18968        valid_1's rmse: 0.214414
+# [1400]  training's rmse: 0.188452       valid_1's rmse: 0.21439
+# [1500]  training's rmse: 0.187219       valid_1's rmse: 0.214378
+# [1600]  training's rmse: 0.186012       valid_1's rmse: 0.214378
+# [1700]  training's rmse: 0.184909       valid_1's rmse: 0.214364
+# [1800]  training's rmse: 0.18381        valid_1's rmse: 0.214357
