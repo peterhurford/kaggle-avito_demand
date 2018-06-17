@@ -4,6 +4,7 @@ from pprint import pprint
 import pandas as pd
 import numpy as np
 
+from textblob import TextBlob
 from nltk.stem.porter import PorterStemmer
 
 from sklearn.preprocessing import normalize
@@ -16,6 +17,7 @@ from keras.preprocessing.text import Tokenizer
 from keras.callbacks import Callback
 
 from utils import print_step
+from preprocess import normalize_text
 from cache import get_data, is_in_cache, save_in_cache
 
 #####Thomas
@@ -34,14 +36,37 @@ from itertools import combinations
 
 
 
-EMBEDDING_FILES = {'crawl': 'cache/cc.ru.300.vec',
-                   'local': 'cache/local_fasttext_model.vec'}
+class RocAucEvaluation(Callback):
+    def __init__(self, validation_data=(), interval=1):
+        super(Callback, self).__init__()
+
+        self.interval = interval
+        self.X_val, self.y_val = validation_data
+
+    def on_epoch_end(self, epoch, logs={}):
+        if epoch % self.interval == 0:
+            y_pred = self.model.predict(self.X_val, verbose=0)
+            score = roc_auc_score(self.y_val, y_pred)
+            print("\n ROC-AUC - epoch: %d - score: %.6f \n" % (epoch+1, score))
+
+
+EMBEDDING_FILES = {'crawl': 'cache/crawl/crawl-300d-2M.vec',
+                   'glove': 'cache/glove/glove.840B.300d.txt',
+                   'twitter': 'cache/twitter/glove.twitter.27B.200d.txt',
+                   'lexvec': 'cache/lexvec/lexvec.commoncrawl.300d.W.pos.vectors',
+                   'fasttext': 'cache/wiki/wiki.en.vec'}
+#                   'local': 'cache/local_fasttext_model.vec'}
 EMBED_SIZE_LOOKUP = {'crawl': 300,
+                     'glove': 300,
+                     'twitter': 200,
+                     'lexvec': 300,
+                     'fasttext': 300,
                      'local': 100}
 
+
 def tokenize_and_embed(train_df, test_df, embedding_file, max_features, maxlen, embed_size, label):
-    X_train = train_df['desc']
-    X_test = test_df['desc']
+    X_train = train_df['comment_text'].fillna('peterhurford').values
+    X_test = test_df['comment_text'].fillna('peterhurford').values
 
     print_step('Tokenizing data...')
     tokenizer = Tokenizer(num_words=max_features)
@@ -70,8 +95,6 @@ def tokenize_and_embed(train_df, test_df, embedding_file, max_features, maxlen, 
     word_index = tokenizer.word_index
     nb_words = min(max_features, len(word_index))
     embedding_matrix = np.zeros((nb_words, embed_size))
-    import pdb
-    pdb.set_trace()
     if label != 'local':
         local_embedding_matrix = np.zeros((nb_words, 100))
         print_step('Calculating pre-trained <-> local shared words')
@@ -88,8 +111,6 @@ def tokenize_and_embed(train_df, test_df, embedding_file, max_features, maxlen, 
         # First try to find the embedding vector as-is
         embedding_vector = embeddings_index.get(word)
         if embedding_vector is None:
-            import pdb
-            pdb.set_trace()
             # Second, try to replace in' -> ing
             print("in' -> ing")
             word = word.replace("in'", "ing")
@@ -163,30 +184,21 @@ def tokenize_and_embed(train_df, test_df, embedding_file, max_features, maxlen, 
 
 
 def run_nn_model(label, model, max_features, maxlen, epochs, batch_size, predict_batch_size):
+    classes = ['toxic', 'severe_toxic', 'obscene', 'threat', 'insult', 'identity_hate']
     for embedding_name, embedding_file in EMBEDDING_FILES.items():
         if is_in_cache(label + '_' + embedding_name):
             print_step('Already trained ' + label + '_' + embedding_name + '! Skipping...')
         else:
-            print_step('Preprocessing 1/4')
-            train, test = get_data()
-            print_step('Preprocessing 2/4')
-            train['desc'] = train['title'] + ' ' + train['description'].fillna('')
-            print_step('Preprocessing 3/4')
-            test['desc'] = test['title'] + ' ' + test['description'].fillna('')
-            print_step('Preprocessing 4/4')
-            train.drop([c for c in train.columns if c != 'desc'], axis=1, inplace=True)
-            test.drop([c for c in test.columns if c != 'desc'], axis=1, inplace=True)
+            train_df, test_df = get_data()
 
             print_step('Loading embed ' + embedding_name + '...')
             embed_size = EMBED_SIZE_LOOKUP[embedding_name]
-            x_train, x_test, embedding_matrix = tokenize_and_embed(train, test, embedding_file, max_features, maxlen, embed_size, embedding_name)
-            y_train = train_df['deal_probability']
-            import pdb
-            pdb.set_trace()
+            x_train, x_test, embedding_matrix = tokenize_and_embed(train_df, test_df, embedding_file, max_features, maxlen, embed_size, embedding_name)
+            y_train = train_df[classes].values
 
             print_step('Build model...')
             model = model(max_features, maxlen, embed_size, embedding_matrix)
-            model.save_weights('cache/' + label + '-model-weights.h5')
+            model.save_weights('cache/gru-model-weights.h5')
 
             print_step('Making KFold for CV')
             kf = StratifiedKFold(n_splits=5, shuffle=True, random_state=2017)

@@ -1,4 +1,4 @@
-import re
+import re, regex
 import string
 import pymorphy2
 
@@ -33,17 +33,6 @@ def univariate_analysis(target, feature):
     return 1 - score if score < 0.5 else score
 
 
-# Normalize Russian Morphology
-# HT @IggiSv9t https://www.kaggle.com/iggisv9t/handling-russian-language-inflectional-structure
-morph = pymorphy2.MorphAnalyzer()
-retoken = re.compile(r'[\'\w\-]+')
-
-def normalize_form(text):
-    text = retoken.findall(text.lower())
-    text = [morph.parse(x)[0].normal_form for x in text]
-    return ' '.join(text)
-
-
 stop_words = stopwords.words('russian')
 
 def normalize_text(text):
@@ -52,6 +41,19 @@ def normalize_text(text):
         text = text.replace(s, ' ')
     text = text.split(' ')
     return u' '.join(x for x in text if len(x) > 1 and x not in stop_words)
+
+
+def clean_text(text):
+        text = bytes(text, encoding="utf-8")
+        text = text.lower()
+        text = re.sub(b'(?<! )(?=[.,!?()])|(?<=[.,!?()])(?! )', b' ', text)
+        text = re.sub(b'\s+(?=\d)|(?<=\d)\s+', b' ', text)
+        text = text.replace(b"\b", b" ")
+        text = text.replace(b"\r", b" ")
+        text = regex.sub(b"\s+", b" ", text)
+        text = str(text, 'utf-8')
+        text = re.sub(r"\W+", " ", text.lower())
+        return text
 
 
 # https://stackoverflow.com/questions/37685412/avoid-scaling-binary-columns-in-sci-kit-learn-standsardscaler

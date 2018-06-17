@@ -36,6 +36,7 @@ if not is_in_cache('active_feats'):
         periods_test
     ])
 
+
     print('~~~~~~~~~~~~~~~~~~~~~')
     print_step('Grouping 1/4 1/3')
     all_periods['date_to'] = pd.to_datetime(all_periods['date_to'])
@@ -43,6 +44,7 @@ if not is_in_cache('active_feats'):
     all_periods['date_from'] = pd.to_datetime(all_periods['date_from'])
     print_step('Grouping 1/4 3/3')
     all_periods['days_up'] = all_periods['date_to'].dt.dayofyear - all_periods['date_from'].dt.dayofyear
+    all_periods['item_count'] = all_periods.groupby('item_id')['item_id'].transform('count')
 
 
     print_step('Grouping 2/4 1/5')
@@ -64,11 +66,10 @@ if not is_in_cache('active_feats'):
     print_step('Grouping 3/4 3/4')
     all_periods = all_periods.merge(all_samples, on='item_id', how='left')
     print_step('Grouping 3/4 4/4')
-    gp = all_periods.groupby(['user_id'])[['days_up_sum', 'times_put_up']].mean().reset_index() \
-        .rename(index=str, columns={
-            'days_up_sum': 'avg_days_up_user',
-            'times_put_up': 'avg_times_up_user'
-        })
+    gp = all_periods.groupby(['user_id'])[['days_up_sum', 'times_put_up']].agg(['min', 'max', 'mean'])
+    gp = pd.DataFrame(gp.to_records())
+    gp.columns = ['user_id', 'days_up_sum_min', 'days_up_sum_max', 'days_up_sum_mean',
+                  'times_put_up_min', 'times_put_up_max', 'times_put_up_mean']
     print_step('Grouping 4/4 1/3')
     n_user_items = all_samples.groupby(['user_id'])[['item_id']].count().reset_index() \
         .rename(index=str, columns={

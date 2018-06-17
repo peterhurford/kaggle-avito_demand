@@ -13,29 +13,37 @@ from utils import print_step, rmse, bin_and_ohe_data
 from cache import get_data, is_in_cache, load_cache, save_in_cache
 
 
-# LGB Model Definition
-def runLGB(train_X, train_y, test_X, test_y, test_X2):
+params = {'learning_rate': 0.05,
+          'application': 'regression',
+          'max_depth': 9,
+          'num_leaves': 300,
+          'verbosity': -1,
+          'metric': 'rmse',
+          'data_random_seed': 3,
+          'bagging_fraction': 0.8,
+          'feature_fraction': 0.4,
+          'nthread': 16,
+          'lambda_l1': 1,
+          'lambda_l2': 1,
+          'min_data_in_leaf': 40,
+          'num_rounds': 4800,
+          'verbose_eval': 10}
+
+def runLGB(train_X, train_y, test_X, test_y, test_X2, params):
+    print_step('Prep LGB')
     d_train = lgb.Dataset(train_X, label=train_y)
     d_valid = lgb.Dataset(test_X, label=test_y)
     watchlist = [d_train, d_valid]
-    params = {'learning_rate': 0.1,
-              'application': 'regression',
-              'max_depth': 9,
-              'num_leaves': 2 ** 9,
-              'verbosity': -1,
-              'metric': 'rmse',
-              'data_random_seed': 3,
-              'bagging_fraction': 0.8,
-              'feature_fraction': 0.2,
-              'nthread': 3,
-              'lambda_l1': 1,
-              'lambda_l2': 1,
-              'min_data_in_leaf': 40}
+    print_step('Train LGB')
+    num_rounds = params.pop('num_rounds')
+    verbose_eval = params.pop('verbose_eval')
     model = lgb.train(params,
                       train_set=d_train,
-                      num_boost_round=1000,
+                      num_boost_round=num_rounds,
                       valid_sets=watchlist,
-                      verbose_eval=10)
+                      verbose_eval=verbose_eval)
+    print_step('Feature importance')
+    pprint(sorted(list(zip(model.feature_importance(), train_X.columns)), reverse=True))
     print_step('Predict 1/2')
     pred_test_y = model.predict(test_X)
     print_step('Predict 2/2')
@@ -44,7 +52,7 @@ def runLGB(train_X, train_y, test_X, test_y, test_X2):
 
 
 print('~~~~~~~~~~~~~~~~~~~~~~~')
-print_step('Importing Data 1/6')
+print_step('Importing Data 1/11')
 train, test = get_data()
 
 print('~~~~~~~~~~~~~~~')
@@ -55,27 +63,27 @@ test_id = test['item_id']
 train.drop(['deal_probability', 'item_id'], axis=1, inplace=True)
 test.drop(['item_id'], axis=1, inplace=True)
 
-if not is_in_cache('deep_text_feats'):
+if not is_in_cache('deep_text_feats3'):
     print('~~~~~~~~~~~~~~~~~~~~~~~')
-    print_step('Importing Data 2/6')
+    print_step('Importing Data 2/11')
     tfidf_train, tfidf_test = load_cache('titlecat_tfidf')
 
-    print_step('Importing Data 3/6')
+    print_step('Importing Data 3/11')
     tfidf_train2, tfidf_test2 = load_cache('text_tfidf')
 
-    print_step('Importing Data 4/6')
+    print_step('Importing Data 4/11')
     tfidf_train3, tfidf_test3 = load_cache('text_char_tfidf')
 
 
-    print_step('Importing Data 5/6')
+    print_step('Importing Data 5/11')
     train = hstack((tfidf_train, tfidf_train2, tfidf_train3)).tocsr()
-    print_step('Importing Data 6/6')
+    print_step('Importing Data 6/11')
     test = hstack((tfidf_test, tfidf_test2, tfidf_test3)).tocsr()
     print(train.shape)
     print(test.shape)
 
     print_step('SelectKBest 1/2')
-    fselect = SelectKBest(f_regression, k=40000)
+    fselect = SelectKBest(f_regression, k=100000)
     train = fselect.fit_transform(train, target)
     print_step('SelectKBest 2/2')
     test = fselect.transform(test)
@@ -91,7 +99,7 @@ if not is_in_cache('deep_text_feats'):
     del tfidf_train3
     gc.collect()
 
-    print_step('Importing Data 7/7')
+    print_step('Importing Data 7/11')
     train_fe, test_fe = load_cache('data_with_fe')
     dummy_cols = ['parent_category_name', 'category_name', 'user_type', 'image_top_1',
                   'day_of_week', 'region', 'city', 'param_1', 'param_2', 'param_3', 'cat_bin']
@@ -110,43 +118,47 @@ if not is_in_cache('deep_text_feats'):
                     'num_lowercase_description', 'num_punctuations_title', 'sentence_mean', 'sentence_std',
                     'words_per_sentence', 'price_missing']
 
-    print_step('Importing Data 8/5 1/5')
+    print_step('Importing Data 8/11 1/3')
     train_img, test_img = load_cache('img_data')
-    print_step('Importing Data 8/5 2/5')
+    print_step('Importing Data 8/11 2/3')
     drops = ['item_id', 'img_path', 'img_std_color', 'img_sum_color', 'img_rms_color',
              'img_var_color', 'img_average_color', 'deal_probability']
     drops += [c for c in train_img if 'hist' in c]
     img_dummy_cols = ['img_average_color']
     img_numeric_cols = list(set(train_img.columns) - set(drops) - set(dummy_cols))
+    print_step('Importing Data 8/11 3/3')
     train_img = train_img[img_numeric_cols + img_dummy_cols].fillna(0)
     test_img = test_img[img_numeric_cols + img_dummy_cols].fillna(0)
     dummy_cols += img_dummy_cols
     numeric_cols += img_numeric_cols
 
-    print_step('Importing Data 9/5 2/8')
+    print_step('Importing Data 9/11 1/3')
 # HT: https://www.kaggle.com/jpmiller/russian-cities/data
 # HT: https://www.kaggle.com/jpmiller/exploring-geography-for-1-5m-deals/notebook
     locations = pd.read_csv('city_latlons.csv')
-    print_step('Importing Data 9/5 3/8')
+    print_step('Importing Data 9/11 2/3')
     train_fe = train_fe.merge(locations, how='left', left_on='city', right_on='location')
-    print_step('Importing Data 9/5 4/8')
+    print_step('Importing Data 9/11 3/3')
     test_fe = test_fe.merge(locations, how='left', left_on='city', right_on='location')
     numeric_cols += ['lat', 'lon']
 
-    print_step('Importing Data 10/5 2/8')
+    print_step('Importing Data 10/11 1/3')
     region_macro = pd.read_csv('region_macro.csv')
-    print_step('Importing Data 10/5 3/8')
+    print_step('Importing Data 10/11 2/3')
     train_fe = train_fe.merge(region_macro, how='left', on='region')
-    print_step('Importing Data 10/5 4/8')
+    print_step('Importing Data 10/11 3/3')
     test_fe = test_fe.merge(region_macro, how='left', on='region')
     numeric_cols += ['unemployment_rate', 'GDP_PC_PPP', 'HDI']
 
-    print_step('Importing Data 11/5 1/4')
+    print_step('Importing Data 11/11 1/4')
     train_active, test_active = load_cache('active_feats')
+    print_step('Importing Data 11/11 2/4')
     train_active.fillna(0, inplace=True)
     test_active.fillna(0, inplace=True)
+    print_step('Importing Data 11/11 3/4')
     train_active.drop('user_id', axis=1, inplace=True)
     test_active.drop('user_id', axis=1, inplace=True)
+    print_step('Importing Data 11/11 4/4')
     numeric_cols += train_active.columns.values.tolist()
 
     print_step('CSR 1/7')
@@ -182,45 +194,30 @@ if not is_in_cache('deep_text_feats'):
     gc.collect()
 
     print_step('Caching')
-    save_in_cache('deep_text_feats', train, test)
+    save_in_cache('deep_text_feats3', train, test)
 else:
-    train, test = load_cache('deep_text_feats')
+    train, test = load_cache('deep_text_feats3')
 
 
 print('~~~~~~~~~~~~')
 print_step('Run LGB')
-results = run_cv_model(train, test, target, runLGB, rmse, 'lgb')
+results = run_cv_model(train, test, target, runLGB, params, rmse, 'deep_lgb')
 import pdb
 pdb.set_trace()
 
 print('~~~~~~~~~~')
 print_step('Cache')
-save_in_cache('deep_text_lgb', pd.DataFrame({'deep_text_lgb': results['train']}),
-                               pd.DataFrame({'deep_text_lgb': results['test']}))
+save_in_cache('deep_lgb', pd.DataFrame({'deep_lgb': results['train']}),
+                          pd.DataFrame({'deep_lgb': results['test']}))
 
 print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
 print_step('Prepping submission file')
 submission = pd.DataFrame()
 submission['item_id'] = test_id
 submission['deal_probability'] = results['test'].clip(0.0, 1.0)
-submission.to_csv('submit/submit_lgb7.csv', index=False)
+submission.to_csv('submit/submit_deep_lgb.csv', index=False)
 print_step('Done!')
 
-# Deep LGB                                                       - Dim 195673, 5CV 0.22196
-
-# CURRENT
-# [2018-05-03 09:16:12.670379] lgb cv scores : [0.22257689498410263, 0.22140350676341775, 0.22190683421601698, 0.22168666577421173, 0.22221717818648018]
-# [2018-05-03 09:16:12.671351] lgb mean cv score : 0.22195821598484583
-# [2018-05-03 09:16:12.672767] lgb std cv score : 0.00040838879744612577
-
-# [10]    training's rmse: 0.240701       valid_1's rmse: 0.241443
-# [100]   training's rmse: 0.224196       valid_1's rmse: 0.227253
-# [200]   training's rmse: 0.221323       valid_1's rmse: 0.225548
-# [300]   training's rmse: 0.21958        valid_1's rmse: 0.224654
-# [400]   training's rmse: 0.218335       valid_1's rmse: 0.224104
-# [500]   training's rmse: 0.217273       valid_1's rmse: 0.223712
-# [600]   training's rmse: 0.216378       valid_1's rmse: 0.223389
-# [700]   training's rmse: 0.215555       valid_1's rmse: 0.223133
-# [800]   training's rmse: 0.214814       valid_1's rmse: 0.222927
-# [900]   training's rmse: 0.21409        valid_1's rmse: 0.222717
-# [1000]  training's rmse: 0.213506       valid_1's rmse: 0.222577
+# [2018-06-08 10:35:04.661110] lgb cv scores : [0.21780504041940127, 0.21681461786715062, 0.21690422843478088, 0.2170641135832974, 0.21757371806331538]
+# [2018-06-08 10:35:04.661735] lgb mean cv score : 0.21723234367358915
+# [2018-06-08 10:35:04.663950] lgb std cv score : 0.00038858045735915296

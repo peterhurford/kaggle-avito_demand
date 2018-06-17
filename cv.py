@@ -6,7 +6,7 @@ from sklearn.model_selection import KFold
 from utils import print_step
 
 
-def run_cv_model(train, test, target, model_fn, eval_fn, label):
+def run_cv_model(train, test, target, model_fn, params, eval_fn, label):
     kf = KFold(n_splits=5, shuffle=True, random_state=2017)
     fold_splits = kf.split(train)
     cv_scores = []
@@ -27,7 +27,8 @@ def run_cv_model(train, test, target, model_fn, eval_fn, label):
             dev_X, val_X = train[dev_index], train[val_index]
             dev_y, val_y = target[dev_index], target[val_index]
 
-        pred_val_y, pred_test_y = model_fn(dev_X, dev_y, val_X, val_y, test)
+        params2 = params.copy()
+        pred_val_y, pred_test_y = model_fn(dev_X, dev_y, val_X, val_y, test, params2)
         pred_full_test = pred_full_test + pred_test_y
         pred_train[val_index] = pred_val_y
         cv_score = eval_fn(val_y, pred_val_y)

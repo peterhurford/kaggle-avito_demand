@@ -1,57 +1,74 @@
-- number of days between activation and from date
-- Days up median, min, max (https://github.com/tyokota/kaggle-avito/blob/master/code_features/make%20-%20time%20features%20v.2.ipynb)
-- how many renewals per user
-- avg time between renewals
-- average price of items per user
-- average price of renewed items per user
-- Num special chars, num emoji, ratios (https://github.com/tyokota/kaggle-avito/blob/master/code_features/make%20-%20string%20stats.ipynb)
-- Add more macroeconomic data
-- BayesOpt (https://github.com/tyokota/kaggle-avito/blob/master/LGB%20framework%20v.3.2.ipynb)
-- Start doing text embeddings + corrections
-- Add text normalization
-- Add LDA
-- More text features (RDizzl3 style, see https://www.kaggle.com/rdizzl3/stage-2-lgbm-stacker-8th-place-solution/code)
-	- Cooc - parent_category_name X text
-	- Cooc - parent_category_name X title
-	- Cooc - parent_category_name X region
-	- Cooc - cat_bin X text
-	- Cooc - cat_bin X title
-	- Cooc - cat_bin X region
-	- title_first_word
-	- title_second_word
-	- title_third_word
-	- title_last_word
-	- title_first_bigram
-	- title_last_bigram
-	- desc_first_bigram
-	- desc_last_bigram
-	- title_first_trigram
-	- title_last_trigram
-	- desc_first_trigram
-	- desc_last_trigram
-	- Means, sums, skew, kurtosis of TFIDF
+- Move embedding into mainline LGB stack, add to stacker models using SVD(20)
+- Make a second base LGB with Bayesian encoding and NB features
+- Add SVD embedding to blender, also try removing all other SVD
+- Switch stacker LGBs to Bayesian encoding if better
+- Rotate seeds on models, tune leaves for base model separately
+- Try more and different embeddings, SVD on embeddings
+
+- Dominant color
+- average, standard deviation and minimum of Brightness in HSV color space
+- average and standard deviation of Saturation in HSV color space
+- average, standard deviation and minimum of Luminance in YUV color space
+- number of colors
+- number of key points
+- number bright spots <https://www.pyimagesearch.com/2016/10/31/detecting-multiple-bright-spots-in-an-image-with-python-and-opencv/>
+- object size <https://www.pyimagesearch.com/2016/03/28/measuring-size-of-objects-in-an-image-with-opencv/>
+- noise, composition, contrast <https://github.com/jeffh/CV-Image-Quality-Analysis>
+- https://bitbucket.org/sakoho81/pyimagequalityranking/
+- number circles <http://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_imgproc/py_houghcircles/py_houghcircles.html#hough-circles>
+- number lines <http://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_imgproc/py_houghlines/py_houghlines.html#hough-lines>
+- number edges <http://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_imgproc/py_canny/py_canny.html#canny>
+- histogram stuff <http://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_imgproc/py_histograms/py_histogram_backprojection/py_histogram_backprojection.html#histogram-backprojection, http://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_imgproc/py_histograms/py_histogram_equalization/py_histogram_equalization.html#histogram-equalization>
+- HarrPSI <http://www.haarpsi.org/software/haarPsi.py, http://www.math.uni-bremen.de/cda/HaarPSI/publications/HaarPSI_preprint_v4.pdf>
+
+- price mean and price diff on inception_resnet_v2_top_1
+
+- Add more macroeconomic data (vote Putin)
+
+- Docfreq stats (see https://github.com/Wrosinski/Kaggle-Quora/blob/master/features/Extraction%20-%20Textacy%20Features%2017.05.ipynb)
+
 - POS tagging
 - Sentiment analysis
-- Understand and apply FE from https://www.kaggle.com/shadowwarrior/1st-place-solution
-- Pic2Vec (github.com/datarobot/pic2vec)
-- Neural image assessment (https://github.com/titu1994/neural-image-assessment)
-- Image labeling confidence
-- Dominant color
-- Handle price outliers / Try to predict price
-- https://github.com/mxbi/ftim
-- Try `tv = TfidfVectorizer(max_features=None, ngram_range=(1, 3), min_df=2, token_pattern=r'(?u)\b\w+\b')` in Ridges
-- Re-do existing ridges / FMs
-- Finish VP
-- Make additional FMs, FTRL
-- Make LGBs/XGBs
-- Make NNs
-- Understand and apply models from https://www.kaggle.com/shadowwarrior/1st-place-solution
-- Add Cat2Vec
-- Add Olivier TargetEncoding (do inside CV)
-- Add Entity embedding
-- Look more at Mercari competition, DonorsChoose competition, Porto competition
-- Tune models some
-- Try to predict category
-- Try to predict image_top_1
-- Look at fail cases
-- Classification models
+
+- use mean of log1p for price / diff
+- use harmonic mean for price / diff
+- use geometric mean for price / diff
+
+- Figure out what to do with Matt's entity embedding on price
+- Add Matt's entity embedding on deal probability
+- Add Matt's entity embedding on deal threshold
+- Add Matt's Price ECDF encoding
+- Add Matt's interactions???
+
+- Mean, skew, kurtosis of embeddings
+
+- Similarity encoding (https://dirty-cat.github.io/stable/auto_examples/02_predict_employee_salaries.html#sphx-glr-auto-examples-02-predict-employee-salaries-py)
+- Forest Kernels (https://github.com/joshloyal/ForestKernels, https://arxiv.org/abs/1402.4293)
+
+- LGB with CountVectorizer title (see https://www.kaggle.com/him4318/lightgbm-with-aggregated-features-v-2-0)
+- Refine embedding LGB, try SVD of multiple embeddings
+- Models with poisson loss
+
+- Lower learning rate, more rounds, vary seed
+- Tune LGB encoding -- defaults are min_data_per_group=100 max_cat_threshold=32 cat_l2=10.0 cat_smooth=10.0 max_cat_to_onehot=4
+
+- Add RDizzl3's LGB
+- Add RDizzle3's Ridge
+- Add Sijun's NNs
+- Add Matt's NNs
+- Add Matt's NB-SVM
+- Add Thomas's NNs
+
+- Dart
+- XGB
+- RF
+
+
+PATH TO 0.2166
+- Improving NN (0.0001)
+- Adding new NNs (0.0002)
+- RDizzl3 models (0.0002)
+- Embedding LGBs (0.0002)
+- Model tuning (0.0001)
+- Stacking and foresting (0.0001)
+- Better features (0.0001)

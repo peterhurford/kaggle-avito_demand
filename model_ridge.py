@@ -16,18 +16,8 @@ from cache import get_data, is_in_cache, load_cache, save_in_cache
 
 NCOMP = 20
 
-def runRidge5(train_X, train_y, test_X, test_y, test_X2):
-    model = Ridge(alpha=5.0)
-    print_step('Fit Ridge')
-    model.fit(train_X, train_y)
-    print_step('Ridge Predict 1/2')
-    pred_test_y = model.predict(test_X)
-    print_step('Ridge Predict 2/2')
-    pred_test_y2 = model.predict(test_X2)
-    return pred_test_y, pred_test_y2
-
-def runRidge8(train_X, train_y, test_X, test_y, test_X2):
-    model = Ridge(alpha=8.0)
+def runRidge(train_X, train_y, test_X, test_y, test_X2, params):
+    model = Ridge(**params)
     print_step('Fit Ridge')
     model.fit(train_X, train_y)
     print_step('Ridge Predict 1/2')
@@ -64,6 +54,19 @@ if not is_in_cache('tfidf_ridges') or not is_in_cache('titlecat_tfidf') or not i
     tfidf_test = tfidf.transform(test['title'])
     print(tfidf_test.shape)
 
+    print_step('Title Stats 1/6')
+    train['title_tfidf_sum'] = tfidf_train.sum(axis=1)
+    print_step('Title Stats 2/6')
+    train['title_tfidf_mean'] = tfidf_train.mean(axis=1)
+    print_step('Title Stats 3/6')
+    train['title_tfidf_nnz'] = tfidf_train.getnnz(axis=1)
+    print_step('Title Stats 4/6')
+    test['title_tfidf_sum'] = tfidf_test.sum(axis=1)
+    print_step('Title Stats 5/6')
+    test['title_tfidf_mean'] = tfidf_test.mean(axis=1)
+    print_step('Title Stats 6/6')
+    test['title_tfidf_nnz'] = tfidf_test.getnnz(axis=1)
+
     print_step('Title SVD 1/4')
     svd = TruncatedSVD(n_components=NCOMP, algorithm='arpack')
     svd.fit(tfidf_train)
@@ -99,6 +102,19 @@ if not is_in_cache('tfidf_ridges') or not is_in_cache('titlecat_tfidf') or not i
         print_step('Loading from cache...')
         tfidf_train, tfidf_test = load_cache('titlecat_tfidf')
 
+    print_step('Titlecat Stats 1/6')
+    train['titlecat_tfidf_sum'] = tfidf_train.sum(axis=1)
+    print_step('Titlecat Stats 2/6')
+    train['titlecat_tfidf_mean'] = tfidf_train.mean(axis=1)
+    print_step('Titlecat Stats 3/6')
+    train['titlecat_tfidf_nnz'] = tfidf_train.getnnz(axis=1)
+    print_step('Titlecat Stats 4/6')
+    test['titlecat_tfidf_sum'] = tfidf_test.sum(axis=1)
+    print_step('Titlecat Stats 5/6')
+    test['titlecat_tfidf_mean'] = tfidf_test.mean(axis=1)
+    print_step('Titlecat Stats 6/6')
+    test['titlecat_tfidf_nnz'] = tfidf_test.getnnz(axis=1)
+
     print_step('Titlecat SVD 1/4')
     svd = TruncatedSVD(n_components=NCOMP, algorithm='arpack')
     svd.fit(tfidf_train)
@@ -113,7 +129,7 @@ if not is_in_cache('tfidf_ridges') or not is_in_cache('titlecat_tfidf') or not i
     test = pd.concat([test, test_svd], axis=1)
 
     print_step('Titlecat TFIDF Ridge')
-    results = run_cv_model(tfidf_train, tfidf_test, target, runRidge5, rmse, 'titlecat-ridge')
+    results = run_cv_model(tfidf_train, tfidf_test, target, runRidge, {'alpha': 5.0}, rmse, 'titlecat-ridge')
     train['title_ridge'] = results['train']
     test['title_ridge'] = results['test']
 
@@ -133,6 +149,19 @@ if not is_in_cache('tfidf_ridges') or not is_in_cache('titlecat_tfidf') or not i
     print_step('Description TFIDF 3/3')
     tfidf_test = tfidf.transform(test['description'].fillna(''))
     print(tfidf_test.shape)
+
+    print_step('Description Stats 1/6')
+    train['description_tfidf_sum'] = tfidf_train.sum(axis=1)
+    print_step('Description Stats 2/6')
+    train['description_tfidf_mean'] = tfidf_train.mean(axis=1)
+    print_step('Description Stats 3/6')
+    train['description_tfidf_nnz'] = tfidf_train.getnnz(axis=1)
+    print_step('Description Stats 4/6')
+    test['description_tfidf_sum'] = tfidf_test.sum(axis=1)
+    print_step('Description Stats 5/6')
+    test['description_tfidf_mean'] = tfidf_test.mean(axis=1)
+    print_step('Description Stats 6/6')
+    test['description_tfidf_nnz'] = tfidf_test.getnnz(axis=1)
 
     print_step('Description SVD 1/4')
     svd = TruncatedSVD(n_components=NCOMP, algorithm='arpack')
@@ -166,7 +195,7 @@ if not is_in_cache('tfidf_ridges') or not is_in_cache('titlecat_tfidf') or not i
         print_step('Loading from cache...')
         tfidf_train, tfidf_test = load_cache('text_tfidf')
 
-    results = run_cv_model(tfidf_train, tfidf_test, target, runRidge8, rmse, 'desc-ridge')
+    results = run_cv_model(tfidf_train, tfidf_test, target, runRidge, {'alpha': 8.0}, rmse, 'desc-ridge')
     train['desc_ridge'] = results['train']
     test['desc_ridge'] = results['test']
 
@@ -192,14 +221,27 @@ if not is_in_cache('tfidf_ridges') or not is_in_cache('titlecat_tfidf') or not i
         print_step('Loading from cache...')
         tfidf_train, tfidf_test = load_cache('text_char_tfidf')
 
-    results = run_cv_model(tfidf_train, tfidf_test, target, runRidge8, rmse, 'desc-char-ridge')
+    print_step('Title Stats 1/6')
+    train['desc_char_tfidf_sum'] = tfidf_train.sum(axis=1)
+    print_step('Title Stats 2/6')
+    train['desc_char_tfidf_mean'] = tfidf_train.mean(axis=1)
+    print_step('Title Stats 3/6')
+    train['desc_char_tfidf_nnz'] = tfidf_train.getnnz(axis=1)
+    print_step('Title Stats 4/6')
+    test['desc_char_tfidf_sum'] = tfidf_test.sum(axis=1)
+    print_step('Title Stats 5/6')
+    test['desc_char_tfidf_mean'] = tfidf_test.mean(axis=1)
+    print_step('Title Stats 6/6')
+    test['desc_char_tfidf_nnz'] = tfidf_test.getnnz(axis=1)
+
+    results = run_cv_model(tfidf_train, tfidf_test, target, runRidge, {'alpha': 8.0}, rmse, 'desc-char-ridge')
     train['desc_char_ridge'] = results['train']
     test['desc_char_ridge'] = results['test']
 
     print('~~~~~~~~~~~~~')
     print_step('Dropping')
-    train.drop([c for c in train.columns if 'svd' not in c and 'ridge' not in c], axis=1, inplace=True)
-    test.drop([c for c in test.columns if 'svd' not in c and 'ridge' not in c], axis=1, inplace=True)
+    train.drop([c for c in train.columns if 'svd' not in c and 'ridge' not in c and 'tfidf' not in c], axis=1, inplace=True)
+    test.drop([c for c in test.columns if 'svd' not in c and 'ridge' not in c and 'tfidf' not in c], axis=1, inplace=True)
 
     print('~~~~~~~~~~~~')
     print_step('Caching')
@@ -225,7 +267,7 @@ print(test.shape)
 if not is_in_cache('full_text_ridge'):
     print('~~~~~~~~~~~~~~~~~~~~~~~~')
     print_step('Run Full Text Ridge')
-    results = run_cv_model(train, test, target, runRidge8, rmse, 'text-ridge')
+    results = run_cv_model(train, test, target, runRidge, {'alpha': 8.0}, rmse, 'text-ridge')
     import pdb
     pdb.set_trace()
 
@@ -353,7 +395,7 @@ if not is_in_cache('complete_ridge'):
         train, test = load_cache('complete_ridge_data')
 
     print_step('Run Complete Ridge')
-    results = run_cv_model(train, test, target, runRidge8, rmse, 'complete-ridge')
+    results = run_cv_model(train, test, target, runRidge, {'alpha': 8.0}, rmse, 'complete-ridge')
     import pdb
     pdb.set_trace()
 
@@ -361,6 +403,15 @@ if not is_in_cache('complete_ridge'):
     print_step('Cache')
     save_in_cache('complete_ridge', pd.DataFrame({'complete_ridge': results['train']}),
                                     pd.DataFrame({'complete_ridge': results['test']}))
+
+    print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+    print_step('Prepping submission file')
+    submission = pd.DataFrame()
+    submission['item_id'] = test_id
+    submission['deal_probability'] = results['test'].clip(0.0, 1.0)
+    submission.to_csv('submit/submit_complete_ridge.csv', index=False)
+    print_step('Done!')
+
 # [2018-06-05 21:47:05.054174] complete-ridge cv scores : [0.22481497797006353, 0.22409152529039147, 0.22410818210527936, 0.22406284281957914, 0.22472168320897423]
 # [2018-06-05 21:47:05.054259] complete-ridge mean cv score : 0.22435984227885752
 # [2018-06-05 21:47:05.054364] complete-ridge std cv score : 0.00033514560542958886
