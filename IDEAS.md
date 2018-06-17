@@ -1,7 +1,12 @@
-- Add lat / lon to blender
-- Add SVD and TFIDF stats to base LGB, and add to blender
-
-- Docfreq stats (see https://github.com/Wrosinski/Kaggle-Quora/blob/master/features/Extraction%20-%20Textacy%20Features%2017.05.ipynb)
+- Add Matt's entity embedding on price
+- Add Matt's entity embedding on deal probability
+- Add Matt's entity embedding on deal threshold
+- Add Matt's Price ECDF encoding
+- Add Matt's inception_resnet_v2_top_1, inception_resnet_v2_prob, nasnet_top_1, nasnet_prob, xception_top_1, xception_prob
+- Add mean and std of image confidence
+- Agreement between image models on labels (inception-nasnet, inception-xception, nasnet-xception, inception-nasnet-xception)
+- Agreement between image models and image_top_1 somehow?
+- Add Matt's interactions???
 
 - Dominant color
 - average, standard deviation and minimum of Brightness in HSV color space
@@ -18,6 +23,8 @@
 - number edges <http://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_imgproc/py_canny/py_canny.html#canny>
 - histogram stuff <http://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_imgproc/py_histograms/py_histogram_backprojection/py_histogram_backprojection.html#histogram-backprojection, http://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_imgproc/py_histograms/py_histogram_equalization/py_histogram_equalization.html#histogram-equalization>
 - HarrPSI <http://www.haarpsi.org/software/haarPsi.py, http://www.math.uni-bremen.de/cda/HaarPSI/publications/HaarPSI_preprint_v4.pdf>
+
+- Docfreq stats (see https://github.com/Wrosinski/Kaggle-Quora/blob/master/features/Extraction%20-%20Textacy%20Features%2017.05.ipynb)
 
 - POS tagging
 - Sentiment analysis
@@ -38,11 +45,12 @@
 - Lower learning rate, more rounds, vary seed
 - Tune LGB encoding -- defaults are min_data_per_group=100 max_cat_threshold=32 cat_l2=10.0 cat_smooth=10.0 max_cat_to_onehot=4
 
-- Add RDizzl3 LGB
-- Add RDizzle3 Ridge
-- Add NNs
-- Image labeling confidence
-- Add Entity embedding
+- Add RDizzl3's LGB
+- Add RDizzle3's Ridge
+- Add Sijun's NNs
+- Add Matt's NNs
+- Add Matt's NB-SVM
+- Add Thomas's NNs
 
 - Dart
 - XGB
