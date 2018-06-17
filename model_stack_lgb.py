@@ -92,6 +92,7 @@ train_fe = train_fe.merge(region_macro, how='left', on='region')
 print_step('Importing Data 5/15 3/3')
 test_fe = test_fe.merge(region_macro, how='left', on='region')
 
+
 print_step('Importing Data 6/15 1/5')
 train_active_feats, test_active_feats = load_cache('active_feats')
 train_active_feats.fillna(0, inplace=True)
@@ -110,16 +111,37 @@ train_fe.drop('user_id', axis=1, inplace=True)
 test_fe.drop('user_id', axis=1, inplace=True)
 
 
-print_step('Importing Data 7/15')
+print_step('Importing Data 7/15 1/8')
 train, test = get_data()
+print_step('Importing Data 7/15 2/8')
 train_nima, test_nima = load_cache('img_nima')
+print_step('Importing Data 7/15 3/8')
 train = train.merge(train_nima, on = 'image', how = 'left')
+print_step('Importing Data 7/15 4/8')
 test = test.merge(test_nima, on = 'image', how = 'left')
+print_step('Importing Data 7/15 5/8')
 cols = ['mobile_mean', 'mobile_std', 'inception_mean', 'inception_std',
 		'nasnet_mean', 'nasnet_std']
 train_fe[cols] = train[cols].fillna(0)
 test_fe[cols] = test[cols].fillna(0)
+print_step('Importing Data 7/15 6/8')
+train_nima, test_nima = load_cache('img_nima_softmax')
+print_step('Importing Data 7/15 7/8')
+train = train.merge(train_nima, on = 'image', how = 'left')
+test = test.merge(test_nima, on = 'image', how = 'left')
+print_step('Importing Data 7/15 8/8')
+cols = [x + '_' + str(y) for x in ['mobile', 'inception', 'nasnet'] for y in range(1, 11)]
+train_fe[cols] = train[cols].fillna(0)
+test_fe[cols] = test[cols].fillna(0)
 del train, test, train_nima, test_nima
+
+
+print_step('Importing Data 8/15 1/2')
+train_ridge, test_ridge = load_cache('tfidf_ridges')
+print_step('Importing Data 8/15 2/2')
+cols = [c for c in train_ridge.columns if 'svd' in c or 'tfidf' in c]
+train_fe[cols] = train_ridge[cols]
+test_fe[cols] = test_ridge[cols]
 
 
 print('~~~~~~~~~~~~~~~~~~~~~~~~~~~')
@@ -152,36 +174,38 @@ for col in train_fe.columns:
 print('-')
 
 
-# print('~~~~~~~~~~~~')
-# print_step('Run LGB')
-# results = run_cv_model(train_fe, test_fe, target, runLGB, rmse, 'base_lgb')
-# import pdb
-# pdb.set_trace()
+print('~~~~~~~~~~~~')
+print_step('Run LGB')
+print(train_fe.shape)
+print(test_fe.shape)
+results = run_cv_model(train_fe, test_fe, target, runLGB, rmse, 'base_lgb')
+import pdb
+pdb.set_trace()
 
-# print('~~~~~~~~~~')
-# print_step('Cache')
-# save_in_cache('base_lgb', pd.DataFrame({'base_lgb': results['train']}),
-#                           pd.DataFrame({'base_lgb': results['test']}))
+print('~~~~~~~~~~')
+print_step('Cache')
+save_in_cache('base_lgb', pd.DataFrame({'base_lgb': results['train']}),
+                          pd.DataFrame({'base_lgb': results['test']}))
 
-# print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
-# print_step('Prepping submission file')
-# submission = pd.DataFrame()
-# submission['item_id'] = test_id
-# submission['deal_probability'] = results['test'].clip(0.0, 1.0)
-# submission.to_csv('submit/submit_base_lgb.csv', index=False)
+print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+print_step('Prepping submission file')
+submission = pd.DataFrame()
+submission['item_id'] = test_id
+submission['deal_probability'] = results['test'].clip(0.0, 1.0)
+submission.to_csv('submit/submit_base_lgb.csv', index=False)
 
 print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
 print_step('Importing Data 8/15')
-drops = ['img_size_ratio', 'times_put_up_min', 'times_put_up_max']
+drops = [x + '_' + str(y) for x in ['mobile', 'inception', 'nasnet'] for y in range(1, 11)] + ['img_size_ratio', 'times_put_up_min', 'times_put_up_max']
 train_fe.drop(drops, axis=1, inplace=True)
 test_fe.drop(drops, axis=1, inplace=True)
 
-print_step('Importing Data 9/15 1/3')
+print_step('Importing Data 9/15 1/2')
 train_ridge, test_ridge = load_cache('tfidf_ridges')
-print_step('Importing Data 9/15 2/3')
-train_fe = pd.concat([train_fe, train_ridge], axis=1)
-print_step('Importing Data 9/15 3/3')
-test_fe = pd.concat([test_fe, test_ridge], axis=1)
+print_step('Importing Data 9/15 2/2')
+cols = [c for c in train_ridge.columns if 'ridge' in c]
+train_fe[cols] = train_ridge[cols]
+test_fe[cols] = test_ridge[cols]
 
 print_step('Importing Data 10/15 1/3')
 train_full_text_ridge, test_full_text_ridge = load_cache('full_text_ridge')
@@ -229,6 +253,8 @@ test_fe = pd.concat([test_fe, test_catb_ridge], axis=1)
 
 print('~~~~~~~~~~~~~~~~~~')
 print_step('Run Ridge LGB')
+print(train_fe.shape)
+print(test_fe.shape)
 results = run_cv_model(train_fe, test_fe, target, runLGB, rmse, 'ridge_lgb')
 import pdb
 pdb.set_trace()
@@ -246,7 +272,7 @@ submission['deal_probability'] = results['test'].clip(0.0, 1.0)
 submission.to_csv('submit/submit_ridge_lgb.csv', index=False)
 
 
-print('~~~~~~~~~~~~~~~~~~')
+print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
 print_step('Importing Data 15/15 1/3')
 train_deep_lgb, test_deep_lgb = load_cache('deep_lgb')
 print_step('Importing Data 15/15 2/3')
@@ -254,7 +280,10 @@ train_fe['deep_lgb'] = train_deep_lgb['deep_lgb']
 print_step('Importing Data 15/15 3/3')
 test_fe['deep_lgb'] = test_deep_lgb['deep_lgb']
 
+print('~~~~~~~~~~~~~~~~~~')
 print_step('Run Stack LGB')
+print(train_fe.shape)
+print(test_fe.shape)
 results = run_cv_model(train_fe, test_fe, target, runLGB, rmse, 'stack_lgb')
 import pdb
 pdb.set_trace()
@@ -274,28 +303,9 @@ print_step('Done!')
 
 
 # BASE
-# [2018-06-14 15:36:12.468047] base_lgb cv scores : [0.21970573671775664, 0.2189724471126797, 0.2189077547425295, 0.21882077122829713, 0.2193020339508764]
-# [2018-06-14 15:36:12.468113] base_lgb mean cv score : 0.21914174875042786
-# [2018-06-14 15:36:12.468214] base_lgb std cv score : 0.0003256429279945189
-
-# [100]   training's rmse: 0.226989       valid_1's rmse: 0.229376
-# [200]   training's rmse: 0.221307       valid_1's rmse: 0.225421
-# [300]   training's rmse: 0.218186       valid_1's rmse: 0.223813
-# [400]   training's rmse: 0.215975       valid_1's rmse: 0.222886
-# [500]   training's rmse: 0.213945       valid_1's rmse: 0.222142
-# [600]   training's rmse: 0.212382       valid_1's rmse: 0.221699
-# [700]   training's rmse: 0.210814       valid_1's rmse: 0.22135
-# [800]   training's rmse: 0.20937        valid_1's rmse: 0.221082
-# [900]   training's rmse: 0.207895       valid_1's rmse: 0.220803
-# [1000]  training's rmse: 0.206642       valid_1's rmse: 0.220603
-# [1100]  training's rmse: 0.205368       valid_1's rmse: 0.220419
-# [1200]  training's rmse: 0.204154       valid_1's rmse: 0.220254
-# [1300]  training's rmse: 0.202948       valid_1's rmse: 0.220114
-# [1400]  training's rmse: 0.201868       valid_1's rmse: 0.219987
-# [1500]  training's rmse: 0.200826       valid_1's rmse: 0.219903
-# [1600]  training's rmse: 0.199883       valid_1's rmse: 0.219826
-# [1700]  training's rmse: 0.198968       valid_1's rmse: 0.219772
-# [1800]  training's rmse: 0.197979       valid_1's rmse: 0.219706
+# [2018-06-17 02:15:35.160780] base_lgb cv scores : [0.2180584840223271, 0.2173285470396579, 0.21730824294582546, 0.21708803739182905, 0.21764331398813264]
+# [2018-06-17 02:15:35.160849] base_lgb mean cv score : 0.21748532507755441
+# [2018-06-17 02:15:35.160952] base_lgb std cv score : 0.0003368223898769227
 
 
 # RIDGE LGB

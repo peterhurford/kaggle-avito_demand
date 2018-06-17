@@ -201,12 +201,10 @@ for col in train_.columns:
         train_[col] = train_[col].astype(np.float64)
         test_[col] = test_[col].astype(np.float64)
 
-print(train_.columns)
-print(train_.shape)
-print(test_.shape)
-
 print('~~~~~~~~~~~~')
 print_step('Run LGB')
+print(train_.shape)
+print(test_.shape)
 results = run_cv_model(train_, test_, target, runLGB, rmse, 'lgb_blender')
 import pdb
 pdb.set_trace()
@@ -224,28 +222,28 @@ submission['deal_probability'] = results['test'].clip(0.0, 1.0)
 submission.to_csv('submit/submit_lgb_blender.csv', index=False)
 print_step('Done!')
 
-# [2018-06-15 06:46:28.812118] lgb_blender cv scores : [0.21376233017823917, 0.2128623582252882, 0.21274452072353106, 0.21272911046668352, 0.2133548337221898]
-# [2018-06-15 06:46:28.812205] lgb_blender mean cv score : 0.21309063066318634
-# [2018-06-15 06:46:28.812322] lgb_blender std cv score : 0.00040585237306699874
+# [2018-06-17 03:40:29.894896] lgb_blender cv scores : [0.2137423913209247, 0.21285016987984232, 0.21273620021060774, 0.2126969636489526, 0.21333412900333057]
+# [2018-06-17 03:40:29.894966] lgb_blender mean cv score : 0.2130719708127316
+# [2018-06-17 03:40:29.895071] lgb_blender std cv score : 0.00040515638923032516
 
-# [20]    training's rmse: 0.235461       valid_1's rmse: 0.236034
-# [40]    training's rmse: 0.223408       valid_1's rmse: 0.22411
-# [60]    training's rmse: 0.217748       valid_1's rmse: 0.218555
-# [80]    training's rmse: 0.215098       valid_1's rmse: 0.215987
-# [100]   training's rmse: 0.213845       valid_1's rmse: 0.214802
-# [120]   training's rmse: 0.213231       valid_1's rmse: 0.214256
-# [140]   training's rmse: 0.212914       valid_1's rmse: 0.213998
-# [160]   training's rmse: 0.212732       valid_1's rmse: 0.213878
-# [180]   training's rmse: 0.212616       valid_1's rmse: 0.213819
-# [200]   training's rmse: 0.21253        valid_1's rmse: 0.21379
-# [220]   training's rmse: 0.21246        valid_1's rmse: 0.213774
-# [240]   training's rmse: 0.212398       valid_1's rmse: 0.213767
-# [260]   training's rmse: 0.212342       valid_1's rmse: 0.213764
-# [280]   training's rmse: 0.212289       valid_1's rmse: 0.213764
-# [300]   training's rmse: 0.212237       valid_1's rmse: 0.213762
-# [320]   training's rmse: 0.212187       valid_1's rmse: 0.213763
-# [340]   training's rmse: 0.212139       valid_1's rmse: 0.21376
-# [360]   training's rmse: 0.212093       valid_1's rmse: 0.213758
-# [380]   training's rmse: 0.212048       valid_1's rmse: 0.213759
-# [400]   training's rmse: 0.212004       valid_1's rmse: 0.21376
-# [420]   training's rmse: 0.21196        valid_1's rmse: 0.213762
+# [20]    training's rmse: 0.235451       valid_1's rmse: 0.236032
+# [40]    training's rmse: 0.223395       valid_1's rmse: 0.224105
+# [60]    training's rmse: 0.21773        valid_1's rmse: 0.218541
+# [80]    training's rmse: 0.215079       valid_1's rmse: 0.21597
+# [100]   training's rmse: 0.213826       valid_1's rmse: 0.214783
+# [120]   training's rmse: 0.213211       valid_1's rmse: 0.214233
+# [140]   training's rmse: 0.212893       valid_1's rmse: 0.213976
+# [160]   training's rmse: 0.212712       valid_1's rmse: 0.213852
+# [180]   training's rmse: 0.212595       valid_1's rmse: 0.213795
+# [200]   training's rmse: 0.212509       valid_1's rmse: 0.21377
+# [220]   training's rmse: 0.212439       valid_1's rmse: 0.213757
+# [240]   training's rmse: 0.212378       valid_1's rmse: 0.21375
+# [260]   training's rmse: 0.212324       valid_1's rmse: 0.213745
+# [280]   training's rmse: 0.212268       valid_1's rmse: 0.213744
+# [300]   training's rmse: 0.212215       valid_1's rmse: 0.213744
+# [320]   training's rmse: 0.212163       valid_1's rmse: 0.213744
+# [340]   training's rmse: 0.212115       valid_1's rmse: 0.213745
+# [360]   training's rmse: 0.212069       valid_1's rmse: 0.213745
+# [380]   training's rmse: 0.212024       valid_1's rmse: 0.213745
+# [400]   training's rmse: 0.211978       valid_1's rmse: 0.213743
+# [420]   training's rmse: 0.211933       valid_1's rmse: 0.213742
