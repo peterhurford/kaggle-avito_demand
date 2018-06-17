@@ -1,9 +1,8 @@
+- Re-run features
 - Move embedding into mainline LGB stack, add to stacker models using SVD(20)
-- Make a second base LGB with Bayesian encoding and NB features
+
 - Add SVD embedding to blender, also try removing all other SVD
-- Switch stacker LGBs to Bayesian encoding if better
-- Rotate seeds on models, tune leaves for base model separately
-- Try more and different embeddings, SVD on embeddings
+- Make a second base LGB with Bayesian encoding and NB features
 
 - Dominant color
 - average, standard deviation and minimum of Brightness in HSV color space
@@ -40,11 +39,14 @@
 - Add Matt's Price ECDF encoding
 - Add Matt's interactions???
 
+- Rotate seeds on models, tune leaves for base model separately
+- Try more and different embeddings, SVD on embeddings
 - Mean, skew, kurtosis of embeddings
 
 - Similarity encoding (https://dirty-cat.github.io/stable/auto_examples/02_predict_employee_salaries.html#sphx-glr-auto-examples-02-predict-employee-salaries-py)
 - Forest Kernels (https://github.com/joshloyal/ForestKernels, https://arxiv.org/abs/1402.4293)
 
+- Retrain Ridges, FMs, OHE LGB
 - LGB with CountVectorizer title (see https://www.kaggle.com/him4318/lightgbm-with-aggregated-features-v-2-0)
 - Refine embedding LGB, try SVD of multiple embeddings
 - Models with poisson loss
