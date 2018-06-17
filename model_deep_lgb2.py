@@ -13,28 +13,37 @@ from utils import print_step, rmse, bin_and_ohe_data
 from cache import get_data, is_in_cache, load_cache, save_in_cache
 
 
-# LGB Model Definition
-def runLGB(train_X, train_y, test_X, test_y, test_X2):
+params = {'learning_rate': 0.05,
+          'application': 'regression',
+          'max_depth': 9,
+          'num_leaves': 300,
+          'verbosity': -1,
+          'metric': 'rmse',
+          'data_random_seed': 4,
+          'bagging_fraction': 0.8,
+          'feature_fraction': 0.4,
+          'nthread': 16,
+          'lambda_l1': 1,
+          'lambda_l2': 1,
+          'min_data_in_leaf': 40,
+          'num_rounds': 4800,
+          'verbose_eval': 10}
+
+def runLGB(train_X, train_y, test_X, test_y, test_X2, params):
+    print_step('Prep LGB')
     d_train = lgb.Dataset(train_X, label=train_y)
     d_valid = lgb.Dataset(test_X, label=test_y)
     watchlist = [d_train, d_valid]
-    params = {'learning_rate': 0.05,
-              'application': 'regression',
-              'num_leaves': 300,
-              'verbosity': -1,
-              'metric': 'rmse',
-              'data_random_seed': 4,
-              'bagging_fraction': 0.8,
-              'feature_fraction': 0.4,
-              'nthread': 16,
-              'lambda_l1': 1,
-              'lambda_l2': 1,
-              'min_data_in_leaf': 40}
+    print_step('Train LGB')
+    num_rounds = params.pop('num_rounds')
+    verbose_eval = params.pop('verbose_eval')
     model = lgb.train(params,
                       train_set=d_train,
-                      num_boost_round=4800,
+                      num_boost_round=num_rounds,
                       valid_sets=watchlist,
-                      verbose_eval=10)
+                      verbose_eval=verbose_eval)
+    print_step('Feature importance')
+    pprint(sorted(list(zip(model.feature_importance(), train_X.columns)), reverse=True))
     print_step('Predict 1/2')
     pred_test_y = model.predict(test_X)
     print_step('Predict 2/2')

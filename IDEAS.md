@@ -1,12 +1,9 @@
-- Add Matt's entity embedding on price
-- Add Matt's entity embedding on deal probability
-- Add Matt's entity embedding on deal threshold
-- Add Matt's Price ECDF encoding
-- Add Matt's inception_resnet_v2_top_1, inception_resnet_v2_prob, nasnet_top_1, nasnet_prob, xception_top_1, xception_prob
-- Add mean and std of image confidence
-- Agreement between image models on labels (inception-nasnet, inception-xception, nasnet-xception, inception-nasnet-xception)
-- Agreement between image models and image_top_1 somehow?
-- Add Matt's interactions???
+- Move embedding into mainline LGB stack, add to stacker models using SVD(20)
+- Make a second base LGB with Bayesian encoding and NB features
+- Add SVD embedding to blender, also try removing all other SVD
+- Switch stacker LGBs to Bayesian encoding if better
+- Rotate seeds on models, tune leaves for base model separately
+- Try more and different embeddings, SVD on embeddings
 
 - Dominant color
 - average, standard deviation and minimum of Brightness in HSV color space
@@ -24,22 +21,32 @@
 - histogram stuff <http://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_imgproc/py_histograms/py_histogram_backprojection/py_histogram_backprojection.html#histogram-backprojection, http://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_imgproc/py_histograms/py_histogram_equalization/py_histogram_equalization.html#histogram-equalization>
 - HarrPSI <http://www.haarpsi.org/software/haarPsi.py, http://www.math.uni-bremen.de/cda/HaarPSI/publications/HaarPSI_preprint_v4.pdf>
 
+- price mean and price diff on inception_resnet_v2_top_1
+
+- Add more macroeconomic data (vote Putin)
+
 - Docfreq stats (see https://github.com/Wrosinski/Kaggle-Quora/blob/master/features/Extraction%20-%20Textacy%20Features%2017.05.ipynb)
 
 - POS tagging
 - Sentiment analysis
 
-- Add more macroeconomic data
+- use mean of log1p for price / diff
+- use harmonic mean for price / diff
+- use geometric mean for price / diff
+
+- Figure out what to do with Matt's entity embedding on price
+- Add Matt's entity embedding on deal probability
+- Add Matt's entity embedding on deal threshold
+- Add Matt's Price ECDF encoding
+- Add Matt's interactions???
+
+- Mean, skew, kurtosis of embeddings
 
 - Similarity encoding (https://dirty-cat.github.io/stable/auto_examples/02_predict_employee_salaries.html#sphx-glr-auto-examples-02-predict-employee-salaries-py)
 - Forest Kernels (https://github.com/joshloyal/ForestKernels, https://arxiv.org/abs/1402.4293)
 
-- Handle price outliers / Try to predict price
-
-- skew and kurtosis of sent2vec (see https://github.com/abhishekkrthakur/is_that_a_duplicate_quora_question/blob/master/feature_engineering.py)
-
 - LGB with CountVectorizer title (see https://www.kaggle.com/him4318/lightgbm-with-aggregated-features-v-2-0)
-- Make embedding LGBs
+- Refine embedding LGB, try SVD of multiple embeddings
 - Models with poisson loss
 
 - Lower learning rate, more rounds, vary seed

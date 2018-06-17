@@ -16,18 +16,8 @@ from cache import get_data, is_in_cache, load_cache, save_in_cache
 
 NCOMP = 20
 
-def runRidge5(train_X, train_y, test_X, test_y, test_X2):
-    model = Ridge(alpha=5.0)
-    print_step('Fit Ridge')
-    model.fit(train_X, train_y)
-    print_step('Ridge Predict 1/2')
-    pred_test_y = model.predict(test_X)
-    print_step('Ridge Predict 2/2')
-    pred_test_y2 = model.predict(test_X2)
-    return pred_test_y, pred_test_y2
-
-def runRidge8(train_X, train_y, test_X, test_y, test_X2):
-    model = Ridge(alpha=8.0)
+def runRidge(train_X, train_y, test_X, test_y, test_X2, params):
+    model = Ridge(**params)
     print_step('Fit Ridge')
     model.fit(train_X, train_y)
     print_step('Ridge Predict 1/2')
@@ -139,7 +129,7 @@ if not is_in_cache('tfidf_ridges') or not is_in_cache('titlecat_tfidf') or not i
     test = pd.concat([test, test_svd], axis=1)
 
     print_step('Titlecat TFIDF Ridge')
-    results = run_cv_model(tfidf_train, tfidf_test, target, runRidge5, rmse, 'titlecat-ridge')
+    results = run_cv_model(tfidf_train, tfidf_test, target, runRidge, {'alpha': 5.0}, rmse, 'titlecat-ridge')
     train['title_ridge'] = results['train']
     test['title_ridge'] = results['test']
 
@@ -205,7 +195,7 @@ if not is_in_cache('tfidf_ridges') or not is_in_cache('titlecat_tfidf') or not i
         print_step('Loading from cache...')
         tfidf_train, tfidf_test = load_cache('text_tfidf')
 
-    results = run_cv_model(tfidf_train, tfidf_test, target, runRidge8, rmse, 'desc-ridge')
+    results = run_cv_model(tfidf_train, tfidf_test, target, runRidge, {'alpha': 8.0}, rmse, 'desc-ridge')
     train['desc_ridge'] = results['train']
     test['desc_ridge'] = results['test']
 
@@ -244,7 +234,7 @@ if not is_in_cache('tfidf_ridges') or not is_in_cache('titlecat_tfidf') or not i
     print_step('Title Stats 6/6')
     test['desc_char_tfidf_nnz'] = tfidf_test.getnnz(axis=1)
 
-    results = run_cv_model(tfidf_train, tfidf_test, target, runRidge8, rmse, 'desc-char-ridge')
+    results = run_cv_model(tfidf_train, tfidf_test, target, runRidge, {'alpha': 8.0}, rmse, 'desc-char-ridge')
     train['desc_char_ridge'] = results['train']
     test['desc_char_ridge'] = results['test']
 
@@ -277,7 +267,7 @@ print(test.shape)
 if not is_in_cache('full_text_ridge'):
     print('~~~~~~~~~~~~~~~~~~~~~~~~')
     print_step('Run Full Text Ridge')
-    results = run_cv_model(train, test, target, runRidge8, rmse, 'text-ridge')
+    results = run_cv_model(train, test, target, runRidge, {'alpha': 8.0}, rmse, 'text-ridge')
     import pdb
     pdb.set_trace()
 
@@ -405,7 +395,7 @@ if not is_in_cache('complete_ridge'):
         train, test = load_cache('complete_ridge_data')
 
     print_step('Run Complete Ridge')
-    results = run_cv_model(train, test, target, runRidge8, rmse, 'complete-ridge')
+    results = run_cv_model(train, test, target, runRidge, {'alpha': 8.0}, rmse, 'complete-ridge')
     import pdb
     pdb.set_trace()
 

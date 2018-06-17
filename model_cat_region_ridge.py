@@ -14,18 +14,8 @@ from utils import rmse, normalize_text, print_step
 from cache import get_data, is_in_cache, load_cache, save_in_cache
 
 
-def runRidge5(train_X, train_y, test_X, test_y, test_X2):
-    model = Ridge(alpha=5.0)
-    print_step('Fit Ridge')
-    model.fit(train_X, train_y)
-    print_step('Ridge Predict 1/2')
-    pred_test_y = model.predict(test_X)
-    print_step('Ridge Predict 2/2')
-    pred_test_y2 = model.predict(test_X2)
-    return pred_test_y, pred_test_y2
-
-def runRidge8(train_X, train_y, test_X, test_y, test_X2):
-    model = Ridge(alpha=8.0)
+def runRidge(train_X, train_y, test_X, test_y, test_X2, params):
+    model = Ridge(**params)
     print_step('Fit Ridge')
     model.fit(train_X, train_y)
     print_step('Ridge Predict 1/2')
@@ -71,7 +61,7 @@ def run_ridge_on_regioncat(regioncat):
         print(tfidf_test.shape)
 
         print_step(regioncat + ' > Titlecat TFIDF Ridge')
-        results = run_cv_model(tfidf_train, tfidf_test, target, runRidge5, rmse, regioncat + '-titlecat-ridge')
+        results = run_cv_model(tfidf_train, tfidf_test, target, runRidge, {'alpha': 5.0}, rmse, regioncat + '-titlecat-ridge')
         train_c['regioncat_title_ridge'] = results['train']
         test_c['regioncat_title_ridge'] = results['test']
 
@@ -90,7 +80,7 @@ def run_ridge_on_regioncat(regioncat):
         print_step(regioncat + ' > Description TFIDF 3/3')
         tfidf_test2 = tfidf.transform(test_c['desc'].fillna(''))
         print(tfidf_test2.shape)
-        results = run_cv_model(tfidf_train2, tfidf_test2, target, runRidge5, rmse, regioncat + '-desc-ridge')
+        results = run_cv_model(tfidf_train2, tfidf_test2, target, runRidge, {'alpha': 5.0}, rmse, regioncat + '-desc-ridge')
         train_c['regioncat_desc_ridge'] = results['train']
         test_c['regioncat_desc_ridge'] = results['test']
 
@@ -109,7 +99,7 @@ def run_ridge_on_regioncat(regioncat):
         tfidf_test3 = tfidf.transform(test_c['desc'])
         print(tfidf_test3.shape)
 
-        results = run_cv_model(tfidf_train3, tfidf_test3, target, runRidge5, rmse, regioncat + '-desc-char-ridge')
+        results = run_cv_model(tfidf_train3, tfidf_test3, target, runRidge, {'alpha': 5.0}, rmse, regioncat + '-desc-char-ridge')
         train_c['regioncat_desc_char_ridge'] = results['train']
         test_c['regioncat_desc_char_ridge'] = results['test']
 
@@ -122,7 +112,7 @@ def run_ridge_on_regioncat(regioncat):
 
         print('~~~~~~~~~~~~~~~~~~~~~~~~')
         print_step('Run Full Text Ridge')
-        results = run_cv_model(train_c2, test_c2, target, runRidge8, rmse, regioncat + '-text-ridge')
+        results = run_cv_model(train_c2, test_c2, target, runRidge, {'alpha': 8.0}, rmse, regioncat + '-text-ridge')
         train_c['regioncat_all_text_ridge'] = results['train']
         test_c['regioncat_all_text_ridge'] = results['test']
 

@@ -9,37 +9,25 @@ from cv import run_cv_model
 from cache import get_data, is_in_cache, load_cache, save_in_cache
 
 
-def runTFFM3(train_X, train_y, test_X, test_y, test_X2):
-    iters = 1
-    rounds = 1
-    model = TFFMRegressor(order=3, rank=40, 
-                          optimizer=tf.train.AdamOptimizer(learning_rate=0.00005), 
-                          n_epochs=rounds, batch_size=1024,
-                          init_std=0.01, reg=0.1,
-                          input_type='sparse', seed=52, verbose=2)
-    print_step('Fit TFFM3')
-    for i in range(rounds):
-        model.fit(train_X, train_y.values, n_epochs=iters)
-        pred_test_y = model.predict(test_X)
-        print_step('Iteration {}/{} -- RMSE: {}'.format(i + 1, rounds, rmse(pred_test_y, test_y)))
-    print_step('TFFM3 Predict 2/2')
-    pred_test_y2 = model.predict(test_X2)
-    return pred_test_y, pred_test_y2
+params3 = {'order': 3, 'rank': 40,
+           'optimizer': tf.train.AdamOptimizer(learning_rate=0.00005),
+           'n_epochs': 1, 'batch_size': 1024,
+           'init_std': 0.01, 'reg': 0.1,
+           'input_type': 'sparse', 'seed': 52, 'verbose': 2}
+params3 = {'order': 2, 'rank': 50,
+           'optimizer': tf.train.AdamOptimizer(learning_rate=0.00005),
+           'n_epochs': 1, 'batch_size': 1024,
+           'init_std': 0.01, 'reg': 0.1,
+           'input_type': 'sparse', 'seed': 42, 'verbose': 2}
 
-def runTFFM2(train_X, train_y, test_X, test_y, test_X2):
-    iters = 1
-    rounds = 2
-    model = TFFMRegressor(order=2, rank=50, 
-                          optimizer=tf.train.AdamOptimizer(learning_rate=0.00005), 
-                          n_epochs=rounds, batch_size=1024,
-                          init_std=0.01, reg=0.1,
-                          input_type='sparse', seed=42, verbose=2)
-    print_step('Fit TFFM2')
+def runTFFM(train_X, train_y, test_X, test_y, test_X2, params):
+    model = TFFMRegressor(**params)
+    print_step('Fit TFFM')
     for i in range(rounds):
         model.fit(train_X, train_y.values, n_epochs=iters)
         pred_test_y = model.predict(test_X)
         print_step('Iteration {}/{} -- RMSE: {}'.format(i + 1, rounds, rmse(pred_test_y, test_y)))
-    print_step('TFFM2 Predict 2/2')
+    print_step('TFFM Predict 2/2')
     pred_test_y2 = model.predict(test_X2)
     return pred_test_y, pred_test_y2
 
@@ -62,7 +50,7 @@ train, test = load_cache('complete_fm_data')
 
 print('~~~~~~~~~~~~~~')
 print_step('Run TFFM2')
-results = run_cv_model(train, test, target, runTFFM2, rmse, 'tffm2')
+results = run_cv_model(train, test, target, runTFFM, params2, rmse, 'tffm2')
 
 print_step('Cache')
 save_in_cache('tffm2', pd.DataFrame({'tffm2': results['train']}),
@@ -82,7 +70,7 @@ print_step('Done!')
 
 print('~~~~~~~~~~~~~~')
 print_step('Run TFFM3')
-results = run_cv_model(train, test, target, runTFFM3, rmse, 'tffm3')
+results = run_cv_model(train, test, target, runTFFM, params3, rmse, 'tffm3')
 
 print_step('Cache')
 save_in_cache('tffm3', pd.DataFrame({'tffm3': results['train']}),

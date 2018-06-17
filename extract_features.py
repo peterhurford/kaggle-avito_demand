@@ -248,6 +248,34 @@ if not is_in_cache('data_with_fe'):
     print_step('Grouping 4/4 4/4')
     test_fe['city_count'].fillna(0, inplace=True)
 
+    print_step('Grouping 5/6 1/6')
+    train_fe['p23'] = train_fe['param_2'] + ' ' + train_fe['param_3']
+    test_fe['p23'] = test_fe['param_2'] + ' ' + test_fe['param_3']
+    print_step('Grouping 5/6 2/6')
+    train_enc = train_fe.groupby('p23')['price'].agg(['mean']).reset_index()
+    train_enc.columns = ['p23', 'param_2_price_mean']
+    print_step('Grouping 5/6 3/6')
+    train_fe = pd.merge(train_fe, train_enc, how='left', on='p23')
+    print_step('Grouping 5/6 4/6')
+    test_fe = pd.merge(test_fe, train_enc, how='left', on='p23')
+    print_step('Grouping 5/6 5/6')
+    train_fe['param_2_price_diff'] = train_fe['price'] - train_fe['param_2_price_mean']
+    test_fe['param_2_price_diff'] = test_fe['price'] - test_fe['param_2_price_mean']
+    print_step('Grouping 5/6 6/6')
+    train_fe.drop('p23', axis=1, inplace=True)
+    test_fe.drop('p23', axis=1, inplace=True)
+
+    print_step('Grouping 6/6 1/4')
+    train_enc = train_fe.groupby('image_top_1')['price'].agg(['mean']).reset_index()
+    train_enc.columns = ['image_top_1', 'image_top_1_price_mean']
+    print_step('Grouping 6/6 2/4')
+    train_fe = pd.merge(train_fe, train_enc, how='left', on='image_top_1')
+    print_step('Grouping 6/6 3/4')
+    test_fe = pd.merge(test_fe, train_enc, how='left', on='image_top_1')
+    print_step('Grouping 6/6 4/4')
+    train_fe['image_top_1_price_diff'] = train_fe['price'] - train_fe['image_top_1_price_mean']
+    test_fe['image_top_1_price_diff'] = test_fe['price'] - test_fe['image_top_1_price_mean']
+
     print('~~~~~~~~~~~~~')
     print_step('Dropping')
     drops = ['activation_date', 'description', 'title', 'image', 'user_id', 'date_int']
@@ -279,7 +307,8 @@ if not is_in_cache('ohe_data'):
                     'unique_words_per_word_description', 'item_seq_number', 'adjusted_seq_num', 'user_num_days', 'user_days_range',
                     'cat_price_mean', 'cat_price_diff', 'parent_cat_count', 'region_X_cat_count', 'city_count',
 					'num_lowercase_description', 'num_punctuations_title', 'sentence_mean', 'sentence_std',
-					'words_per_sentence']
+					'words_per_sentence', 'param_2_price_mean', 'param_2_price_diff', 'image_top_1_price_mean',
+                    'image_top_1_price_diff']
     train_ohe, test_ohe = bin_and_ohe_data(train_fe, test_fe, numeric_cols=numeric_cols, dummy_cols=dummy_cols)
 
     print_step('Caching')

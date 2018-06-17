@@ -14,13 +14,16 @@ from utils import rmse, print_step, normalize_text, bin_and_ohe_data
 from cache import get_data, is_in_cache, load_cache, save_in_cache
 
 
-def runFM(train_X, train_y, test_X, test_y, test_X2):
-    iters = 1
-    rounds = 4 
-    model = FM_FTRL(alpha=0.005, beta=0.01, L1=0.0001, L2=0.1,
-                    alpha_fm=0.005, L2_fm=0.0, init_fm=0.01, D_fm=50, e_noise=0.0, 
-                    D=train_X.shape[1], iters=iters, inv_link='identity', threads=16,
-                    use_avx=1, verbose=0)
+params = {'alpha': 0.005, 'beta': 0.01, 'L1': 0.0001, 'L2': 0.1,
+          'alpha_fm': 0.005, 'L2_fm': 0.0, 'init_fm': 0.01, 'D_fm': 50,
+          'e_noise': 0.0, 'iters': 1, 'rounds': 4,
+          'inv_link': 'itentity', 'threads': 16,
+          'use_avx': 1, 'verbose': 0}
+
+def runFM(train_X, train_y, test_X, test_y, test_X2, params):
+    params['D'] = train_X.shape[1]
+    rounds = params.pop('rounds')
+    model = FM_FTRL(**params)
     print_step('Fit FM')
     for i in range(rounds):
         model.fit(train_X, train_y, reset=False)
@@ -232,7 +235,7 @@ if not is_in_cache('complete_fm'):
         train, test = load_cache('complete_fm_data')
 
     print_step('Run Complete FM')
-    results = run_cv_model(train, test, target, runFM, rmse, 'complete-fm')
+    results = run_cv_model(train, test, target, runFM, params, rmse, 'complete-fm')
     import pdb
     pdb.set_trace()
 

@@ -1,4 +1,4 @@
-import re
+import re, regex
 import string
 import pymorphy2
 

@@ -11,6 +11,10 @@ pip3 install git+https://github.com/anttttti/Wordbatch
 pip3 install -r requirements.txt
 python3 -c "import nltk; nltk.download('stopwords')"
 
+mkdir ~/.R
+export R_LIBS_USER=~/.R
+sudo apt install -y r-base-core
+
 wget https://s3.amazonaws.com/avito-demand-kaggle/city_latlons.csv
 wget https://s3.amazonaws.com/avito-demand-kaggle/region_macro.csv
 kaggle competitions download -c avito-demand-prediction -p .
