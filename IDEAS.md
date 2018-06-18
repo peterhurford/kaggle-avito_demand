@@ -18,6 +18,8 @@
 - histogram stuff <http://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_imgproc/py_histograms/py_histogram_backprojection/py_histogram_backprojection.html#histogram-backprojection, http://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_imgproc/py_histograms/py_histogram_equalization/py_histogram_equalization.html#histogram-equalization>
 - HarrPSI <http://www.haarpsi.org/software/haarPsi.py, http://www.math.uni-bremen.de/cda/HaarPSI/publications/HaarPSI_preprint_v4.pdf>
 
+- Feature share with Ryan
+
 - Add more macroeconomic data (vote Putin)
 
 - price mean and price diff on inception_resnet_v2_top_1
@@ -50,13 +52,6 @@
 
 - Lower learning rate, more rounds, vary seed
 - Tune LGB encoding -- defaults are min_data_per_group=100 max_cat_threshold=32 cat_l2=10.0 cat_smooth=10.0 max_cat_to_onehot=4
-
-- Add RDizzl3's LGB
-- Add RDizzle3's Ridge
-- Add Sijun's NNs
-- Add Matt's NNs
-- Add Matt's NB-SVM
-- Add Thomas's NNs
 
 - Dart
 - XGB
