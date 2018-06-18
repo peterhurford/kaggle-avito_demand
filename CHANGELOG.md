@@ -42,4 +42,5 @@ BLEND: +Add NIMA to LGBs                                                        
 BLEND: +Add Base LGB                                                              - Dim 90,    5CV 0.21324, Submit ?0.2176?
 BLEND: +Add CNN FT, +Add TFIDF stats                                              - Dim 100,   5CV 0.21309, Submit ?0.2175?
 BLEND: +CNN FT2                                                                   - Dim 101,   5CV 0.21301, Submit ?0.2174?
+BLEND: +Improve CNN FT2                                                           - Dim 101,   5CV 0.21296, Submit ?0.2173?
 ```
