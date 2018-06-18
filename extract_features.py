@@ -292,6 +292,10 @@ if not is_in_cache('ohe_data'):
     print_step('Cache loading')
     train_fe, test_fe = load_cache('data_with_fe')
 
+    train_fe['image_top_1'] = train_fe['image_top_1'].astype('str').fillna('missing')
+    test_fe['image_top_1'] = test_fe['image_top_1'].astype('str').fillna('missing')
+    train_fe.fillna(0, inplace=True)
+    test_fe.fillna(0, inplace=True)
     dummy_cols = ['parent_category_name', 'category_name', 'user_type', 'image_top_1',
                   'day_of_week', 'region', 'city', 'param_1', 'param_2', 'param_3', 'cat_bin']
     numeric_cols = ['price', 'num_words_description', 'num_words_title', 'num_chars_description',

@@ -1,9 +1,13 @@
 import gc
+from pprint import pprint
 
 import pandas as pd
 
+from nltk.corpus import stopwords
+
 from scipy.sparse import hstack, csr_matrix
 
+from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_selection.univariate_selection import SelectKBest, f_regression
 
 import lightgbm as lgb
@@ -42,8 +46,6 @@ def runLGB(train_X, train_y, test_X, test_y, test_X2, params):
                       num_boost_round=num_rounds,
                       valid_sets=watchlist,
                       verbose_eval=verbose_eval)
-    print_step('Feature importance')
-    pprint(sorted(list(zip(model.feature_importance(), train_X.columns)), reverse=True))
     print_step('Predict 1/2')
     pred_test_y = model.predict(test_X)
     print_step('Predict 2/2')
@@ -134,8 +136,9 @@ if not is_in_cache('deep_text_feats2'):
                     'num_stopwords_description', 'number_count_description', 'number_count_title', 'num_unique_words_description',
                     'unique_words_per_word_description', 'item_seq_number', 'adjusted_seq_num', 'user_num_days', 'user_days_range',
                     'cat_price_mean', 'cat_price_diff', 'parent_cat_count', 'region_X_cat_count', 'city_count',
-                    'num_lowercase_description', 'num_punctuations_title', 'sentence_mean', 'sentence_std',
-                    'words_per_sentence', 'price_missing']
+					'num_lowercase_description', 'num_punctuations_title', 'sentence_mean', 'sentence_std',
+					'words_per_sentence', 'param_2_price_mean', 'param_2_price_diff', 'image_top_1_price_mean',
+                    'image_top_1_price_diff']
 
     print_step('Importing Data 10/13 1/3')
     train_img, test_img = load_cache('img_data')
@@ -152,8 +155,8 @@ if not is_in_cache('deep_text_feats2'):
     numeric_cols += img_numeric_cols
 
     print_step('Importing Data 11/13 1/3')
-# HT: https://www.kaggle.com/jpmiller/russian-cities/data
-# HT: https://www.kaggle.com/jpmiller/exploring-geography-for-1-5m-deals/notebook
+    # HT: https://www.kaggle.com/jpmiller/russian-cities/data
+    # HT: https://www.kaggle.com/jpmiller/exploring-geography-for-1-5m-deals/notebook
     locations = pd.read_csv('city_latlons.csv')
     print_step('Importing Data 11/13 2/3')
     train_fe = train_fe.merge(locations, how='left', left_on='city', right_on='location')
@@ -220,7 +223,7 @@ else:
 
 print('~~~~~~~~~~~~')
 print_step('Run LGB')
-results = run_cv_model(train, test, target, runLGB, rmse, 'deep_lgb2')
+results = run_cv_model(train, test, target, runLGB, params, rmse, 'deep_lgb2')
 import pdb
 pdb.set_trace()
 
