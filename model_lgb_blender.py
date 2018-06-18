@@ -7,6 +7,8 @@ import numpy as np
 
 import pathos.multiprocessing as mp
 
+from sklearn.decomposition import TruncatedSVD
+
 import lightgbm as lgb
 
 from cv import run_cv_model
@@ -25,7 +27,7 @@ params = {'learning_rate': 0.02,
           'lambda_l1': 1,
           'lambda_l2': 1,
           'min_data_in_leaf': 40,
-          'num_rounds': 420,
+          'num_rounds': 800, # 420
           'verbose_eval': 20}
 
 def runLGB(train_X, train_y, test_X, test_y, test_X2, params):
@@ -68,6 +70,9 @@ train_fe, test_fe = load_cache('data_with_fe')
 
 print_step('Importing Data 2/15')
 train_ridge, test_ridge = load_cache('tfidf_ridges')
+drops = [c for c in train_ridge.columns if 'svd' in c or 'tfidf' in c]
+train_ridge.drop(drops, axis=1, inplace=True)
+test_ridge.drop(drops, axis=1, inplace=True)
 train_ = train_ridge
 test_ = test_ridge
 
@@ -83,6 +88,20 @@ print_step('Importing Data 3/15 2/3')
 train_['base_lgb'] = train_base_lgb['base_lgb']
 print_step('Importing Data 3/15 3/3')
 test_['base_lgb'] = test_base_lgb['base_lgb']
+
+print_step('Importing Data 3/15 1/3')
+train_te_lgb, test_te_lgb = load_cache('te_lgb')
+print_step('Importing Data 3/15 2/3')
+train_['te_lgb'] = train_te_lgb['te_lgb']
+print_step('Importing Data 3/15 3/3')
+test_['te_lgb'] = test_te_lgb['te_lgb']
+
+print_step('Importing Data 3/15 1/3')
+train_ryan_lgbm_v29, test_ryan_lgbm_v29 = load_cache('ryan_lgbm_v29')
+print_step('Importing Data 3/15 2/3')
+train_['ryan_lgbm_v29'] = train_ryan_lgbm_v29['oof_lgbm']
+print_step('Importing Data 3/15 3/3')
+test_['ryan_lgbm_v29'] = test_ryan_lgbm_v29['oof_lgbm']
 
 print_step('Importing Data 3/15 1/3')
 train_ridge_lgb, test_ridge_lgb = load_cache('ridge_lgb')
@@ -142,6 +161,17 @@ train_['complete_ridge'] = train_complete_ridge['complete_ridge']
 print_step('Importing Data 9/15 3/3')
 test_['complete_ridge'] = test_complete_ridge['complete_ridge']
 
+print_step('Importing Data 9/15 1/3')
+train_ryan_ridge, test_ryan_ridge = load_cache('ryan_ridge_sgd_v2')
+print_step('Importing Data 9/15 2/3')
+train_['ryan_ridge'] = train_ryan_ridge['oof_ridge']
+print_step('Importing Data 9/15 3/3')
+test_['ryan_ridge'] = test_ryan_ridge['oof_ridge']
+print_step('Importing Data 9/15 2/3')
+train_['ryan_sgd'] = train_ryan_ridge['oof_sgd']
+print_step('Importing Data 9/15 3/3')
+test_['ryan_sgd'] = test_ryan_ridge['oof_sgd']
+
 print_step('Importing Data 10/15 1/3')
 train_complete_fm, test_complete_fm = load_cache('complete_fm')
 print_step('Importing Data 10/15 2/3')
@@ -177,6 +207,13 @@ train_['cnn_ft3'] = train_cnn_ft['CNN_FastText_3']
 print_step('Importing Data 14/15 3/3')
 test_['cnn_ft3'] = test_cnn_ft['CNN_FastText_3']
 
+print_step('Importing Data 14/15 1/3')
+train_cnn_ft, test_cnn_ft = load_cache('CNN_FastText_4')
+print_step('Importing Data 14/15 2/3')
+train_['cnn_ft4'] = train_cnn_ft['CNN_FastText_4']
+print_step('Importing Data 14/15 3/3')
+test_['cnn_ft4'] = test_cnn_ft['CNN_FastText_4']
+
 print_step('Importing Data 15/15 1/4')
 train_img, test_img = load_cache('img_data')
 cols = ['img_dullness_light_percent', 'img_dullness_dark_percent']
@@ -191,6 +228,22 @@ train_['img_dullness_light_percent'] = train_fe['img_dullness_light_percent']
 test_['img_dullness_light_percent'] = test_fe['img_dullness_light_percent']
 train_['img_dullness_dark_percent'] = train_fe['img_dullness_dark_percent']
 test_['img_dullness_dark_percent'] = test_fe['img_dullness_dark_percent']
+
+print_step('Importing Data 15/15 4/4')
+train_embeddings_df, test_embeddings_df = load_cache('avito_fasttext_300d')
+print_step('Embedding SVD 1/4')
+NCOMP = 20
+svd = TruncatedSVD(n_components=NCOMP, algorithm='arpack')
+svd.fit(train_embeddings_df)
+print_step('Embedding SVD 2/4')
+train_svd = pd.DataFrame(svd.transform(train_embeddings_df))
+print_step('Embedding SVD 3/4')
+test_svd = pd.DataFrame(svd.transform(test_embeddings_df))
+print_step('Embedding SVD 4/4')
+train_svd.columns = ['svd_embed_'+str(i+1) for i in range(NCOMP)]
+test_svd.columns = ['svd_embed_'+str(i+1) for i in range(NCOMP)]
+train_ = pd.concat([train_, train_svd], axis=1)
+test_ = pd.concat([test_, test_svd], axis=1)
 
 print('~~~~~~~~~~~~~~~~~~~~~~~~~~~')
 print_step('Converting to category')
@@ -226,28 +279,47 @@ submission['deal_probability'] = results['test'].clip(0.0, 1.0)
 submission.to_csv('submit/submit_lgb_blender.csv', index=False)
 print_step('Done!')
 
-# [2018-06-17 23:59:14.652496] lgb_blender cv scores : [0.21356417189300284, 0.21278934369825342, 0.21264252048937435, 0.21263584567850638, 0.21318742375055824]
-# [2018-06-17 23:59:14.652576] lgb_blender mean cv score : 0.21296386110193904
-# [2018-06-17 23:59:14.652720] lgb_blender std cv score : 0.000361016214374812
+# [2018-06-18 16:16:54.438668] lgb_blender cv scores : [0.2120923791639136, 0.21127704177755158, 0.21127264952127392, 0.21108054813472305, 0.21163707986214958]
+# [2018-06-18 16:16:54.438743] lgb_blender mean cv score : 0.21147193969192238
+# [2018-06-18 16:16:54.438850] lgb_blender std cv score : 0.00035863784920655455
 
-# [20]    training's rmse: 0.235581       valid_1's rmse: 0.236041
-# [40]    training's rmse: 0.223534       valid_1's rmse: 0.224113
-# [60]    training's rmse: 0.21783        valid_1's rmse: 0.218505
-# [80]    training's rmse: 0.21513        valid_1's rmse: 0.21589
-# [100]   training's rmse: 0.213836       valid_1's rmse: 0.214677
-# [120]   training's rmse: 0.213192       valid_1's rmse: 0.214104
-# [140]   training's rmse: 0.212853       valid_1's rmse: 0.213832
-# [160]   training's rmse: 0.212658       valid_1's rmse: 0.213703
-# [180]   training's rmse: 0.212531       valid_1's rmse: 0.213641
-# [200]   training's rmse: 0.212438       valid_1's rmse: 0.213614
-# [220]   training's rmse: 0.212361       valid_1's rmse: 0.213598
-# [240]   training's rmse: 0.212294       valid_1's rmse: 0.213593
-# [260]   training's rmse: 0.212233       valid_1's rmse: 0.213588
-# [280]   training's rmse: 0.212177       valid_1's rmse: 0.213583
-# [300]   training's rmse: 0.212122       valid_1's rmse: 0.213581
-# [320]   training's rmse: 0.21207        valid_1's rmse: 0.213578
-# [340]   training's rmse: 0.212018       valid_1's rmse: 0.213574
-# [360]   training's rmse: 0.21197        valid_1's rmse: 0.213571
-# [380]   training's rmse: 0.211923       valid_1's rmse: 0.213567
-# [400]   training's rmse: 0.211875       valid_1's rmse: 0.213564
-# [420]   training's rmse: 0.21183        valid_1's rmse: 0.213564
+# [20]    training's rmse: 0.234902       valid_1's rmse: 0.235498
+# [40]    training's rmse: 0.222572       valid_1's rmse: 0.223299
+# [60]    training's rmse: 0.216685       valid_1's rmse: 0.217514
+# [80]    training's rmse: 0.213895       valid_1's rmse: 0.214787
+# [100]   training's rmse: 0.212546       valid_1's rmse: 0.213499
+# [120]   training's rmse: 0.211869       valid_1's rmse: 0.212878
+# [140]   training's rmse: 0.211507       valid_1's rmse: 0.212565
+# [160]   training's rmse: 0.211293       valid_1's rmse: 0.212401
+# [180]   training's rmse: 0.211153       valid_1's rmse: 0.212309
+# [200]   training's rmse: 0.211049       valid_1's rmse: 0.212254
+# [220]   training's rmse: 0.210964       valid_1's rmse: 0.212216
+# [240]   training's rmse: 0.210891       valid_1's rmse: 0.212194
+# [260]   training's rmse: 0.210825       valid_1's rmse: 0.212179
+# [280]   training's rmse: 0.210763       valid_1's rmse: 0.21217
+# [300]   training's rmse: 0.210706       valid_1's rmse: 0.21216
+# [320]   training's rmse: 0.210652       valid_1's rmse: 0.212153
+# [340]   training's rmse: 0.210597       valid_1's rmse: 0.212148
+# [360]   training's rmse: 0.210545       valid_1's rmse: 0.212145
+# [380]   training's rmse: 0.210493       valid_1's rmse: 0.212141
+# [400]   training's rmse: 0.210448       valid_1's rmse: 0.212138
+# [420]   training's rmse: 0.2104 valid_1's rmse: 0.212134
+# [440]   training's rmse: 0.210353       valid_1's rmse: 0.212129
+# [460]   training's rmse: 0.210306       valid_1's rmse: 0.212125
+# [480]   training's rmse: 0.21026        valid_1's rmse: 0.212124
+# [500]   training's rmse: 0.210215       valid_1's rmse: 0.212121
+# [520]   training's rmse: 0.210171       valid_1's rmse: 0.212116
+# [540]   training's rmse: 0.210127       valid_1's rmse: 0.212117
+# [560]   training's rmse: 0.210082       valid_1's rmse: 0.212114
+# [580]   training's rmse: 0.210037       valid_1's rmse: 0.212114
+# [600]   training's rmse: 0.209992       valid_1's rmse: 0.212113
+# [620]   training's rmse: 0.209947       valid_1's rmse: 0.212109
+# [640]   training's rmse: 0.209904       valid_1's rmse: 0.212106
+# [660]   training's rmse: 0.209858       valid_1's rmse: 0.212102
+# [680]   training's rmse: 0.209814       valid_1's rmse: 0.212099
+# [700]   training's rmse: 0.209769       valid_1's rmse: 0.212096
+# [720]   training's rmse: 0.209727       valid_1's rmse: 0.212095
+# [740]   training's rmse: 0.209683       valid_1's rmse: 0.212093
+# [760]   training's rmse: 0.20964        valid_1's rmse: 0.212094
+# [780]   training's rmse: 0.209597       valid_1's rmse: 0.212094
+# [800]   training's rmse: 0.209555       valid_1's rmse: 0.212092

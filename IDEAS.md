@@ -1,8 +1,6 @@
-- Re-run features
-- Move embedding into mainline LGB stack, add to stacker models using SVD(20)
-
-- Add SVD embedding to blender, also try removing all other SVD
-- Make a second base LGB with Bayesian encoding and NB features
+- Submit blender
+- Submit L3 Lasso
+- Submit average of Lasso and blender
 
 - Dominant color
 - average, standard deviation and minimum of Brightness in HSV color space
@@ -20,9 +18,9 @@
 - histogram stuff <http://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_imgproc/py_histograms/py_histogram_backprojection/py_histogram_backprojection.html#histogram-backprojection, http://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_imgproc/py_histograms/py_histogram_equalization/py_histogram_equalization.html#histogram-equalization>
 - HarrPSI <http://www.haarpsi.org/software/haarPsi.py, http://www.math.uni-bremen.de/cda/HaarPSI/publications/HaarPSI_preprint_v4.pdf>
 
-- price mean and price diff on inception_resnet_v2_top_1
-
 - Add more macroeconomic data (vote Putin)
+
+- price mean and price diff on inception_resnet_v2_top_1
 
 - Docfreq stats (see https://github.com/Wrosinski/Kaggle-Quora/blob/master/features/Extraction%20-%20Textacy%20Features%2017.05.ipynb)
 
@@ -33,7 +31,6 @@
 - use harmonic mean for price / diff
 - use geometric mean for price / diff
 
-- Figure out what to do with Matt's entity embedding on price
 - Add Matt's entity embedding on deal probability
 - Add Matt's entity embedding on deal threshold
 - Add Matt's Price ECDF encoding

@@ -41,6 +41,12 @@ BLEND: +FM models                                                               
 BLEND: +Add NIMA to LGBs                                                          - Dim 89,    5CV 0.21332, Submit 0.2177, Delta -.00438
 BLEND: +Add Base LGB                                                              - Dim 90,    5CV 0.21324, Submit ?0.2176?
 BLEND: +Add CNN FT, +Add TFIDF stats                                              - Dim 100,   5CV 0.21309, Submit ?0.2175?
-BLEND: +CNN FT2                                                                   - Dim 101,   5CV 0.21301, Submit ?0.2174?
-BLEND: +Improve CNN FT2                                                           - Dim 101,   5CV 0.21296, Submit ?0.2173?
+BLEND: +CNN FT3                                                                   - Dim 101,   5CV 0.21301, Submit ?0.2174?
+BLEND: +Improve CNN FT3                                                           - Dim 101,   5CV 0.21296, Submit ?0.2173?
+BLEND: +Add SVD of Embedding to Ridge LGB, -Stack LGB                             - Dim 101,   5CV 0.21261, Submit ?0.2170?
+BLEND: +Add CNN FT4                                                               - Dim 102,   5CV 0.21253, Submit 0.2173, Delta -.00477
+BLEND: +Add Ridge, +SVD of Embedding, -SVD dimensions. -TFIDF Stats               - Dim 50,    5CV 0.21242, Submit ?0.2172?
+BLEND: +Add Embedding to Base LGB                                                 - Dim 50,    5CV 0.21210, Submit ?0.2169?
+BLEND: +Add TE LGB                                                                - Dim 51,    5CV 0.21168, Submit ?0.2165?
+BLEND: +Add Ryan's LGB                                                            - Dim 52,    5CV 0.21147, Submit ?0.2163?
 ```
