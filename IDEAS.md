@@ -1,7 +1,10 @@
-- Submit L3 Lasso
 - Submit average of Lasso and blender
 
-- Add Deep LGB2 to blender
+- Add Ryan's features
+- LGBs with two embeddings
+- Deep LGB2
+
+- Drop my count features and add all Ryan count/LE features
 
 - Dominant color
 - average, standard deviation and minimum of Brightness in HSV color space
@@ -19,10 +22,9 @@
 - histogram stuff <http://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_imgproc/py_histograms/py_histogram_backprojection/py_histogram_backprojection.html#histogram-backprojection, http://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_imgproc/py_histograms/py_histogram_equalization/py_histogram_equalization.html#histogram-equalization>
 - HarrPSI <http://www.haarpsi.org/software/haarPsi.py, http://www.math.uni-bremen.de/cda/HaarPSI/publications/HaarPSI_preprint_v4.pdf>
 
-- Feature share with Ryan
-- LGB on new embedding
-- LGB on two embeddings
-- LGB on SVD of two embeddings
+
+- https://www.kaggle.com/lemonkoala/target-variable-homework
+- https://www.kaggle.com/alijs1/target-variable-some-interesting-insights
 
 - Add more macroeconomic data (vote Putin)
 
