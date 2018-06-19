@@ -48,5 +48,5 @@ BLEND: +Add CNN FT4                                                             
 BLEND: +Add Ridge, +SVD of Embedding, -SVD dimensions. -TFIDF Stats               - Dim 50,    5CV 0.21242, Submit ?0.2172?
 BLEND: +Add Embedding to Base LGB                                                 - Dim 50,    5CV 0.21210, Submit ?0.2169?
 BLEND: +Add TE LGB                                                                - Dim 51,    5CV 0.21168, Submit ?0.2165?
-BLEND: +Add Ryan's LGB                                                            - Dim 52,    5CV 0.21147, Submit ?0.2163?
+BLEND: +Add Ryan's LGB                                                            - Dim 52,    5CV 0.21147, Submit 0.2166, Delta -.00513
 ```
