@@ -1,6 +1,7 @@
-- Submit blender
 - Submit L3 Lasso
 - Submit average of Lasso and blender
+
+- Add Deep LGB2 to blender
 
 - Dominant color
 - average, standard deviation and minimum of Brightness in HSV color space
@@ -60,12 +61,4 @@
 - XGB
 - RF
 
-
-PATH TO 0.2166
-- Improving NN (0.0001)
-- Adding new NNs (0.0002)
-- RDizzl3 models (0.0002)
-- Embedding LGBs (0.0002)
-- Model tuning (0.0001)
-- Stacking and foresting (0.0001)
-- Better features (0.0001)
+- RNNs
