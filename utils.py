@@ -44,16 +44,16 @@ def normalize_text(text):
 
 
 def clean_text(text):
-        text = bytes(text, encoding="utf-8")
-        text = text.lower()
-        text = re.sub(b'(?<! )(?=[.,!?()])|(?<=[.,!?()])(?! )', b' ', text)
-        text = re.sub(b'\s+(?=\d)|(?<=\d)\s+', b' ', text)
-        text = text.replace(b"\b", b" ")
-        text = text.replace(b"\r", b" ")
-        text = regex.sub(b"\s+", b" ", text)
-        text = str(text, 'utf-8')
-        text = re.sub(r"\W+", " ", text.lower())
-        return text
+    text = bytes(text, encoding="utf-8")
+    text = text.lower()
+    text = re.sub(b'(?<! )(?=[.,!?()])|(?<=[.,!?()])(?! )', b' ', text)
+    text = re.sub(b'\s+(?=\d)|(?<=\d)\s+', b' ', text)
+    text = text.replace(b"\b", b" ")
+    text = text.replace(b"\r", b" ")
+    text = regex.sub(b"\s+", b" ", text)
+    text = str(text, 'utf-8')
+    text = re.sub(r"\W+", " ", text.lower())
+    return text
 
 
 # https://stackoverflow.com/questions/37685412/avoid-scaling-binary-columns-in-sci-kit-learn-standsardscaler

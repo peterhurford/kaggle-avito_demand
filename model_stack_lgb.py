@@ -500,58 +500,11 @@ submission.to_csv('submit/submit_ridge_lgb.csv', index=False)
 
 
 # WITH TE
-# [2018-06-18 07:48:31.911351] te_lgb cv scores : [0.21598862312524517, 0.21525477628543208, 0.21534744275560835, 0.21509341082165914, 0.21573400907042536]
-# [2018-06-18 07:48:31.911415] te_lgb mean cv score : 0.21548365241167403
-# [2018-06-18 07:48:31.911510] te_lgb std cv score : 0.00032890719915869125
-
-# [100]   training's rmse: 0.22459        valid_1's rmse: 0.22679
-# [200]   training's rmse: 0.219649       valid_1's rmse: 0.223354
-# [300]   training's rmse: 0.216497       valid_1's rmse: 0.221629
-# [400]   training's rmse: 0.214097       valid_1's rmse: 0.22057
-# [500]   training's rmse: 0.21194        valid_1's rmse: 0.219744
-# [600]   training's rmse: 0.210097       valid_1's rmse: 0.219181
-# [700]   training's rmse: 0.20834        valid_1's rmse: 0.218707
-# [800]   training's rmse: 0.206786       valid_1's rmse: 0.218382
-# [900]   training's rmse: 0.205311       valid_1's rmse: 0.218131
-# [1000]  training's rmse: 0.203922       valid_1's rmse: 0.217927
-# [1100]  training's rmse: 0.202562       valid_1's rmse: 0.217705
-# [1200]  training's rmse: 0.201303       valid_1's rmse: 0.217548
-# [1300]  training's rmse: 0.200042       valid_1's rmse: 0.217384
-# [1400]  training's rmse: 0.198829       valid_1's rmse: 0.217223
-# [1500]  training's rmse: 0.197677       valid_1's rmse: 0.217111
-# [1600]  training's rmse: 0.196541       valid_1's rmse: 0.216987
-# [1700]  training's rmse: 0.195483       valid_1's rmse: 0.216902
-# [1800]  training's rmse: 0.19446        valid_1's rmse: 0.216829
-# [1900]  training's rmse: 0.193441       valid_1's rmse: 0.216767
-# [2000]  training's rmse: 0.192428       valid_1's rmse: 0.216693
-# [2100]  training's rmse: 0.191468       valid_1's rmse: 0.216631
-# [2200]  training's rmse: 0.190533       valid_1's rmse: 0.216577
-# [2300]  training's rmse: 0.189619       valid_1's rmse: 0.216522
-# [2400]  training's rmse: 0.188752       valid_1's rmse: 0.216475
-# [2500]  training's rmse: 0.187863       valid_1's rmse: 0.216425
-# [2600]  training's rmse: 0.187005       valid_1's rmse: 0.216387
-# [2700]  training's rmse: 0.186172       valid_1's rmse: 0.216349
-# [2800]  training's rmse: 0.185361       valid_1's rmse: 0.216323
-# [2900]  training's rmse: 0.184535       valid_1's rmse: 0.216295
-# [3000]  training's rmse: 0.183741       valid_1's rmse: 0.216267
-# [3100]  training's rmse: 0.182951       valid_1's rmse: 0.216232
-# [3200]  training's rmse: 0.182207       valid_1's rmse: 0.216205
-# [3300]  training's rmse: 0.181466       valid_1's rmse: 0.216178
-# [3400]  training's rmse: 0.18074        valid_1's rmse: 0.216156
-# [3500]  training's rmse: 0.179979       valid_1's rmse: 0.216134
-# [3600]  training's rmse: 0.179255       valid_1's rmse: 0.216108
-# [3700]  training's rmse: 0.178519       valid_1's rmse: 0.216083
-# [3800]  training's rmse: 0.177807       valid_1's rmse: 0.216057
-# [3900]  training's rmse: 0.177104       valid_1's rmse: 0.216038
-# [4000]  training's rmse: 0.176411       valid_1's rmse: 0.216022
-# [4100]  training's rmse: 0.175742       valid_1's rmse: 0.216004
-# [4200]  training's rmse: 0.175058       valid_1's rmse: 0.215989
+# ?
 
 
 # WITH RIDGES
-# [2018-06-15 04:56:50.288476] ridge_lgb cv scores : [0.2147783829876306, 0.21395614971673593, 0.2138701184179281, 0.21380657669625333, 0.21439726308695933]
-# [2018-06-15 04:56:50.288546] ridge_lgb mean cv score : 0.21416169818110148
-# [2018-06-15 04:56:50.288657] ridge_lgb std cv score : 0.00037126033291255727
+# ?
 
 # [100]   training's rmse: 0.216434       valid_1's rmse: 0.220314
 # [200]   training's rmse: 0.211524       valid_1's rmse: 0.217921
