@@ -19,6 +19,9 @@
 - HarrPSI <http://www.haarpsi.org/software/haarPsi.py, http://www.math.uni-bremen.de/cda/HaarPSI/publications/HaarPSI_preprint_v4.pdf>
 
 - Feature share with Ryan
+- LGB on new embedding
+- LGB on two embeddings
+- LGB on SVD of two embeddings
 
 - Add more macroeconomic data (vote Putin)
 
