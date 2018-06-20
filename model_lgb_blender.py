@@ -147,6 +147,13 @@ train_['deep_lgb'] = train_deep_lgb['deep_lgb']
 print_step('Importing Data 7/15 3/3')
 test_['deep_lgb'] = test_deep_lgb['deep_lgb']
 
+print_step('Importing Data 7/15 1/3')
+train_deep_lgb, test_deep_lgb = load_cache('deep_lgb2')
+print_step('Importing Data 7/15 2/3')
+train_['deep_lgb2'] = train_deep_lgb['deep_lgb2']
+print_step('Importing Data 7/15 3/3')
+test_['deep_lgb2'] = test_deep_lgb['deep_lgb2']
+
 print_step('Importing Data 8/15 1/3')
 train_full_text_ridge, test_full_text_ridge = load_cache('full_text_ridge')
 print_step('Importing Data 8/15 2/3')
@@ -199,13 +206,6 @@ print_step('Importing Data 13/15 2/3')
 train_['cnn_ft'] = train_cnn_ft['CNN_FastText']
 print_step('Importing Data 13/15 3/3')
 test_['cnn_ft'] = test_cnn_ft['CNN_FastText']
-
-print_step('Importing Data 14/15 1/3')
-train_cnn_ft, test_cnn_ft = load_cache('CNN_FastText_3')
-print_step('Importing Data 14/15 2/3')
-train_['cnn_ft3'] = train_cnn_ft['CNN_FastText_3']
-print_step('Importing Data 14/15 3/3')
-test_['cnn_ft3'] = test_cnn_ft['CNN_FastText_3']
 
 print_step('Importing Data 14/15 1/3')
 train_cnn_ft, test_cnn_ft = load_cache('CNN_FastText_4')
@@ -279,47 +279,47 @@ submission['deal_probability'] = results['test'].clip(0.0, 1.0)
 submission.to_csv('submit/submit_lgb_blender.csv', index=False)
 print_step('Done!')
 
-# [2018-06-18 16:16:54.438668] lgb_blender cv scores : [0.2120923791639136, 0.21127704177755158, 0.21127264952127392, 0.21108054813472305, 0.21163707986214958]
-# [2018-06-18 16:16:54.438743] lgb_blender mean cv score : 0.21147193969192238
-# [2018-06-18 16:16:54.438850] lgb_blender std cv score : 0.00035863784920655455
+# [2018-06-20 06:47:27.913950] lgb_blender cv scores : [0.2121027435380671, 0.2112603457994605, 0.21128739123830775, 0.2110462075966361, 0.21162790531226147]
+# [2018-06-20 06:47:27.914023] lgb_blender mean cv score : 0.21146491869694656
+# [2018-06-20 06:47:27.914127] lgb_blender std cv score : 0.00036934271867793757
 
-# [20]    training's rmse: 0.234902       valid_1's rmse: 0.235498
-# [40]    training's rmse: 0.222572       valid_1's rmse: 0.223299
-# [60]    training's rmse: 0.216685       valid_1's rmse: 0.217514
-# [80]    training's rmse: 0.213895       valid_1's rmse: 0.214787
-# [100]   training's rmse: 0.212546       valid_1's rmse: 0.213499
-# [120]   training's rmse: 0.211869       valid_1's rmse: 0.212878
-# [140]   training's rmse: 0.211507       valid_1's rmse: 0.212565
-# [160]   training's rmse: 0.211293       valid_1's rmse: 0.212401
-# [180]   training's rmse: 0.211153       valid_1's rmse: 0.212309
-# [200]   training's rmse: 0.211049       valid_1's rmse: 0.212254
-# [220]   training's rmse: 0.210964       valid_1's rmse: 0.212216
-# [240]   training's rmse: 0.210891       valid_1's rmse: 0.212194
-# [260]   training's rmse: 0.210825       valid_1's rmse: 0.212179
-# [280]   training's rmse: 0.210763       valid_1's rmse: 0.21217
-# [300]   training's rmse: 0.210706       valid_1's rmse: 0.21216
-# [320]   training's rmse: 0.210652       valid_1's rmse: 0.212153
-# [340]   training's rmse: 0.210597       valid_1's rmse: 0.212148
-# [360]   training's rmse: 0.210545       valid_1's rmse: 0.212145
-# [380]   training's rmse: 0.210493       valid_1's rmse: 0.212141
-# [400]   training's rmse: 0.210448       valid_1's rmse: 0.212138
-# [420]   training's rmse: 0.2104 valid_1's rmse: 0.212134
-# [440]   training's rmse: 0.210353       valid_1's rmse: 0.212129
-# [460]   training's rmse: 0.210306       valid_1's rmse: 0.212125
-# [480]   training's rmse: 0.21026        valid_1's rmse: 0.212124
-# [500]   training's rmse: 0.210215       valid_1's rmse: 0.212121
-# [520]   training's rmse: 0.210171       valid_1's rmse: 0.212116
-# [540]   training's rmse: 0.210127       valid_1's rmse: 0.212117
-# [560]   training's rmse: 0.210082       valid_1's rmse: 0.212114
-# [580]   training's rmse: 0.210037       valid_1's rmse: 0.212114
-# [600]   training's rmse: 0.209992       valid_1's rmse: 0.212113
-# [620]   training's rmse: 0.209947       valid_1's rmse: 0.212109
-# [640]   training's rmse: 0.209904       valid_1's rmse: 0.212106
-# [660]   training's rmse: 0.209858       valid_1's rmse: 0.212102
-# [680]   training's rmse: 0.209814       valid_1's rmse: 0.212099
-# [700]   training's rmse: 0.209769       valid_1's rmse: 0.212096
-# [720]   training's rmse: 0.209727       valid_1's rmse: 0.212095
-# [740]   training's rmse: 0.209683       valid_1's rmse: 0.212093
-# [760]   training's rmse: 0.20964        valid_1's rmse: 0.212094
-# [780]   training's rmse: 0.209597       valid_1's rmse: 0.212094
-# [800]   training's rmse: 0.209555       valid_1's rmse: 0.212092
+# [20]    training's rmse: 0.234899       valid_1's rmse: 0.235495
+# [40]    training's rmse: 0.22257        valid_1's rmse: 0.223301
+# [60]    training's rmse: 0.216683       valid_1's rmse: 0.217516
+# [80]    training's rmse: 0.213891       valid_1's rmse: 0.214795
+# [100]   training's rmse: 0.212539       valid_1's rmse: 0.213504
+# [120]   training's rmse: 0.21186        valid_1's rmse: 0.212879
+# [140]   training's rmse: 0.211497       valid_1's rmse: 0.212565
+# [160]   training's rmse: 0.211282       valid_1's rmse: 0.212403
+# [180]   training's rmse: 0.211141       valid_1's rmse: 0.212315
+# [200]   training's rmse: 0.211035       valid_1's rmse: 0.21226
+# [220]   training's rmse: 0.210949       valid_1's rmse: 0.212223
+# [240]   training's rmse: 0.210876       valid_1's rmse: 0.212201
+# [260]   training's rmse: 0.210809       valid_1's rmse: 0.212184
+# [280]   training's rmse: 0.210748       valid_1's rmse: 0.212175
+# [300]   training's rmse: 0.210689       valid_1's rmse: 0.212167
+# [320]   training's rmse: 0.210636       valid_1's rmse: 0.212161
+# [340]   training's rmse: 0.210581       valid_1's rmse: 0.212157
+# [360]   training's rmse: 0.21053        valid_1's rmse: 0.212152
+# [380]   training's rmse: 0.210481       valid_1's rmse: 0.212148
+# [400]   training's rmse: 0.210432       valid_1's rmse: 0.212144
+# [420]   training's rmse: 0.210384       valid_1's rmse: 0.212141
+# [440]   training's rmse: 0.210337       valid_1's rmse: 0.212138
+# [460]   training's rmse: 0.210292       valid_1's rmse: 0.212137
+# [480]   training's rmse: 0.210247       valid_1's rmse: 0.212133
+# [500]   training's rmse: 0.2102 valid_1's rmse: 0.212127
+# [520]   training's rmse: 0.210154       valid_1's rmse: 0.212124
+# [540]   training's rmse: 0.210108       valid_1's rmse: 0.212122
+# [560]   training's rmse: 0.210064       valid_1's rmse: 0.21212
+# [580]   training's rmse: 0.21002        valid_1's rmse: 0.212119
+# [600]   training's rmse: 0.209975       valid_1's rmse: 0.212118
+# [620]   training's rmse: 0.209932       valid_1's rmse: 0.212114
+# [640]   training's rmse: 0.20989        valid_1's rmse: 0.212113
+# [660]   training's rmse: 0.209846       valid_1's rmse: 0.212111
+# [680]   training's rmse: 0.209803       valid_1's rmse: 0.212109
+# [700]   training's rmse: 0.209759       valid_1's rmse: 0.212107
+# [720]   training's rmse: 0.209719       valid_1's rmse: 0.212106
+# [740]   training's rmse: 0.209677       valid_1's rmse: 0.212104
+# [760]   training's rmse: 0.209635       valid_1's rmse: 0.212104
+# [780]   training's rmse: 0.209593       valid_1's rmse: 0.212105
+# [800]   training's rmse: 0.209552       valid_1's rmse: 0.212103
