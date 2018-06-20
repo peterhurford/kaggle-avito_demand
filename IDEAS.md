@@ -1,10 +1,13 @@
-- Submit average of Lasso and blender
-
-- Add Ryan's features
-- LGBs with two embeddings
-- Deep LGB2
-
 - Drop my count features and add all Ryan count/LE features
+- New glove for Matt
+- Add new features from Ryan
+- Add Liu's NN
+- Add Liu's LGB
+- Add Sijun's CNN
+- Add Matt and Thomas's RNNs
+
+- Add more macroeconomic data (vote Putin)
+- PUBLISH EXTERNAL DATA!
 
 - Dominant color
 - average, standard deviation and minimum of Brightness in HSV color space
@@ -26,7 +29,6 @@
 - https://www.kaggle.com/lemonkoala/target-variable-homework
 - https://www.kaggle.com/alijs1/target-variable-some-interesting-insights
 
-- Add more macroeconomic data (vote Putin)
 
 - price mean and price diff on inception_resnet_v2_top_1
 
