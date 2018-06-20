@@ -229,8 +229,8 @@ pdb.set_trace()
 
 print('~~~~~~~~~~')
 print_step('Cache')
-save_in_cache('deep_lgb', pd.DataFrame({'deep_lgb2': results['train']}),
-                          pd.DataFrame({'deep_lgb2': results['test']}))
+save_in_cache('deep_lgb2', pd.DataFrame({'deep_lgb2': results['train']}),
+                           pd.DataFrame({'deep_lgb2': results['test']}))
 
 print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
 print_step('Prepping submission file')
