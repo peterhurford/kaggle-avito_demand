@@ -48,5 +48,11 @@ BLEND: +Add CNN FT4                                                             
 BLEND: +Add Ridge, +SVD of Embedding, -SVD dimensions. -TFIDF Stats               - Dim 50,    5CV 0.21242, Submit ?0.2172?
 BLEND: +Add Embedding to Base LGB                                                 - Dim 50,    5CV 0.21210, Submit ?0.2169?
 BLEND: +Add TE LGB                                                                - Dim 51,    5CV 0.21168, Submit ?0.2165?
-BLEND: +Add Ryan's LGB                                                            - Dim 52,    5CV 0.21147, Submit 0.2166, Delta -.00513
+BLEND: +Add Ryan's LGB, +Ryan's Ridge, +Ryan's SGD                                - Dim 54,    5CV 0.21147, Submit 0.2166, Delta -.00513
+BLEND: -FT3                                                                       - Dim 55,    5CV 0.21149, Submit ?0.2166?
+Blend: +Deep LGB2                                                                 - Dim 54,    5CV 0.21146, Submit ?0.2166?
+Blend: +retrain Base LGB (with Ryan features)                                     - Dim 54,    5CV 0.21141, Submit ?0.2165?
+Blend: +Liu Jilong's NN                                                           - Dim 55,    5CV 0.21095, Submit ?0.2161?
+Blend: +Liu Jilong's LGB                                                          - Dim 56,    5CV 0.21092, Submit ?0.2161?
+Blend: +Tuning                                                                    - Dim 56,    5CV 0.21088, Submit 0.2158, Delta -.00492
 ```
