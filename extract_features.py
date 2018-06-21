@@ -229,7 +229,7 @@ if not is_in_cache('data_with_fe'):
     print_step('Grouping 2/3 5/6')
     train_fe['param_2_price_diff'] = train_fe['price'] - train_fe['param_2_price_mean']
     test_fe['param_2_price_diff'] = test_fe['price'] - test_fe['param_2_price_mean']
-    print_step('Grouping 5/6 6/6')
+    print_step('Grouping 2/3 6/6')
     train_fe.drop('p23', axis=1, inplace=True)
     test_fe.drop('p23', axis=1, inplace=True)
 
