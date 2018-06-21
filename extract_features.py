@@ -202,77 +202,45 @@ if not is_in_cache('data_with_fe'):
     test_fe['user_days_range'] = test_fe['user_days_range'].fillna(0).apply(lambda x: round(x / 10**11))
 
     print('~~~~~~~~~~~~~~~~~~~~~')
-    print_step('Grouping 1/4 1/5')
+    print_step('Grouping 1/3 1/5')
     train_fe['price'] = train_fe['price'].astype(np.float64)
     test_fe['price'] = test_fe['price'].astype(np.float64)
-    print_step('Grouping 1/4 2/5')
+    print_step('Grouping 1/3 2/5')
     train_enc = train_fe.groupby('category_name')['price'].agg(['mean']).reset_index()
     train_enc.columns = ['category_name', 'cat_price_mean']
-    print_step('Grouping 1/4 3/5')
+    print_step('Grouping 1/3 3/5')
     train_fe = pd.merge(train_fe, train_enc, how='left', on='category_name')
-    print_step('Grouping 1/4 4/5')
+    print_step('Grouping 1/3 4/5')
     test_fe = pd.merge(test_fe, train_enc, how='left', on='category_name')
-    print_step('Grouping 1/4 5/5')
+    print_step('Grouping 1/3 5/5')
     train_fe['cat_price_diff'] = train_fe['price'] - train_fe['cat_price_mean']
     test_fe['cat_price_diff'] = test_fe['price'] - test_fe['cat_price_mean']
 
-    print_step('Grouping 2/4 1/3')
-    train_enc = train_fe.groupby('parent_category_name')['parent_category_name'].agg(['count']).reset_index()
-    train_enc.columns = ['parent_category_name', 'parent_cat_count']
-    print_step('Grouping 2/4 2/3')
-    train_fe = pd.merge(train_fe, train_enc, how='left', on='parent_category_name')
-    print_step('Grouping 2/4 3/3')
-    test_fe = pd.merge(test_fe, train_enc, how='left', on='parent_category_name')
-
-    print_step('Grouping 3/4 1/5')
-    train_fe['region_X_cat'] = train_fe['region'] + ':' + train_fe['parent_category_name']
-    test_fe['region_X_cat'] = test_fe['region'] + ':' + test_fe['parent_category_name']
-    print_step('Grouping 3/4 2/5')
-    train_enc = train_fe.groupby('region_X_cat')['region_X_cat'].agg(['count']).reset_index()
-    train_enc.columns = ['region_X_cat', 'region_X_cat_count']
-    print_step('Grouping 3/4 3/5')
-    train_fe = pd.merge(train_fe, train_enc, how='left', on='region_X_cat')
-    print_step('Grouping 3/4 4/5')
-    test_fe = pd.merge(test_fe, train_enc, how='left', on='region_X_cat')
-    print_step('Grouping 3/4 5/5')
-    train_fe.drop('region_X_cat', axis=1, inplace=True)
-    test_fe.drop('region_X_cat', axis=1, inplace=True)
-
-    print_step('Grouping 4/4 1/4')
-    train_enc = train_fe.groupby('city')['city'].agg(['count']).reset_index()
-    train_enc.columns = ['city', 'city_count']
-    print_step('Grouping 4/4 2/4')
-    train_fe = pd.merge(train_fe, train_enc, how='left', on='city')
-    print_step('Grouping 4/4 3/4')
-    test_fe = pd.merge(test_fe, train_enc, how='left', on='city')
-    print_step('Grouping 4/4 4/4')
-    test_fe['city_count'].fillna(0, inplace=True)
-
-    print_step('Grouping 5/6 1/6')
+    print_step('Grouping 2/3 1/6')
     train_fe['p23'] = train_fe['param_2'] + ' ' + train_fe['param_3']
     test_fe['p23'] = test_fe['param_2'] + ' ' + test_fe['param_3']
-    print_step('Grouping 5/6 2/6')
+    print_step('Grouping 2/3 2/6')
     train_enc = train_fe.groupby('p23')['price'].agg(['mean']).reset_index()
     train_enc.columns = ['p23', 'param_2_price_mean']
-    print_step('Grouping 5/6 3/6')
+    print_step('Grouping 2/3 3/6')
     train_fe = pd.merge(train_fe, train_enc, how='left', on='p23')
-    print_step('Grouping 5/6 4/6')
+    print_step('Grouping 2/3 4/6')
     test_fe = pd.merge(test_fe, train_enc, how='left', on='p23')
-    print_step('Grouping 5/6 5/6')
+    print_step('Grouping 2/3 5/6')
     train_fe['param_2_price_diff'] = train_fe['price'] - train_fe['param_2_price_mean']
     test_fe['param_2_price_diff'] = test_fe['price'] - test_fe['param_2_price_mean']
     print_step('Grouping 5/6 6/6')
     train_fe.drop('p23', axis=1, inplace=True)
     test_fe.drop('p23', axis=1, inplace=True)
 
-    print_step('Grouping 6/6 1/4')
+    print_step('Grouping 3/3 1/4')
     train_enc = train_fe.groupby('image_top_1')['price'].agg(['mean']).reset_index()
     train_enc.columns = ['image_top_1', 'image_top_1_price_mean']
-    print_step('Grouping 6/6 2/4')
+    print_step('Grouping 3/3 2/4')
     train_fe = pd.merge(train_fe, train_enc, how='left', on='image_top_1')
-    print_step('Grouping 6/6 3/4')
+    print_step('Grouping 3/3 3/4')
     test_fe = pd.merge(test_fe, train_enc, how='left', on='image_top_1')
-    print_step('Grouping 6/6 4/4')
+    print_step('Grouping 3/3 4/4')
     train_fe['image_top_1_price_diff'] = train_fe['price'] - train_fe['image_top_1_price_mean']
     test_fe['image_top_1_price_diff'] = test_fe['price'] - test_fe['image_top_1_price_mean']
 
@@ -309,8 +277,7 @@ if not is_in_cache('ohe_data'):
                     'max_word_length_description', 'max_word_length_title', 'mean_word_length_description', 'mean_word_length_title',
                     'num_stopwords_description', 'number_count_description', 'number_count_title', 'num_unique_words_description',
                     'unique_words_per_word_description', 'item_seq_number', 'adjusted_seq_num', 'user_num_days', 'user_days_range',
-                    'cat_price_mean', 'cat_price_diff', 'parent_cat_count', 'region_X_cat_count', 'city_count',
-					'num_lowercase_description', 'num_punctuations_title', 'sentence_mean', 'sentence_std',
+                    'cat_price_mean', 'cat_price_diff', 'num_lowercase_description', 'num_punctuations_title', 'sentence_mean', 'sentence_std',
 					'words_per_sentence', 'param_2_price_mean', 'param_2_price_diff', 'image_top_1_price_mean',
                     'image_top_1_price_diff']
     train_ohe, test_ohe = bin_and_ohe_data(train_fe, test_fe, numeric_cols=numeric_cols, dummy_cols=dummy_cols)
