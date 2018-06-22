@@ -1,18 +1,18 @@
-- Get features for Liu
+- Add Liu's image features to models
+- Add Count lemmas to models
 
-- Add Liu's image features
-- Count lemmas
+- Train Poisson models
+- Add Poisson models from me and Ryan
+- Train Poisson blender
 
-- Add Poisson models
-- Add Poisson blender
+- Add Liu's price level feature to models
+- Add Liu's high cardinality category bin feature to models
+- Add x['level'] = pd.qcut(x['price'], 100, labels=False, duplicates='drop') but cast to categorical
+- Add Thomas's price imputation
+- Add Thomas's image_top_1 imputation
+- Add Thomas's / Matt's new price embedding
 
-- Liu's price level feature
-- Liu's high cardinality category bin feature
-- x['level'] = pd.qcut(x['price'], 100, labels=False, duplicates='drop') but cast to categorical
-- Thomas's price imputation
-- Thomas's image_top_1 imputation
-
-- Add Sijun's CNN
+- Add Sijun's CNNs
 - Add Matt and Thomas's RNNs
 
 - Dominant color
