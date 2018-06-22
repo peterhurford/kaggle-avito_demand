@@ -1,6 +1,16 @@
-- Retrain features
-- Thomas's interact features
+- Get features for Liu
+
+- Add Liu's image features
+- Count lemmas
+
+- Add Poisson models
+- Add Poisson blender
+
+- Liu's price level feature
+- Liu's high cardinality category bin feature
+- x['level'] = pd.qcut(x['price'], 100, labels=False, duplicates='drop') but cast to categorical
 - Thomas's price imputation
+- Thomas's image_top_1 imputation
 
 - Add Sijun's CNN
 - Add Matt and Thomas's RNNs
