@@ -332,23 +332,23 @@ print_step('Done!')
 
 print('~~~~~~~~~~~~~~~~')
 print_step('Run Average')
-results = pd.DataFrame()
-results['train'] = results['train'].clip(0.0, 1.0) * 0.5 + poisson_results['train'].clip(0.0, 1.0) * 0.5
-results['test'] = results['test'].clip(0.0, 1.0) * 0.5 + poisson_results['test'].clip(0.0, 1.0) * 0.5
-print('RMSE: ' + str(rmse(target, results['train'])))
+average_results = pd.DataFrame()
+average_results['train'] = results['train'].clip(0.0, 1.0) * 0.5 + poisson_results['train'].clip(0.0, 1.0) * 0.5
+average_results['test'] = results['test'].clip(0.0, 1.0) * 0.5 + poisson_results['test'].clip(0.0, 1.0) * 0.5
+print('RMSE: ' + str(rmse(target, average_results['train'])))
 import pdb
 pdb.set_trace()
 
 print('~~~~~~~~~~')
 print_step('Cache')
-save_in_cache('blender_average', pd.DataFrame({'blender_average': results['train']}),
-                                 pd.DataFrame({'blender_average': results['test']}))
+save_in_cache('blender_average', pd.DataFrame({'blender_average': average_results['train']}),
+                                 pd.DataFrame({'blender_average': average_results['test']}))
 
 print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
 print_step('Prepping submission file')
 submission = pd.DataFrame()
 submission['item_id'] = test_id
-submission['deal_probability'] = results['test'].clip(0.0, 1.0)
+submission['deal_probability'] = average_results['test'].clip(0.0, 1.0)
 submission.to_csv('submit/submit_average_blender.csv', index=False)
 print_step('Done!')
 

@@ -2,7 +2,8 @@
 - Add Liu's price level feature and high cardinality category bin feature to models + Thomas's imputation + Liu's image features (TE running on Avito4 -- Need to do for Base, Ridge)
 
 - Try adding Ridge, Poisson and non-Poisson, averaged to blender
-- Add other Poisson models from me and Ryan to blender?
+- Add Ryan's train_ryan_lgbm_v33.csv/test_ryan_lgbm_v33.csv to blender
+- Add other Poisson models from me to blender?
 - Train Poisson blender and average
 
 - Add Count lemmas to models
