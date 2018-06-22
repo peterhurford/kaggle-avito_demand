@@ -27,8 +27,12 @@ params = {'learning_rate': 0.02,
           'lambda_l1': 1,
           'lambda_l2': 1,
           'min_data_in_leaf': 40,
-          'num_rounds': 1600,
-          'verbose_eval': 20}
+          'verbose_eval': 20,
+          'num_rounds': 1600}
+poisson_params = params.copy()
+poisson_params['application'] = 'poisson'
+poisson_params['poisson_max_delta_step'] = 1.5
+poisson_params['num_rounds'] = 8000
 
 def runLGB(train_X, train_y, test_X, test_y, test_X2, params):
     print_step('Prep LGB')
@@ -109,6 +113,13 @@ print_step('Importing Data 3/15 2/3')
 train_['ridge_lgb'] = train_ridge_lgb['ridge_lgb']
 print_step('Importing Data 3/15 3/3')
 test_['ridge_lgb'] = test_ridge_lgb['ridge_lgb']
+
+print_step('Importing Data 3/15 1/3')
+train_ridge_lgb_poisson, test_ridge_lgb_poisson = load_cache('ridge_lgb_poisson')
+print_step('Importing Data 3/15 2/3')
+train_['ridge_lgb_poisson'] = train_ridge_lgb_poisson['ridge_lgb_poisson']
+print_step('Importing Data 3/15 3/3')
+test_['ridge_lgb_poisson'] = test_ridge_lgb_poisson['ridge_lgb_poisson']
 
 print_step('Importing Data 4/15 1/4')
 train_pcat_ridge, test_pcat_ridge = load_cache('parent_cat_ridges')
@@ -215,18 +226,18 @@ print_step('Importing Data 14/15 3/3')
 test_['cnn_ft4'] = test_cnn_ft['CNN_FastText_4']
 
 print_step('Importing Data 14/15 1/3')
-train_cnn_ft, test_cnn_ft = load_cache('liu_nn')
+train_liu_nn, test_liu_nn = load_cache('liu_nn')
 print_step('Importing Data 14/15 2/3')
-train_['liu_nn'] = train_cnn_ft['liu_nn']
+train_['liu_nn'] = train_liu_nn['liu_nn']
 print_step('Importing Data 14/15 3/3')
-test_['liu_nn'] = test_cnn_ft['liu_nn']
+test_['liu_nn'] = test_liu_nn['liu_nn']
 
 print_step('Importing Data 14/15 1/3')
-train_clgb_ft, test_clgb_ft = load_cache('liu_lgb')
+train_liu_lgb, test_liu_lgb = load_cache('liu_lgb')
 print_step('Importing Data 14/15 2/3')
-train_['liu_lgb'] = train_clgb_ft['liu_lgb']
+train_['liu_lgb'] = train_liu_lgb['liu_lgb']
 print_step('Importing Data 14/15 3/3')
-test_['liu_lgb'] = test_clgb_ft['liu_lgb']
+test_['liu_lgb'] = test_liu_lgb['liu_lgb']
 
 models = [c for c in train_.columns if 'svd' not in c and 'price' not in c and 'img' not in c and 'parent_category' not in c]
 pprint(sorted([(m, rmse(target, train_[m])) for m in models], key = lambda x: x[1]))
@@ -298,87 +309,54 @@ submission['deal_probability'] = results['test'].clip(0.0, 1.0)
 submission.to_csv('submit/submit_lgb_blender.csv', index=False)
 print_step('Done!')
 
-# 2018-06-21 00:56:58.038816] lgb_blender cv scores : [0.21154527641571197, 0.21059885401269102, 0.21071576327433625, 0.21046953960362005, 0.21104572235752722]
-# 2018-06-21 00:56:58.038894] lgb_blender mean cv score : 0.2108750311327773
-# 2018-06-21 00:56:58.039000] lgb_blender std cv score : 0.000385856881787182
+print('~~~~~~~~~~~~~~~~~~~~')
+print_step('Run Poisson LGB')
+print(train_.shape)
+print(test_.shape)
+poisson_results = run_cv_model(train_, test_, target, runLGB, poisson_params, rmse, 'possion_lgb_blender')
+import pdb
+pdb.set_trace()
 
-# [20]    training's rmse: 0.234703       valid_1's rmse: 0.235077
-# [40]    training's rmse: 0.22224        valid_1's rmse: 0.222715
-# [60]    training's rmse: 0.216284       valid_1's rmse: 0.216913
-# [80]    training's rmse: 0.213434       valid_1's rmse: 0.214191
-# [100]   training's rmse: 0.212049       valid_1's rmse: 0.212925
-# [120]   training's rmse: 0.211352       valid_1's rmse: 0.21233
-# [140]   training's rmse: 0.210979       valid_1's rmse: 0.212046
-# [160]   training's rmse: 0.210759       valid_1's rmse: 0.211901
-# [180]   training's rmse: 0.210615       valid_1's rmse: 0.211829
-# [200]   training's rmse: 0.210509       valid_1's rmse: 0.211785
-# [220]   training's rmse: 0.210421       valid_1's rmse: 0.211756
-# [240]   training's rmse: 0.210346       valid_1's rmse: 0.211735
-# [260]   training's rmse: 0.210277       valid_1's rmse: 0.21172
-# [280]   training's rmse: 0.210213       valid_1's rmse: 0.211708
-# [300]   training's rmse: 0.210154       valid_1's rmse: 0.211698
-# [320]   training's rmse: 0.210099       valid_1's rmse: 0.211693
-# [340]   training's rmse: 0.210046       valid_1's rmse: 0.211687
-# [360]   training's rmse: 0.209994       valid_1's rmse: 0.211684
-# [380]   training's rmse: 0.209943       valid_1's rmse: 0.21168
-# [400]   training's rmse: 0.209893       valid_1's rmse: 0.211676
-# [420]   training's rmse: 0.209845       valid_1's rmse: 0.211674
-# [440]   training's rmse: 0.209795       valid_1's rmse: 0.211668
-# [460]   training's rmse: 0.209747       valid_1's rmse: 0.211663
-# [480]   training's rmse: 0.209698       valid_1's rmse: 0.211661
-# [500]   training's rmse: 0.20965        valid_1's rmse: 0.211658
-# [520]   training's rmse: 0.209601       valid_1's rmse: 0.211656
-# [540]   training's rmse: 0.209554       valid_1's rmse: 0.211651
-# [560]   training's rmse: 0.209507       valid_1's rmse: 0.211649
-# [580]   training's rmse: 0.209461       valid_1's rmse: 0.211647
-# [600]   training's rmse: 0.209416       valid_1's rmse: 0.211644
-# [620]   training's rmse: 0.209366       valid_1's rmse: 0.211641
-# [640]   training's rmse: 0.209321       valid_1's rmse: 0.211641
-# [660]   training's rmse: 0.209278       valid_1's rmse: 0.211641
-# [680]   training's rmse: 0.209232       valid_1's rmse: 0.211639
-# [700]   training's rmse: 0.209189       valid_1's rmse: 0.211638
-# [720]   training's rmse: 0.209145       valid_1's rmse: 0.211634
-# [740]   training's rmse: 0.2091 valid_1's rmse: 0.211631
-# [760]   training's rmse: 0.209057       valid_1's rmse: 0.211629
-# [780]   training's rmse: 0.209014       valid_1's rmse: 0.211628
-# [800]   training's rmse: 0.208971       valid_1's rmse: 0.211625
-# [820]   training's rmse: 0.208926       valid_1's rmse: 0.211622
-# [840]   training's rmse: 0.208884       valid_1's rmse: 0.21162
-# [860]   training's rmse: 0.208844       valid_1's rmse: 0.21162
-# [880]   training's rmse: 0.2088 valid_1's rmse: 0.21162
-# [900]   training's rmse: 0.208757       valid_1's rmse: 0.211618
-# [920]   training's rmse: 0.208714       valid_1's rmse: 0.211615
-# [940]   training's rmse: 0.208674       valid_1's rmse: 0.211614
-# [960]   training's rmse: 0.208632       valid_1's rmse: 0.211611
-# [980]   training's rmse: 0.208589       valid_1's rmse: 0.21161
-# [1000]  training's rmse: 0.208549       valid_1's rmse: 0.21161
-# [1020]  training's rmse: 0.208507       valid_1's rmse: 0.211608
-# [1040]  training's rmse: 0.208466       valid_1's rmse: 0.211607
-# [1060]  training's rmse: 0.208425       valid_1's rmse: 0.211606
-# [1080]  training's rmse: 0.208388       valid_1's rmse: 0.211605
-# [1100]  training's rmse: 0.208347       valid_1's rmse: 0.211603
-# [1120]  training's rmse: 0.208307       valid_1's rmse: 0.211602
-# [1140]  training's rmse: 0.208266       valid_1's rmse: 0.211601
-# [1160]  training's rmse: 0.208227       valid_1's rmse: 0.211601
-# [1180]  training's rmse: 0.208186       valid_1's rmse: 0.211602
-# [1200]  training's rmse: 0.208146       valid_1's rmse: 0.2116
-# [1220]  training's rmse: 0.208106       valid_1's rmse: 0.211598
-# [1240]  training's rmse: 0.208068       valid_1's rmse: 0.211598
-# [1260]  training's rmse: 0.208027       valid_1's rmse: 0.211595
-# [1280]  training's rmse: 0.207987       valid_1's rmse: 0.211595
-# [1300]  training's rmse: 0.207949       valid_1's rmse: 0.211593
-# [1320]  training's rmse: 0.207907       valid_1's rmse: 0.211595
-# [1340]  training's rmse: 0.207866       valid_1's rmse: 0.211596
-# [1360]  training's rmse: 0.207826       valid_1's rmse: 0.211595
-# [1380]  training's rmse: 0.207786       valid_1's rmse: 0.211596
-# [1400]  training's rmse: 0.207745       valid_1's rmse: 0.211596
-# [1420]  training's rmse: 0.207706       valid_1's rmse: 0.211598
-# [1440]  training's rmse: 0.207668       valid_1's rmse: 0.211598
-# [1460]  training's rmse: 0.207629       valid_1's rmse: 0.211598
-# [1480]  training's rmse: 0.207589       valid_1's rmse: 0.211598
-# [1500]  training's rmse: 0.20755        valid_1's rmse: 0.211597
-# [1520]  training's rmse: 0.207507       valid_1's rmse: 0.211597
-# [1540]  training's rmse: 0.207469       valid_1's rmse: 0.211596
-# [1560]  training's rmse: 0.207431       valid_1's rmse: 0.211594
-# [1580]  training's rmse: 0.207393       valid_1's rmse: 0.211594
-# [1600]  training's rmse: 0.207355       valid_1's rmse: 0.211594
+print('~~~~~~~~~~')
+print_step('Cache')
+save_in_cache('lgb_blender_poisson', pd.DataFrame({'lgb_blender_poisson': poisson_results['train']}),
+                                     pd.DataFrame({'lgb_blender_poisson': poisson_results['test']}))
+
+print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+print_step('Prepping submission file')
+submission = pd.DataFrame()
+submission['item_id'] = test_id
+submission['deal_probability'] = poisson_results['test'].clip(0.0, 1.0)
+submission.to_csv('submit/submit_lgb_blender_poisson.csv', index=False)
+print_step('Done!')
+
+print('~~~~~~~~~~~~~~~~')
+print_step('Run Average')
+results = pd.DataFrame()
+results['train'] = results['train'].clip(0.0, 1.0) * 0.5 + poisson_results['train'].clip(0.0, 1.0) * 0.5
+results['test'] = results['test'].clip(0.0, 1.0) * 0.5 + poisson_results['test'].clip(0.0, 1.0) * 0.5
+print('RMSE: ' + str(rmse(target, results['train'])))
+import pdb
+pdb.set_trace()
+
+print('~~~~~~~~~~')
+print_step('Cache')
+save_in_cache('blender_average', pd.DataFrame({'blender_average': results['train']}),
+                                 pd.DataFrame({'blender_average': results['test']}))
+
+print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+print_step('Prepping submission file')
+submission = pd.DataFrame()
+submission['item_id'] = test_id
+submission['deal_probability'] = results['test'].clip(0.0, 1.0)
+submission.to_csv('submit/submit_average_blender.csv', index=False)
+print_step('Done!')
+
+# REGRESSION
+# [2018-06-22 21:49:18.841029] lgb_blender cv scores : [0.21139411770674624, 0.21044333123019984, 0.21056442673558035, 0.2103475962450443, 0.21091313865726366]
+# [2018-06-22 21:49:18.841103] lgb_blender mean cv score : 0.21073252211496687
+# [2018-06-22 21:49:18.841209] lgb_blender std cv score : 0.00038220057879397083
+
+# POISSON
+
+# AVERAGE
