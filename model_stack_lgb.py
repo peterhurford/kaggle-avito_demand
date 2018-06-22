@@ -15,8 +15,9 @@ from utils import print_step, rmse, clean_text
 from cache import get_data, is_in_cache, load_cache, save_in_cache
 
 
-params = {'learning_rate': 0.03,
-          'application': 'regression',
+params = {'learning_rate': 0.03, #0.06
+          'application': 'regression', #'poisson'
+		  #'poisson_max_delta_step': 1.5,
           'num_leaves': 250,
           'verbosity': -1,
           'metric': 'rmse',
@@ -27,7 +28,7 @@ params = {'learning_rate': 0.03,
           'lambda_l1': 6,
           'lambda_l2': 6,
           'min_data_in_leaf': 40,
-          'num_rounds': 4200,
+          'num_rounds': 5200, #5400 for poisson, 4200 for regression
           'verbose_eval': 100}
 
 def runLGB(train_X, train_y, test_X, test_y, test_X2, params):
@@ -111,6 +112,26 @@ print_step('Importing Data 6/19 2/3')
 train_fe = pd.concat([train_fe, train_ryan], axis=1)
 print_step('Importing Data 6/19 3/3')
 test_fe = pd.concat([test_fe, test_ryan], axis=1)
+
+print_step('Importing Data 6/19 1/3')
+train_le, test_le = load_cache('le')
+print_step('Importing Data 6/19 2/3')
+train_fe = pd.concat([train_fe, train_le], axis=1)
+print_step('Importing Data 6/19 3/3')
+test_fe = pd.concat([test_fe, test_le], axis=1)
+train_fe.drop('item_id', axis=1, inplace=True)
+test_fe.drop('item_id', axis=1, inplace=True)
+
+print_step('Importing Data 6/19 1/3')
+train_numeric, test_numeric = load_cache('numeric')
+train_numeric.drop(['item_id', 'item_seq_number', 'price_missing'], axis=1, inplace=True)
+test_numeric.drop(['item_id', 'item_seq_number', 'price_missing'], axis=1, inplace=True)
+train_fe.drop(['image_top_1', 'price'], axis=1, inplace=True)
+test_fe.drop(['image_top_1', 'price'], axis=1, inplace=True)
+print_step('Importing Data 6/19 2/3')
+train_fe = pd.concat([train_fe, train_numeric], axis=1)
+print_step('Importing Data 6/19 3/3')
+test_fe = pd.concat([test_fe, test_numeric], axis=1)
 
 print_step('Importing Data 7/19 1/5')
 train_active_feats, test_active_feats = load_cache('active_feats')
@@ -205,6 +226,28 @@ print_step('Importing Data 9/19 20/20')
 train_fe.drop(['xception_top_1', 'nasnet_top_1', 'inception_resnet_v2_top_1'], axis=1, inplace=True)
 test_fe.drop(['xception_top_1', 'nasnet_top_1', 'inception_resnet_v2_top_1'], axis=1, inplace=True)
 
+train_img = np.load('cache/train_image_meta_wihtout_zero_size.npy')
+img_cols = ['lightness_mean_yuv', 'lightness_std_yuv', 'lightness_mean_hsl', 'lightness_std_hsl', 'saturation_mean_hsv',
+            'saturation_std_hsv', 'colorfulness', 'gray_std', 'red_mean', 'green_mean', 'blue_mean', 'image_x', 'image_y',
+            'image_area', 'blurrness']
+train_img = pd.DataFrame(train_img, columns = img_cols)
+test_img = np.load('cache/test_image_meta.npy')
+test_img = pd.DataFrame(test_img, columns = img_cols)
+train, test = get_data()
+drops = ['red_mean', 'green_mean', 'blue_mean', 'image_x', 'image_y', 'image_area', 'blurrness']
+img_cols = list(set(img_cols) - set(drops))
+train_img.drop(drops, axis=1, inplace=True)
+test_img.drop(drops, axis=1, inplace=True)
+train_fe['image'] = train['image']
+test_fe['image'] = test['image']
+for col in img_cols:
+  train_fe[col] = 0
+  test_fe[col] = 0
+train_fe.loc[train_fe['image'].notnull(), img_cols] = train_img
+test_fe.loc[test_fe['image'].notnull(), img_cols] = test_img
+train_fe.drop('image', inplace=True, axis=1)
+test_fe.drop('image', inplace=True, axis=1)
+
 
 print_step('Importing Data 10/19 1/2')
 train_ridge, test_ridge = load_cache('tfidf_ridges')
@@ -271,10 +314,10 @@ test_fe = pd.concat([test_fe, test_embeddings_df], axis=1)
 
 print('~~~~~~~~~~~~~~~~~~~~~~~~~~~')
 print_step('Converting to category')
-train_fe['image_top_1'] = train_fe['image_top_1'].astype('str').fillna('missing')
-test_fe['image_top_1'] = test_fe['image_top_1'].astype('str').fillna('missing')
+train_fe['image_top_1_imputed'] = train_fe['image_top_1_imputed'].astype('str').fillna('missing')
+test_fe['image_top_1_imputed'] = test_fe['image_top_1_imputed'].astype('str').fillna('missing')
 cat_cols = ['region', 'city', 'parent_category_name', 'category_name', 'cat_bin',
-            'param_1', 'param_2', 'param_3', 'user_type', 'image_top_1', 'day_of_week', 'img_average_color']
+            'param_1', 'param_2', 'param_3', 'user_type', 'image_top_1_imputed', 'day_of_week', 'img_average_color']
 for col in train_fe.columns:
     print(col)
     if col in cat_cols:
@@ -285,38 +328,38 @@ for col in train_fe.columns:
         test_fe[col] = test_fe[col].fillna(0).astype(np.float64)
 
 
-print('~~~~~~~~~~~~~~~~~~~~~~')
-print_step('Pre-flight checks')
-for col in train_fe.columns:
-    print('##')
-    print(col)
-    print('-')
-    print(train_fe[col].values)
-    print('-')
-    print(test_fe[col].values)
-    print('-')
-print('-')
+# print('~~~~~~~~~~~~~~~~~~~~~~')
+# print_step('Pre-flight checks')
+# for col in train_fe.columns:
+#     print('##')
+#     print(col)
+#     print('-')
+#     print(train_fe[col].values)
+#     print('-')
+#     print(test_fe[col].values)
+#     print('-')
+# print('-')
 
 
-print('~~~~~~~~~~~~')
-print_step('Run LGB')
-print(train_fe.shape)
-print(test_fe.shape)
-results = run_cv_model(train_fe, test_fe, target, runLGB, params, rmse, 'base_lgb')
-import pdb
-pdb.set_trace()
+# print('~~~~~~~~~~~~')
+# print_step('Run LGB')
+# print(train_fe.shape)
+# print(test_fe.shape)
+# results = run_cv_model(train_fe, test_fe, target, runLGB, params, rmse, 'base_lgb')
+# import pdb
+# pdb.set_trace()
 
-print('~~~~~~~~~~')
-print_step('Cache')
-save_in_cache('base_lgb', pd.DataFrame({'base_lgb': results['train']}),
-                          pd.DataFrame({'base_lgb': results['test']}))
+# print('~~~~~~~~~~')
+# print_step('Cache')
+# save_in_cache('base_lgb', pd.DataFrame({'base_lgb': results['train']}),
+#                           pd.DataFrame({'base_lgb': results['test']}))
 
-print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
-print_step('Prepping submission file')
-submission = pd.DataFrame()
-submission['item_id'] = test_id
-submission['deal_probability'] = results['test'].clip(0.0, 1.0)
-submission.to_csv('submit/submit_base_lgb.csv', index=False)
+# print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+# print_step('Prepping submission file')
+# submission = pd.DataFrame()
+# submission['item_id'] = test_id
+# submission['deal_probability'] = results['test'].clip(0.0, 1.0)
+# submission.to_csv('submit/submit_base_lgb.csv', index=False)
 
 
 print('~~~~~~~~~~~~~~~~~~~~~~')
@@ -327,6 +370,8 @@ for col in cat_cols:
     if col in train_te.columns:
         train_te.drop(col, axis=1, inplace=True)
         test_te.drop(col, axis=1, inplace=True)
+train_te.drop([c for c in train_te.columns if 'inter' in c], axis=1, inplace=True)
+test_te.drop([c for c in test_te.columns if 'inter' in c], axis=1, inplace=True)
 print_step('Importing Data 12/19 2/7')
 train_target_encoding, test_target_encoding = load_cache('target_encoding_1000')
 print_step('Importing Data 12/19 3/7')
@@ -342,6 +387,7 @@ test_te = pd.concat([test_te, test_nb], axis=1)
 
 print('~~~~~~~~~~~~~~~')
 print_step('Run TE LGB')
+params['num_rounds'] = 5200 #8100
 print(train_te.shape)
 print(test_te.shape)
 results = run_cv_model(train_te, test_te, target, runLGB, params, rmse, 'te_lgb')
@@ -383,6 +429,15 @@ train_svd.columns = ['svd_embed_'+str(i+1) for i in range(NCOMP)]
 test_svd.columns = ['svd_embed_'+str(i+1) for i in range(NCOMP)]
 train_fe = pd.concat([train_fe, train_svd], axis=1)
 test_fe = pd.concat([test_fe, test_svd], axis=1)
+
+print_step('Importing Data 6/19 1/3')
+train_inter, test_inter = load_cache('interact')
+print_step('Importing Data 6/19 2/3')
+train_fe = pd.concat([train_fe, train_inter], axis=1)
+print_step('Importing Data 6/19 3/3')
+test_fe = pd.concat([test_fe, test_inter], axis=1)
+train_fe.drop('item_id', axis=1, inplace=True)
+test_fe.drop('item_id', axis=1, inplace=True)
 
 print_step('Importing Data 14/19 1/2')
 train_ridge, test_ridge = load_cache('tfidf_ridges')
@@ -439,7 +494,7 @@ print('~~~~~~~~~~~~~~~~~~')
 print_step('Run Ridge LGB')
 print(train_fe.shape)
 print(test_fe.shape)
-params['num_rounds'] = 3100
+params['num_rounds'] = 4900 #3100
 results = run_cv_model(train_fe, test_fe, target, runLGB, params, rmse, 'ridge_lgb')
 import pdb
 pdb.set_trace()
@@ -458,7 +513,52 @@ submission.to_csv('submit/submit_ridge_lgb.csv', index=False)
 
 
 # BASE
-# ?
+# [2018-06-21 15:24:00.453329] base_lgb cv scores : [0.21467065391115733, 0.21403075064933444, 0.21399333430251413, 0.2139006508898873, 0.21436928569495026]
+# [2018-06-21 15:24:00.453394] base_lgb mean cv score : 0.2141929350895687
+# [2018-06-21 15:24:00.453490] base_lgb std cv score : 0.0002866667503387072
+
+# [100]   training's rmse: 0.22229        valid_1's rmse: 0.225697
+# [200]   training's rmse: 0.215696       valid_1's rmse: 0.222124
+# [300]   training's rmse: 0.211445       valid_1's rmse: 0.220422
+# [400]   training's rmse: 0.207927       valid_1's rmse: 0.219243
+# [500]   training's rmse: 0.204969       valid_1's rmse: 0.218502
+# [600]   training's rmse: 0.202296       valid_1's rmse: 0.217956
+# [700]   training's rmse: 0.199856       valid_1's rmse: 0.217497
+# [800]   training's rmse: 0.197617       valid_1's rmse: 0.217151
+# [900]   training's rmse: 0.195467       valid_1's rmse: 0.216867
+# [1000]  training's rmse: 0.193399       valid_1's rmse: 0.216609
+# [1100]  training's rmse: 0.191432       valid_1's rmse: 0.216389
+# [1200]  training's rmse: 0.189532       valid_1's rmse: 0.216199
+# [1300]  training's rmse: 0.187702       valid_1's rmse: 0.216057
+# [1400]  training's rmse: 0.185982       valid_1's rmse: 0.215892
+# [1500]  training's rmse: 0.184346       valid_1's rmse: 0.215758
+# [1600]  training's rmse: 0.182705       valid_1's rmse: 0.215658
+# [1700]  training's rmse: 0.181253       valid_1's rmse: 0.215575
+# [1800]  training's rmse: 0.179763       valid_1's rmse: 0.215489
+# [1900]  training's rmse: 0.178362       valid_1's rmse: 0.215417
+# [2000]  training's rmse: 0.176916       valid_1's rmse: 0.215329
+# [2100]  training's rmse: 0.175516       valid_1's rmse: 0.215266
+# [2200]  training's rmse: 0.174251       valid_1's rmse: 0.215213
+# [2300]  training's rmse: 0.172937       valid_1's rmse: 0.215157
+# [2400]  training's rmse: 0.171678       valid_1's rmse: 0.215108
+# [2500]  training's rmse: 0.170459       valid_1's rmse: 0.215058
+# [2600]  training's rmse: 0.169241       valid_1's rmse: 0.215015
+# [2700]  training's rmse: 0.168042       valid_1's rmse: 0.214979
+# [2800]  training's rmse: 0.16692        valid_1's rmse: 0.214944
+# [2900]  training's rmse: 0.165788       valid_1's rmse: 0.214909
+# [3000]  training's rmse: 0.164674       valid_1's rmse: 0.214882
+# [3100]  training's rmse: 0.163611       valid_1's rmse: 0.21485
+# [3200]  training's rmse: 0.162535       valid_1's rmse: 0.214834
+# [3300]  training's rmse: 0.161554       valid_1's rmse: 0.214812
+# [3400]  training's rmse: 0.160565       valid_1's rmse: 0.214786
+# [3500]  training's rmse: 0.159592       valid_1's rmse: 0.21477
+# [3600]  training's rmse: 0.158631       valid_1's rmse: 0.21475
+# [3700]  training's rmse: 0.157667       valid_1's rmse: 0.214731
+# [3800]  training's rmse: 0.156726       valid_1's rmse: 0.214712
+# [3900]  training's rmse: 0.155777       valid_1's rmse: 0.214702
+# [4000]  training's rmse: 0.154786       valid_1's rmse: 0.214688
+# [4100]  training's rmse: 0.153876       valid_1's rmse: 0.214678
+# [4200]  training's rmse: 0.152994       valid_1's rmse: 0.214671
 
 
 # WITH TE
@@ -511,38 +611,6 @@ submission.to_csv('submit/submit_ridge_lgb.csv', index=False)
 
 
 # WITH RIDGES
-# [2018-06-20 23:43:16.775400] ridge_lgb cv scores : [0.21413404310527392, 0.21331210915661106, 0.21315883255371895, 0.21313229298227165, 0.2136170163330921]
-# [2018-06-20 23:43:16.775466] ridge_lgb mean cv score : 0.21347085882619354
-# [2018-06-20 23:43:16.775564] ridge_lgb std cv score : 0.00037372826701218226
-
-# [100]   training's rmse: 0.21625        valid_1's rmse: 0.219947
-# [200]   training's rmse: 0.211105       valid_1's rmse: 0.217619
-# [300]   training's rmse: 0.207797       valid_1's rmse: 0.21653
-# [400]   training's rmse: 0.204942       valid_1's rmse: 0.215961
-# [500]   training's rmse: 0.202259       valid_1's rmse: 0.215532
-# [600]   training's rmse: 0.199979       valid_1's rmse: 0.215253
-# [700]   training's rmse: 0.197843       valid_1's rmse: 0.215052
-# [800]   training's rmse: 0.195894       valid_1's rmse: 0.214917
-# [900]   training's rmse: 0.194012       valid_1's rmse: 0.214801
-# [1000]  training's rmse: 0.192163       valid_1's rmse: 0.214712
-# [1100]  training's rmse: 0.190352       valid_1's rmse: 0.214623
-# [1200]  training's rmse: 0.188777       valid_1's rmse: 0.21456
-# [1300]  training's rmse: 0.18724        valid_1's rmse: 0.214504
-# [1400]  training's rmse: 0.185735       valid_1's rmse: 0.214426
-# [1500]  training's rmse: 0.184338       valid_1's rmse: 0.214377
-# [1600]  training's rmse: 0.182906       valid_1's rmse: 0.214333
-# [1700]  training's rmse: 0.181549       valid_1's rmse: 0.214295
-# [1800]  training's rmse: 0.180177       valid_1's rmse: 0.214268
-# [1900]  training's rmse: 0.178893       valid_1's rmse: 0.214258
-# [2000]  training's rmse: 0.17767        valid_1's rmse: 0.214237
-# [2100]  training's rmse: 0.176481       valid_1's rmse: 0.214215
-# [2200]  training's rmse: 0.175271       valid_1's rmse: 0.214197
-# [2300]  training's rmse: 0.174116       valid_1's rmse: 0.214181
-# [2400]  training's rmse: 0.172951       valid_1's rmse: 0.214172
-# [2500]  training's rmse: 0.17189        valid_1's rmse: 0.214165
-# [2600]  training's rmse: 0.170789       valid_1's rmse: 0.214161
-# [2700]  training's rmse: 0.169762       valid_1's rmse: 0.214157
-# [2800]  training's rmse: 0.168756       valid_1's rmse: 0.214156
-# [2900]  training's rmse: 0.167707       valid_1's rmse: 0.214155
-# [3000]  training's rmse: 0.166701       valid_1's rmse: 0.214151
-# [3100]  training's rmse: 0.165759       valid_1's rmse: 0.214134
+# [2018-06-21 11:03:11.528913] ridge_lgb cv scores : [0.213991140517113, 0.21315434514289164, 0.21309603201930144, 0.21303281451462452, 0.21346750118045446]
+# [2018-06-21 11:03:11.528980] ridge_lgb mean cv score : 0.21334836667487705
+# [2018-06-21 11:03:11.529080] ridge_lgb std cv score : 0.0003544690513431004

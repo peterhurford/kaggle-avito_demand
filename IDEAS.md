@@ -1,24 +1,18 @@
-- Add Liu's image features to models
+- Train Poisson models (Running TE on Avito2, Base on Avito1, Ridge on Avito3)
+- Add Liu's price level feature and high cardinality category bin feature to models + Thomas's imputation + Liu's image features (TE running on Avito4 -- Need to do for Base, Ridge)
+
+- Try adding Ridge, Poisson and non-Poisson, averaged to blender
+- Add other Poisson models from me and Ryan to blender?
+- Train Poisson blender and average
+
 - Add Count lemmas to models
-
-- Train Poisson models
-- Add Poisson models from me and Ryan
-- Train Poisson blender
-
-- Add Liu's price level feature to models
-- Add Liu's high cardinality category bin feature to models
 - Add x['level'] = pd.qcut(x['price'], 100, labels=False, duplicates='drop') but cast to categorical
-- Add Thomas's price imputation
-- Add Thomas's image_top_1 imputation
-- Add Thomas's / Matt's new price embedding
 
+- Add Thomas's / Matt's new price embedding
 - Add Sijun's CNNs
 - Add Matt and Thomas's RNNs
 
 - Dominant color
-- average, standard deviation and minimum of Brightness in HSV color space
-- average and standard deviation of Saturation in HSV color space
-- average, standard deviation and minimum of Luminance in YUV color space
 - number of colors
 - number of key points
 - number bright spots <https://www.pyimagesearch.com/2016/10/31/detecting-multiple-bright-spots-in-an-image-with-python-and-opencv/>
