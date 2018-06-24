@@ -23,7 +23,7 @@ params = {'learning_rate': 0.02,
           'data_random_seed': 3,
           'bagging_fraction': 0.8,
           'feature_fraction': 0.8,
-          'nthread': 16, #max(mp.cpu_count() - 2, 2),
+          'nthread': 6, #max(mp.cpu_count() - 2, 2),
           'lambda_l1': 1,
           'lambda_l2': 1,
           'min_data_in_leaf': 40,
@@ -54,7 +54,6 @@ def runLGB(train_X, train_y, test_X, test_y, test_X2, params):
     print_step('Predict 2/2')
     pred_test_y2 = model.predict(test_X2)
     return pred_test_y, pred_test_y2
-
 
 print('~~~~~~~~~~~~~~~~~~~~~~~~')
 print_step('Importing Data 1/15')
@@ -101,11 +100,25 @@ print_step('Importing Data 3/15 3/3')
 test_['te_lgb'] = test_te_lgb['te_lgb']
 
 print_step('Importing Data 3/15 1/3')
+train_te_lgb2, test_te_lgb2 = load_cache('te_lgb2')
+print_step('Importing Data 3/15 2/3')
+train_['te_lgb2'] = train_te_lgb2['te_lgb']
+print_step('Importing Data 3/15 3/3')
+test_['te_lgb2'] = test_te_lgb2['te_lgb']
+
+print_step('Importing Data 3/15 1/3')
 train_ryan_lgbm_v29, test_ryan_lgbm_v29 = load_cache('ryan_lgbm_v29')
 print_step('Importing Data 3/15 2/3')
 train_['ryan_lgbm_v29'] = train_ryan_lgbm_v29['oof_lgbm']
 print_step('Importing Data 3/15 3/3')
 test_['ryan_lgbm_v29'] = test_ryan_lgbm_v29['oof_lgbm']
+
+print_step('Importing Data 3/15 1/3')
+train_ridge_lgb, test_ridge_lgb = load_cache('ridge_lgb2')
+print_step('Importing Data 3/15 2/3')
+train_['ridge_lgb2'] = train_ridge_lgb['ridge_lgb2']
+print_step('Importing Data 3/15 3/3')
+test_['ridge_lgb2'] = test_ridge_lgb['ridge_lgb2']
 
 print_step('Importing Data 3/15 1/3')
 train_ridge_lgb, test_ridge_lgb = load_cache('ridge_lgb')
@@ -114,12 +127,12 @@ train_['ridge_lgb'] = train_ridge_lgb['ridge_lgb']
 print_step('Importing Data 3/15 3/3')
 test_['ridge_lgb'] = test_ridge_lgb['ridge_lgb']
 
-print_step('Importing Data 3/15 1/3')
-train_ridge_lgb_poisson, test_ridge_lgb_poisson = load_cache('ridge_lgb_poisson')
-print_step('Importing Data 3/15 2/3')
-train_['ridge_lgb_poisson'] = train_ridge_lgb_poisson['ridge_lgb_poisson']
-print_step('Importing Data 3/15 3/3')
-test_['ridge_lgb_poisson'] = test_ridge_lgb_poisson['ridge_lgb_poisson']
+# print_step('Importing Data 3/15 1/3')
+# train_ridge_lgb_poisson, test_ridge_lgb_poisson = load_cache('ridge_lgb_poisson')
+# print_step('Importing Data 3/15 2/3')
+# train_['ridge_lgb_poisson'] = train_ridge_lgb_poisson['ridge_lgb_poisson']
+# print_step('Importing Data 3/15 3/3')
+# test_['ridge_lgb_poisson'] = test_ridge_lgb_poisson['ridge_lgb_poisson']
 
 print_step('Importing Data 4/15 1/4')
 train_pcat_ridge, test_pcat_ridge = load_cache('parent_cat_ridges')
@@ -226,6 +239,14 @@ print_step('Importing Data 14/15 3/3')
 test_['cnn_ft4'] = test_cnn_ft['CNN_FastText_4']
 
 print_step('Importing Data 14/15 1/3')
+train_cnn_ft, test_cnn_ft = load_cache('CNN_binary_PL')
+print_step('Importing Data 14/15 2/3')
+train_['CNN_binary_PL'] = train_cnn_ft['CNN_binary_PL']
+print_step('Importing Data 14/15 3/3')
+test_['CNN_binary_PL'] = test_cnn_ft['CNN_binary_PL']
+
+
+print_step('Importing Data 14/15 1/3')
 train_liu_nn, test_liu_nn = load_cache('liu_nn')
 print_step('Importing Data 14/15 2/3')
 train_['liu_nn'] = train_liu_nn['liu_nn']
@@ -233,11 +254,19 @@ print_step('Importing Data 14/15 3/3')
 test_['liu_nn'] = test_liu_nn['liu_nn']
 
 print_step('Importing Data 14/15 1/3')
+train_liu_nn, test_liu_nn = load_cache('liu_nn2')
+print_step('Importing Data 14/15 2/3')
+train_['liu_nn2'] = train_liu_nn['liu_nn2']
+print_step('Importing Data 14/15 3/3')
+test_['liu_nn2'] = test_liu_nn['liu_nn2']
+
+print_step('Importing Data 14/15 1/3')
 train_liu_lgb, test_liu_lgb = load_cache('liu_lgb')
 print_step('Importing Data 14/15 2/3')
 train_['liu_lgb'] = train_liu_lgb['liu_lgb']
 print_step('Importing Data 14/15 3/3')
 test_['liu_lgb'] = test_liu_lgb['liu_lgb']
+
 
 models = [c for c in train_.columns if 'svd' not in c and 'price' not in c and 'img' not in c and 'parent_category' not in c]
 pprint(sorted([(m, rmse(target, train_[m])) for m in models], key = lambda x: x[1]))
@@ -293,8 +322,8 @@ print_step('Run LGB')
 print(train_.shape)
 print(test_.shape)
 results = run_cv_model(train_, test_, target, runLGB, params, rmse, 'lgb_blender')
-import pdb
-pdb.set_trace()
+# import pdb
+# pdb.set_trace()
 
 print('~~~~~~~~~~')
 print_step('Cache')
@@ -309,54 +338,57 @@ submission['deal_probability'] = results['test'].clip(0.0, 1.0)
 submission.to_csv('submit/submit_lgb_blender.csv', index=False)
 print_step('Done!')
 
-print('~~~~~~~~~~~~~~~~~~~~')
-print_step('Run Poisson LGB')
-print(train_.shape)
-print(test_.shape)
-poisson_results = run_cv_model(train_, test_, target, runLGB, poisson_params, rmse, 'possion_lgb_blender')
-import pdb
-pdb.set_trace()
+# print('~~~~~~~~~~~~~~~~~~~~')
+# print_step('Run Poisson LGB')
+# print(train_.shape)
+# print(test_.shape)
+# poisson_results = run_cv_model(train_, test_, target, runLGB, poisson_params, rmse, 'possion_lgb_blender')
+# import pdb
+# pdb.set_trace()
 
-print('~~~~~~~~~~')
-print_step('Cache')
-save_in_cache('lgb_blender_poisson', pd.DataFrame({'lgb_blender_poisson': poisson_results['train']}),
-                                     pd.DataFrame({'lgb_blender_poisson': poisson_results['test']}))
+# print('~~~~~~~~~~')
+# print_step('Cache')
+# save_in_cache('lgb_blender_poisson', pd.DataFrame({'lgb_blender_poisson': poisson_results['train']}),
+#                                      pd.DataFrame({'lgb_blender_poisson': poisson_results['test']}))
 
-print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
-print_step('Prepping submission file')
-submission = pd.DataFrame()
-submission['item_id'] = test_id
-submission['deal_probability'] = poisson_results['test'].clip(0.0, 1.0)
-submission.to_csv('submit/submit_lgb_blender_poisson.csv', index=False)
-print_step('Done!')
+# print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+# print_step('Prepping submission file')
+# submission = pd.DataFrame()
+# submission['item_id'] = test_id
+# submission['deal_probability'] = poisson_results['test'].clip(0.0, 1.0)
+# submission.to_csv('submit/submit_lgb_blender_poisson.csv', index=False)
+# print_step('Done!')
 
-print('~~~~~~~~~~~~~~~~')
-print_step('Run Average')
-average_results = pd.DataFrame()
-average_results['train'] = results['train'].clip(0.0, 1.0) * 0.5 + poisson_results['train'].clip(0.0, 1.0) * 0.5
-average_results['test'] = results['test'].clip(0.0, 1.0) * 0.5 + poisson_results['test'].clip(0.0, 1.0) * 0.5
-print('RMSE: ' + str(rmse(target, average_results['train'])))
-import pdb
-pdb.set_trace()
+# print('~~~~~~~~~~~~~~~~')
+# print_step('Run Average')
+# average_results = pd.DataFrame()
+# average_results['train'] = results['train'].clip(0.0, 1.0) * 0.5 + poisson_results['train'].clip(0.0, 1.0) * 0.5
+# average_results['test'] = results['test'].clip(0.0, 1.0) * 0.5 + poisson_results['test'].clip(0.0, 1.0) * 0.5
+# print('RMSE: ' + str(rmse(target, average_results['train'])))
+# import pdb
+# pdb.set_trace()
 
-print('~~~~~~~~~~')
-print_step('Cache')
-save_in_cache('blender_average', pd.DataFrame({'blender_average': average_results['train']}),
-                                 pd.DataFrame({'blender_average': average_results['test']}))
+# print('~~~~~~~~~~')
+# print_step('Cache')
+# save_in_cache('blender_average', pd.DataFrame({'blender_average': average_results['train']}),
+#                                  pd.DataFrame({'blender_average': average_results['test']}))
 
-print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
-print_step('Prepping submission file')
-submission = pd.DataFrame()
-submission['item_id'] = test_id
-submission['deal_probability'] = average_results['test'].clip(0.0, 1.0)
-submission.to_csv('submit/submit_average_blender.csv', index=False)
-print_step('Done!')
+# print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+# print_step('Prepping submission file')
+# submission = pd.DataFrame()
+# submission['item_id'] = test_id
+# submission['deal_probability'] = average_results['test'].clip(0.0, 1.0)
+# submission.to_csv('submit/submit_average_blender.csv', index=False)
+# print_step('Done!')
 
 # REGRESSION
 # [2018-06-22 21:49:18.841029] lgb_blender cv scores : [0.21139411770674624, 0.21044333123019984, 0.21056442673558035, 0.2103475962450443, 0.21091313865726366]
 # [2018-06-22 21:49:18.841103] lgb_blender mean cv score : 0.21073252211496687
 # [2018-06-22 21:49:18.841209] lgb_blender std cv score : 0.00038220057879397083
 
+
+# 0.21076288298415052
+# 0.21055572068356385
 # POISSON
 
 # AVERAGE
