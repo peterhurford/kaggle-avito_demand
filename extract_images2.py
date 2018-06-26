@@ -28,12 +28,11 @@ from cache import get_data, is_in_cache, load_cache, save_in_cache
 
 def get_image(image_path):
     try:
-        # img = Image.open(image_path)
         cv_img = cv2.imread(image_path)
         cv_bw_img = cv2.imread(image_path, 0)
         cv_gray = cv2.cvtColor(cv_img, cv2.COLOR_BGR2GRAY)
         return (None, cv_img, image_path, cv_bw_img, cv_gray)
-    except OSError:
+    except (OSError, cv2.error):
         return False
 
 
@@ -46,24 +45,6 @@ def get_keyp(img):
     kp_y_mean = np.array([k.pt[1] for k in kp]).mean()
     kp_y_std = np.array([k.pt[1] for k in kp]).std()
     return [num_kp, kp_x_mean, kp_x_std, kp_y_mean, kp_y_std]
-
-
-def get_circles(img):
-    img = cv2.medianBlur(img, 5)
-    cimg = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
-    circles = cv2.HoughCircles(img, cv2.HOUGH_GRADIENT, 1, 20, param1=50, param2=30, minRadius=0, maxRadius=0)
-    if circles is not None:
-        circles = np.round(circles[0, :]).astype('int')
-        circles_num = len(circles)
-        circles_x_mean = np.array([c[0] for c in circles]).mean()
-        circles_x_std = np.array([c[0] for c in circles]).std()
-        circles_y_mean = np.array([c[1] for c in circles]).mean()
-        circles_y_std = np.array([c[1] for c in circles]).std()
-        circles_radius_mean = np.array([c[2] for c in circles]).mean()
-        circles_radius_std = np.array([c[2] for c in circles]).std()
-        return circles_num, circles_x_mean, circles_x_std, circles_y_mean, circles_y_std, circles_radius_mean, circles_radius_std
-    else:
-        return 0, 0, 0, 0, 0, 0, 0
 
 
 def get_edges(gray):
@@ -97,11 +78,11 @@ def get_bright_spots(gray):
     thresh = cv2.erode(thresh, None, iterations=2)
     thresh = cv2.dilate(thresh, None, iterations=4)
     labels = measure.label(thresh, neighbors=8, background=0)
-    mask = np.zeros(thresh.shape, dtype="uint8")
+    mask = np.zeros(thresh.shape, dtype='uint8')
     for label in np.unique(labels):
         if label == 0:
             continue
-        labelMask = np.zeros(thresh.shape, dtype="uint8")
+        labelMask = np.zeros(thresh.shape, dtype='uint8')
         labelMask[labels == label] = 255
         numPixels = cv2.countNonZero(labelMask)
         if numPixels > 300:
@@ -116,18 +97,60 @@ def get_bright_spots(gray):
         return 0
 
 
+def get_density(img, gray):
+    return cv2.countNonZero(gray) / img.size
+
+
+def get_contours(gray):
+    ret, thresh = cv2.threshold(gray, 127, 255,0)
+    cnts = cv2.findContours(thresh, 2, 1)
+    return cnts[0]
+
+
+def get_moments(cnts):
+    return cv2.moments(cnts[0])
+
+
+def get_aspect_ratio(cnts):
+    x, y, w, h = cv2.boundingRect(cnts)
+    aspect_ratio = float(w) / h
+
+
+def get_median_noise(img):
+    median = cv2.medianBlur(img, 5)
+    diff = img - median
+    return [diff.sum(), diff.mean(), diff.std(), skew(diff, axis=1).mean(), kurtosis(diff, axis=1).mean()]
+
+def get_gaussian_noise(img):
+    blur = cv2.GaussianBlur(img, (5, 5), 0)
+    diff = img - blur
+    return [diff.sum(), diff.mean(), diff.std(), skew(diff, axis=1).mean(), kurtosis(diff, axis=1).mean()]
+
+def get_clahe_noise(img):
+    clahe = cv2.createCLAHE()
+    clahe = clahe.apply(img)
+    diff = img - clahe
+    return [diff.sum(), diff.mean(), diff.std(), skew(diff, axis=1).mean(), kurtosis(diff, axis=1).mean()]
+
+
 def get_data_from_image(dat, core=0, i=0):
     img_path = dat[2].replace('train_jpg/', '').replace('test_jpg/', '')
     num_kp, kp_x_mean, kp_x_std, kp_y_mean, kp_y_std = get_keyp(dat[3])
-    circles_num, circles_x_mean, circles_x_std, circles_y_mean, circles_y_std, circles_radius_mean, circles_radius_std = get_circles(dat[3])
     edges, edges_mean, edges_sum_mean, edges_std, edges_sum_std, edges_skew, edges_kurtosis = get_edges(dat[4])
     lines_num, lines_theta_mean, lines_theta_std, lines_rho_mean, lines_rho_std = get_lines(edges)
     num_bright_spots = get_bright_spots(dat[4])
-    return [img_path, num_kp, kp_x_mean, kp_x_std, kp_y_mean, kp_y_std, circles_num, circles_x_mean, circles_x_std, circles_y_mean, circles_y_std, circles_radius_mean, circles_radius_std, edges_mean, edges_sum_mean, edges_std, edges_sum_std, edges_skew, edges_kurtosis, lines_num, lines_theta_mean, lines_theta_std, lines_rho_mean, lines_rho_std, num_bright_spots]
+    img_density = get_density(dat[1], dat[4])
+    contours = get_contours(dat[4])
+    aspect_ratio = get_aspect_ratio(contours)
+    moments = list(get_moments(contours).values())
+    median_noise_sum, median_noise_mean, median_noise_std, median_noise_skew, median_noise_kurtosis = get_median_noise(dat[1])
+    gaussian_noise_sum, gaussian_noise_mean, gaussian_noise_std, gaussian_noise_skew, gaussian_noise_kurtosis = get_gaussian_noise(dat[1])
+    clahe_noise_sum, clahe_noise_mean, clahe_noise_std, clahe_noise_skew, clahe_noise_kurtosis = get_clahe_noise(dat[3])
+    return [img_path, num_kp, kp_x_mean, kp_x_std, kp_y_mean, kp_y_std, edges_mean, edges_sum_mean, edges_std, edges_sum_std, edges_skew, edges_kurtosis, lines_num, lines_theta_mean, lines_theta_std, lines_rho_mean, lines_rho_std, num_bright_spots, img_density, aspect_ratio] + moments + [median_noise_sum, median_noise_mean, median_noise_std, median_noise_skew, median_noise_kurtosis, gaussian_noise_sum, gaussian_noise_mean, gaussian_noise_std, gaussian_noise_skew, gaussian_noise_kurtosis, clahe_noise_sum, clahe_noise_mean, clahe_noise_std, clahe_noise_skew, clahe_noise_kurtosis]
 
 
 def data_to_df(data):
-    columns = ['img_path', 'num_kp', 'kp_x_mean', 'kp_x_std', 'kp_y_mean', 'kp_y_std', 'circles_num', 'circles_x_mean', 'circles_x_std', 'circles_y_mean', 'circles_y_std', 'circles_radius_mean', 'circles_radius_std', 'edges_mean', 'edges_sum_mean', 'edges_std', 'edges_sum_std', 'edges_skew', 'edges_kurtosis', 'lines_num', 'lines_theta_mean', 'lines_theta_std', 'lines_rho_mean', 'lines_rho_std', 'num_bright_spots']
+    columns = ['img_path', 'num_kp', 'kp_x_mean', 'kp_x_std', 'kp_y_mean', 'kp_y_std', 'edges_mean', 'edges_sum_mean', 'edges_std', 'edges_sum_std', 'edges_skew', 'edges_kurtosis', 'lines_num', 'lines_theta_mean', 'lines_theta_std', 'lines_rho_mean', 'lines_rho_std', 'num_bright_spots', 'img_density', 'img_aspect_ratio', 'img_moment_m11', 'img_moment_nu21', 'img_moment_mu02', 'img_moment_mu21', 'img_moment_mu30', 'img_moment_nu20', 'img_moment_nu02', 'img_moment_nu12', 'img_moment_m00', 'img_moment_m10', 'img_moment_mu20', 'img_moment_m30', 'img_moment_nu03', 'img_moment_mu03', 'img_moment_m20', 'img_moment_m02', 'img_moment_mu12', 'img_moment_m03', 'img_moment_m12', 'img_moment_m01', 'img_moment_mu11', 'img_moment_m21', 'img_moment_nu11', 'img_moment_nu30', 'median_noise_sum', 'median_noise_mean', 'median_noise_std', 'median_noise_skew', 'median_noise_kurtosis', 'gaussian_noise_sum', 'gaussian_noise_mean', 'gaussian_noise_std', 'gaussian_noise_skew', 'gaussian_noise_kurtosis', 'clahe_noise_sum', 'clahe_noise_mean', 'clahe_noise_std', 'clahe_noise_skew', 'clahe_noise_kurtosis']
     return pd.DataFrame(data, columns = columns)
 
 print_step('Loading images')
@@ -154,7 +177,7 @@ def get_img_data(index, image_files):
             if dat:
                 data += [get_data_from_image(dat, core=index, i=i)]
             i += 1
-            if i % 100 == 0:
+            if i % 50 == 0:
                 print_step('[Core %d] Completed %d / %d...' % (index, i, len(image_files)))
         print_step('[Core %d] Done. Saving...' % index)
         save_in_cache('img_data_' + str(index), data_to_df(data), None)
@@ -166,7 +189,7 @@ n_cpu = mp.cpu_count()
 n_nodes = 70
 
 print_step('Chunking images')
-image_chunks = list(chunks(image_files, 2000))
+image_chunks = list(chunks(image_files, 1000))
 print_step('Chunked images into %d groups with %d images per group' % (len(image_chunks), len(image_chunks[0])))
 
 pool = mp.ProcessingPool(n_nodes, maxtasksperchild=500)
