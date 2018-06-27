@@ -21,10 +21,11 @@ from cache import get_data, is_in_cache, load_cache, save_in_cache
 
 params = {'learning_rate': 0.01,
           'application': 'regression',
+          'boosting': 'dart',
           'num_leaves': 31,
           'verbosity': -1,
           'metric': 'rmse',
-          'data_random_seed': 5,
+          'data_random_seed': 6,
           'bagging_fraction': 0.8,
           'feature_fraction': 0.4,
           'nthread': mp.cpu_count(),
@@ -200,6 +201,13 @@ train_fe['deep_lgb3'] = train_deep_lgb['deep_lgb3']
 print_step('Importing Data 7/15 3/3')
 test_fe['deep_lgb3'] = test_deep_lgb['deep_lgb3']
 
+print_step('Importing Data 7/15 1/3')
+train_deep_lgb, test_deep_lgb = load_cache('deep_lgb4')
+print_step('Importing Data 7/15 2/3')
+train_fe['deep_lgb4'] = train_deep_lgb['deep_lgb4']
+print_step('Importing Data 7/15 3/3')
+test_fe['deep_lgb4'] = test_deep_lgb['deep_lgb4']
+
 print_step('Importing Data 8/15 1/3')
 train_full_text_ridge, test_full_text_ridge = load_cache('full_text_ridge')
 print_step('Importing Data 8/15 2/3')
@@ -282,15 +290,28 @@ train_fe['matt_nn'] = train_cnn_ft['matt_nn']
 print_step('Importing Data 14/15 3/3')
 test_fe['matt_nn'] = test_cnn_ft['deal_probability']
 
-print_step('Importing Data 14/15 1/3')
-train_multi = pd.read_csv('cache/matt_multi_nn_oof.csv')
-test_multi = pd.read_csv('cache/matt_multi_nn_test.csv')
+train_femulti = pd.read_csv('cache/matt_multi_6_oof.csv')
+test_femulti = pd.read_csv('cache/matt_multi_6_test.csv')
+train_femulti.drop('item_id', axis=1, inplace=True)
+test_femulti.drop('item_id', axis=1, inplace=True)
+train_femulti.columns = ['matt_6_' + c for c in train_femulti.columns]
+test_femulti.columns = ['matt_6_' + c for c in test_femulti.columns]
 print_step('Importing Data 14/15 2/3')
-train_fe = pd.concat([train_fe, train_multi], axis=1)
-train_fe.drop('item_id', axis=1, inplace=True)
+train_fe = pd.concat([train_fe, train_femulti], axis=1)
 print_step('Importing Data 14/15 3/3')
-test_fe = pd.concat([test_fe, test_multi], axis=1)
-test_fe.drop('item_id', axis=1, inplace=True)
+test_fe = pd.concat([test_fe, test_femulti], axis=1)
+
+print_step('Importing Data 14/15 1/3')
+train_femulti = pd.read_csv('cache/matt_multi_5_oof.csv')
+test_femulti = pd.read_csv('cache/matt_multi_5_test.csv')
+train_femulti.drop('item_id', axis=1, inplace=True)
+test_femulti.drop('item_id', axis=1, inplace=True)
+train_femulti.columns = ['matt_5_' + c for c in train_femulti.columns]
+test_femulti.columns = ['matt_5_' + c for c in test_femulti.columns]
+print_step('Importing Data 14/15 2/3')
+train_fe = pd.concat([train_fe, train_femulti], axis=1)
+print_step('Importing Data 14/15 3/3')
+test_fe = pd.concat([test_fe, test_femulti], axis=1)
 
 print_step('Importing Data 14/15 1/3')
 train_cnn_ft, test_cnn_ft = load_cache('CNN_binary')
@@ -481,7 +502,7 @@ print('~~~~~~~~~~~~~~~~~~~~~~~~~')
 print_step('Run Flat Blender LGB')
 print(train_fe.shape)
 print(test_fe.shape)
-results = run_cv_model(train_fe, test_fe, target, runLGB, params, rmse, 'flat_blender_lgb')
+results = run_cv_model(train_fe, test_fe, target, runLGB, params, rmse, 'flat_blender_lgb_dart')
 import pdb
 pdb.set_trace()
 

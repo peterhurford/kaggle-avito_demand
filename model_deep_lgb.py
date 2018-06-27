@@ -42,8 +42,6 @@ def runLGB(train_X, train_y, test_X, test_y, test_X2, params):
                       num_boost_round=num_rounds,
                       valid_sets=watchlist,
                       verbose_eval=verbose_eval)
-    print_step('Feature importance')
-    pprint(sorted(list(zip(model.feature_importance(), train_X.columns)), reverse=True))
     print_step('Predict 1/2')
     pred_test_y = model.predict(test_X)
     print_step('Predict 2/2')
