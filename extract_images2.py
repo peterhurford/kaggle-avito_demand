@@ -222,9 +222,10 @@ test2 = test.merge(merge, left_on='image', right_on='img_path', how='left')
 
 print_step('Dropping 1/2')
 drops = list(set(train2.columns.values) - set(merge.columns.values) - {'deal_probability', 'item_id'})
+drops += ['img_aspect_ratio', 'img_moment_m11', 'img_moment_mu21', 'img_moment_mu30', 'img_moment_nu02', 'img_moment_nu12', 'img_moment_m00', 'img_moment_m10', 'img_moment_mu03', 'img_moment_mu12', 'img_moment_m03', 'img_moment_m12', 'img_moment_mu11', 'img_moment_nu11', 'img_moment_mu20', 'img_moment_m20', 'img_moment_nu30', 'img_moment_m01', 'img_moment_m30', 'img_moment_nu03', 'img_moment_mu02', 'img_moment_m21', 'img_moment_nu21', 'img_moment_m02', 'img_moment_nu20']
 train2.drop(drops, axis=1, inplace=True)
 print_step('Dropping 2/2')
 test2.drop(drops, axis=1, inplace=True)
 
 print_step('Saving...')
-save_in_cache('img_data', train2, test2)
+save_in_cache('img_data2', train2, test2)
