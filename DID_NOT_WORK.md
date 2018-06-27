@@ -7,3 +7,4 @@
 - img_average_pixel_width
 - standard deviation of user submission dates in train/test
 - train_img['img_size_ratio'] = train_img['img_file_size'] / (train_img['img_size_x'] * train_img['img_size_y'])
+- Docfreq stats (see https://github.com/Wrosinski/Kaggle-Quora/blob/master/features/Extraction%20-%20Textacy%20Features%2017.05.ipynb) -- not available in Russian
