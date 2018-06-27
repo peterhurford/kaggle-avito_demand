@@ -85,12 +85,12 @@ test_['parent_category_name'] = test_fe['parent_category_name']
 train_['price'] = train_fe['price']
 test_['price'] = test_fe['price']
 
-# print_step('Importing Data 3/15 1/3')
-# train_base_lgb, test_base_lgb = load_cache('base_lgb')
-# print_step('Importing Data 3/15 2/3')
-# train_['base_lgb'] = train_base_lgb['base_lgb']
-# print_step('Importing Data 3/15 3/3')
-# test_['base_lgb'] = test_base_lgb['base_lgb']
+print_step('Importing Data 3/15 1/3')
+train_base_lgb, test_base_lgb = load_cache('base_lgb')
+print_step('Importing Data 3/15 2/3')
+train_['base_lgb'] = train_base_lgb['base_lgb']
+print_step('Importing Data 3/15 3/3')
+test_['base_lgb'] = test_base_lgb['base_lgb']
 
 print_step('Importing Data 3/15 1/3')
 train_base_lgb, test_base_lgb = load_cache('base_lgb2')
@@ -99,18 +99,18 @@ train_['base_lgb2'] = train_base_lgb['base_lgb2']
 print_step('Importing Data 3/15 3/3')
 test_['base_lgb2'] = test_base_lgb['base_lgb2']
 
-# train_te_lgb, test_te_lgb = load_cache('te_lgb')
-# print_step('Importing Data 3/15 2/3')
-# train_['te_lgb'] = train_te_lgb['te_lgb']
-# print_step('Importing Data 3/15 3/3')
-# test_['te_lgb'] = test_te_lgb['te_lgb']
+train_te_lgb, test_te_lgb = load_cache('te_lgb')
+print_step('Importing Data 3/15 2/3')
+train_['te_lgb'] = train_te_lgb['te_lgb']
+print_step('Importing Data 3/15 3/3')
+test_['te_lgb'] = test_te_lgb['te_lgb']
 
-# print_step('Importing Data 3/15 1/3')
-# train_te_lgb2, test_te_lgb2 = load_cache('te_lgb2')
-# print_step('Importing Data 3/15 2/3')
-# train_['te_lgb2'] = train_te_lgb2['te_lgb']
-# print_step('Importing Data 3/15 3/3')
-# test_['te_lgb2'] = test_te_lgb2['te_lgb']
+print_step('Importing Data 3/15 1/3')
+train_te_lgb2, test_te_lgb2 = load_cache('te_lgb2')
+print_step('Importing Data 3/15 2/3')
+train_['te_lgb2'] = train_te_lgb2['te_lgb']
+print_step('Importing Data 3/15 3/3')
+test_['te_lgb2'] = test_te_lgb2['te_lgb']
 
 print_step('Importing Data 3/15 1/3')
 train_te_lgb2, test_te_lgb2 = load_cache('te_lgb3')
@@ -119,12 +119,19 @@ train_['te_lgb3'] = train_te_lgb2['te_lgb3']
 print_step('Importing Data 3/15 3/3')
 test_['te_lgb3'] = test_te_lgb2['te_lgb3']
 
-# print_step('Importing Data 3/15 1/3')
-# train_te_lgb2, test_te_lgb2 = load_cache('te_lgb_poisson')
-# print_step('Importing Data 3/15 2/3')
-# train_['te_lgb_poisson'] = train_te_lgb2['te_lgb_poisson']
-# print_step('Importing Data 3/15 3/3')
-# test_['te_lgb_poisson'] = test_te_lgb2['te_lgb_poisson']
+print_step('Importing Data 3/15 1/3')
+train_base_lgb2, test_base_lgb2 = load_cache('base_lgb_poisson')
+print_step('Importing Data 3/15 2/3')
+train_['base_lgb_poisson'] = train_base_lgb2['base_lgb_poisson']
+print_step('Importing Data 3/15 3/3')
+test_['base_lgb_poisson'] = test_base_lgb2['te_lgb_poisson'] # typo
+
+print_step('Importing Data 3/15 1/3')
+train_te_lgb2, test_te_lgb2 = load_cache('te_lgb_poisson')
+print_step('Importing Data 3/15 2/3')
+train_['te_lgb_poisson'] = train_te_lgb2['te_lgb_poisson']
+print_step('Importing Data 3/15 3/3')
+test_['te_lgb_poisson'] = test_te_lgb2['te_lgb_poisson']
 
 print_step('Importing Data 3/15 1/3')
 train_ryan_lgbm_v29, test_ryan_lgbm_v29 = load_cache('ryan_lgbm_v29')
@@ -147,19 +154,19 @@ train_['ryan_lgbm_v36'] = train_ryan_lgbm_v29['oof_lgbm']
 print_step('Importing Data 3/15 3/3')
 test_['ryan_lgbm_v36'] = test_ryan_lgbm_v29['oof_lgbm']
 
-# print_step('Importing Data 3/15 1/3')
-# train_ridge_lgb, test_ridge_lgb = load_cache('ridge_lgb')
-# print_step('Importing Data 3/15 2/3')
-# train_['ridge_lgb'] = train_ridge_lgb['ridge_lgb']
-# print_step('Importing Data 3/15 3/3')
-# test_['ridge_lgb'] = test_ridge_lgb['ridge_lgb']
+print_step('Importing Data 3/15 1/3')
+train_ridge_lgb, test_ridge_lgb = load_cache('ridge_lgb')
+print_step('Importing Data 3/15 2/3')
+train_['ridge_lgb'] = train_ridge_lgb['ridge_lgb']
+print_step('Importing Data 3/15 3/3')
+test_['ridge_lgb'] = test_ridge_lgb['ridge_lgb']
 
-# print_step('Importing Data 3/15 1/3')
-# train_ridge_lgb, test_ridge_lgb = load_cache('ridge_lgb2')
-# print_step('Importing Data 3/15 2/3')
-# train_['ridge_lgb2'] = train_ridge_lgb['ridge_lgb2']
-# print_step('Importing Data 3/15 3/3')
-# test_['ridge_lgb2'] = test_ridge_lgb['ridge_lgb2']
+print_step('Importing Data 3/15 1/3')
+train_ridge_lgb, test_ridge_lgb = load_cache('ridge_lgb2')
+print_step('Importing Data 3/15 2/3')
+train_['ridge_lgb2'] = train_ridge_lgb['ridge_lgb2']
+print_step('Importing Data 3/15 3/3')
+test_['ridge_lgb2'] = test_ridge_lgb['ridge_lgb2']
 
 print_step('Importing Data 3/15 1/3')
 train_ridge_lgb, test_ridge_lgb = load_cache('ridge_lgb3')
@@ -218,6 +225,13 @@ print_step('Importing Data 7/15 2/3')
 train_['deep_lgb2'] = train_deep_lgb['deep_lgb2']
 print_step('Importing Data 7/15 3/3')
 test_['deep_lgb2'] = test_deep_lgb['deep_lgb2']
+
+print_step('Importing Data 7/15 1/3')
+train_deep_lgb, test_deep_lgb = load_cache('deep_lgb3')
+print_step('Importing Data 7/15 2/3')
+train_['deep_lgb3'] = train_deep_lgb['deep_lgb3']
+print_step('Importing Data 7/15 3/3')
+test_['deep_lgb3'] = test_deep_lgb['deep_lgb3']
 
 print_step('Importing Data 8/15 1/3')
 train_full_text_ridge, test_full_text_ridge = load_cache('full_text_ridge')
@@ -311,12 +325,12 @@ print_step('Importing Data 14/15 3/3')
 test_ = pd.concat([test_, test_multi], axis=1)
 test_.drop('item_id', axis=1, inplace=True)
 
-# print_step('Importing Data 14/15 1/3')
-# train_cnn_ft, test_cnn_ft = load_cache('CNN_binary')
-# print_step('Importing Data 14/15 2/3')
-# train_['CNN_binary'] = train_cnn_ft['CNN_binary']
-# print_step('Importing Data 14/15 3/3')
-# test_['CNN_binary'] = test_cnn_ft['CNN_binary']
+print_step('Importing Data 14/15 1/3')
+train_cnn_ft, test_cnn_ft = load_cache('CNN_binary')
+print_step('Importing Data 14/15 2/3')
+train_['CNN_binary'] = train_cnn_ft['CNN_binary']
+print_step('Importing Data 14/15 3/3')
+test_['CNN_binary'] = test_cnn_ft['CNN_binary']
 
 print_step('Importing Data 14/15 1/3')
 train_cnn_ft, test_cnn_ft = load_cache('CNN_binary_PL')
