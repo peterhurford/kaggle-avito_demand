@@ -390,38 +390,38 @@ for col in train_fe.columns:
         test_fe[col] = test_fe[col].fillna(0).astype(np.float64)
 
 
-# print('~~~~~~~~~~~~~~~~~~~~~~')
-# print_step('Pre-flight checks')
-# for col in train_fe.columns:
-#     print('##')
-#     print(col)
-#     print('-')
-#     print(train_fe[col].values)
-#     print('-')
-#     print(test_fe[col].values)
-#     print('-')
-# print('-')
+print('~~~~~~~~~~~~~~~~~~~~~~')
+print_step('Pre-flight checks')
+for col in train_fe.columns:
+    print('##')
+    print(col)
+    print('-')
+    print(train_fe[col].values)
+    print('-')
+    print(test_fe[col].values)
+    print('-')
+print('-')
 
 
-# print('~~~~~~~~~~~~')
-# print_step('Run LGB')
-# print(train_fe.shape)
-# print(test_fe.shape)
-# results = run_cv_model(train_fe, test_fe, target, runLGB, params, rmse, 'base_lgb')
-# import pdb
-# pdb.set_trace()
+print('~~~~~~~~~~~~')
+print_step('Run LGB')
+print(train_fe.shape)
+print(test_fe.shape)
+results = run_cv_model(train_fe, test_fe, target, runLGB, params, rmse, 'base_lgb')
+import pdb
+pdb.set_trace()
 
-# print('~~~~~~~~~~')
-# print_step('Cache')
-# save_in_cache('base_lgb', pd.DataFrame({'base_lgb': results['train']}),
-#                           pd.DataFrame({'base_lgb': results['test']}))
+print('~~~~~~~~~~')
+print_step('Cache')
+save_in_cache('base_lgb', pd.DataFrame({'base_lgb': results['train']}),
+                          pd.DataFrame({'base_lgb': results['test']}))
 
-# print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
-# print_step('Prepping submission file')
-# submission = pd.DataFrame()
-# submission['item_id'] = test_id
-# submission['deal_probability'] = results['test'].clip(0.0, 1.0)
-# submission.to_csv('submit/submit_base_lgb.csv', index=False)
+print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+print_step('Prepping submission file')
+submission = pd.DataFrame()
+submission['item_id'] = test_id
+submission['deal_probability'] = results['test'].clip(0.0, 1.0)
+submission.to_csv('submit/submit_base_lgb.csv', index=False)
 
 
 print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
@@ -447,26 +447,26 @@ train_te = pd.concat([train_te, train_nb], axis=1)
 print_step('Importing Data 12/19 7/7')
 test_te = pd.concat([test_te, test_nb], axis=1)
 
-# print('~~~~~~~~~~~~~~~')
-# print_step('Run TE LGB')
-# params['num_rounds'] = 5200
-# print(train_te.shape)
-# print(test_te.shape)
-# results = run_cv_model(train_te, test_te, target, runLGB, params, rmse, 'te_lgb')
-# import pdb
-# pdb.set_trace()
+print('~~~~~~~~~~~~~~~')
+print_step('Run TE LGB')
+params['num_rounds'] = 5200
+print(train_te.shape)
+print(test_te.shape)
+results = run_cv_model(train_te, test_te, target, runLGB, params, rmse, 'te_lgb')
+import pdb
+pdb.set_trace()
 
-# print('~~~~~~~~~~')
-# print_step('Cache')
-# save_in_cache('te_lgb', pd.DataFrame({'te_lgb': results['train']}),
-#                         pd.DataFrame({'te_lgb': results['test']}))
+print('~~~~~~~~~~')
+print_step('Cache')
+save_in_cache('te_lgb', pd.DataFrame({'te_lgb': results['train']}),
+                        pd.DataFrame({'te_lgb': results['test']}))
 
-# print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
-# print_step('Prepping submission file')
-# submission = pd.DataFrame()
-# submission['item_id'] = test_id
-# submission['deal_probability'] = results['test'].clip(0.0, 1.0)
-# submission.to_csv('submit/submit_te_lgb.csv', index=False)
+print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+print_step('Prepping submission file')
+submission = pd.DataFrame()
+submission['item_id'] = test_id
+submission['deal_probability'] = results['test'].clip(0.0, 1.0)
+submission.to_csv('submit/submit_te_lgb.csv', index=False)
 
 
 print('~~~~~~~~~~~~~~~~~~~~~~~')
