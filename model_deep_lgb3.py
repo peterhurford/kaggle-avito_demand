@@ -81,7 +81,7 @@ if not is_in_cache('title_countvec'):
     print_step('Saving to cache...')
     save_in_cache('title_countvec', tfidf_train, tfidf_test)
 
-if not is_in_cache('deep_text_feats2'):
+if not is_in_cache('deep_text_feats3'):
     print('~~~~~~~~~~~~~~~~~~~~~~~')
     print_step('Importing Data 2/13')
     tfidf_train, tfidf_test = load_cache('title_countvec')
@@ -400,26 +400,26 @@ if not is_in_cache('deep_text_feats2'):
     gc.collect()
 
     print_step('Caching')
-    save_in_cache('deep_text_feats2', train, test)
+    save_in_cache('deep_text_feats3', train, test)
 else:
-    train, test = load_cache('deep_text_feats2')
+    train, test = load_cache('deep_text_feats3')
 
 
 print('~~~~~~~~~~~~')
 print_step('Run LGB')
-results = run_cv_model(train, test, target, runLGB, params, rmse, 'deep_lgb2')
+results = run_cv_model(train, test, target, runLGB, params, rmse, 'deep_lgb3')
 import pdb
 pdb.set_trace()
 
 print('~~~~~~~~~~')
 print_step('Cache')
-save_in_cache('deep_lgb2', pd.DataFrame({'deep_lgb2': results['train']}),
-                           pd.DataFrame({'deep_lgb2': results['test']}))
+save_in_cache('deep_lgb3', pd.DataFrame({'deep_lgb3': results['train']}),
+                           pd.DataFrame({'deep_lgb3': results['test']}))
 
 print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
 print_step('Prepping submission file')
 submission = pd.DataFrame()
 submission['item_id'] = test_id
 submission['deal_probability'] = results['test'].clip(0.0, 1.0)
-submission.to_csv('submit/submit_deep_lgb2.csv', index=False)
+ubmission.to_csv('submit/submit_deep_lgb3.csv', index=False)
 print_step('Done!')
