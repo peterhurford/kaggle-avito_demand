@@ -35,6 +35,7 @@ print('~~~~~~~~~~~~~~~~~~~')
 print_step('Importing Data')
 train, test = get_data()
 target = train['deal_probability']
+test_id = test['item_id']
 
 print_step('Importing Data 2/15')
 train_ridge, test_ridge = load_cache('tfidf_ridges')
@@ -379,6 +380,6 @@ print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
 print_step('Prepping submission file')
 submission = pd.DataFrame()
 submission['item_id'] = test_id
-submission['deal_probability'] = results['test'].clip(0.0, 1.0)
+submission['deal_probability'] = test_lasso['cat_ridge'].clip(0.0, 1.0)
 submission.to_csv('submit/submit_pc_lasso_l2_blender.csv', index=False)
 print_step('Done!')

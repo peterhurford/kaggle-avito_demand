@@ -36,6 +36,7 @@ print_step('Importing Data')
 train, test = get_data()
 
 target = train['deal_probability']
+test_id = test['item_id']
 print_step('Importing Data 1/5')
 train_, test_ = load_cache('lgb_blender')
 train_['deal_probability'] = target
@@ -43,19 +44,59 @@ train_['item_id'] = train['item_id']
 test_['item_id'] = test['item_id']
 
 print_step('Importing Data 2/5')
+train_te_lgb2, test_te_lgb2 = load_cache('lgb_blender')
+train_['lgb_blender'] = train_te_lgb2['lgb_blender']
+test_['lgb_blender'] = test_te_lgb2['lgb_blender']
+
+print_step('Importing Data 2/5')
+train_te_lgb2, test_te_lgb2 = load_cache('lgb_blender_2')
+train_['lgb_blender_2'] = train_te_lgb2['lgb_blender']
+test_['lgb_blender_2'] = test_te_lgb2['lgb_blender']
+
+print_step('Importing Data 2/5')
+train_te_lgb2, test_te_lgb2 = load_cache('lgb_blender_3')
+train_['lgb_blender_3'] = train_te_lgb2['lgb_blender']
+test_['lgb_blender_3'] = test_te_lgb2['lgb_blender']
+
+print_step('Importing Data 2/5')
 train_te_lgb2, test_te_lgb2 = load_cache('lgb_blender_poisson')
 train_['lgb_blender_poisson'] = train_te_lgb2['lgb_blender_poisson']
 test_['lgb_blender_poisson'] = test_te_lgb2['lgb_blender_poisson']
+
+print_step('Importing Data 2/5')
+train_te_lgb2, test_te_lgb2 = load_cache('lgb_blender_poisson_2')
+train_['lgb_blender_poisson_2'] = train_te_lgb2['lgb_blender_poisson']
+test_['lgb_blender_poisson_2'] = test_te_lgb2['lgb_blender_poisson']
 
 print_step('Importing Data 3/5')
 train_te_lgb2, test_te_lgb2 = load_cache('flat_blender_lgb')
 train_['flat_blender_lgb'] = train_te_lgb2['flat_blender_lgb']
 test_['flat_blender_lgb'] = test_te_lgb2['flat_blender_lgb']
 
+print_step('Importing Data 3/5')
+train_te_lgb2, test_te_lgb2 = load_cache('flat_blender_lgb_2')
+train_['flat_blender_lgb_2'] = train_te_lgb2['flat_blender_lgb']
+test_['flat_blender_lgb_2'] = test_te_lgb2['flat_blender_lgb']
+
 print_step('Importing Data 4/5')
 train_te_lgb2, test_te_lgb2 = load_cache('MLP_blender')
 train_['MLP_blender'] = train_te_lgb2['MLP_blender']
 test_['MLP_blender'] = test_te_lgb2['MLP_blender']
+
+print_step('Importing Data 4/5')
+train_te_lgb2, test_te_lgb2 = load_cache('MLP_blender_2')
+train_['MLP_blender_2'] = train_te_lgb2['MLP_blender_2']
+test_['MLP_blender_2'] = test_te_lgb2['MLP_blender_2']
+
+print_step('Importing Data 4/5')
+train_te_lgb2, test_te_lgb2 = load_cache('MLP_blender_3')
+train_['MLP_blender_3'] = train_te_lgb2['MLP_blender_3']
+test_['MLP_blender_3'] = test_te_lgb2['MLP_blender_3']
+
+print_step('Importing Data 4/5')
+train_te_lgb2, test_te_lgb2 = load_cache('MLP_blender_4')
+train_['MLP_blender_4'] = train_te_lgb2['MLP_blender_4']
+test_['MLP_blender_4'] = test_te_lgb2['MLP_blender_4']
 
 print_step('Importing Data 5/5')
 train_te_lgb2, test_te_lgb2 = load_cache('lasso_blender')
@@ -139,6 +180,6 @@ print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
 print_step('Prepping submission file')
 submission = pd.DataFrame()
 submission['item_id'] = test_id
-submission['deal_probability'] = results['test'].clip(0.0, 1.0)
+submission['deal_probability'] = test_lasso['cat_ridge'].clip(0.0, 1.0)
 submission.to_csv('submit/submit_pc_lasso_l3_blender.csv', index=False)
 print_step('Done!')
