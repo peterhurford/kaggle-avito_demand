@@ -28,8 +28,7 @@ params = {'learning_rate': 0.02,
           'lambda_l2': 1,
           'min_data_in_leaf': 40,
           'verbose_eval': 20,
-          #'num_rounds': 1600}
-          'num_rounds': 300}
+          'num_rounds': 1600}
 poisson_params = params.copy()
 poisson_params['application'] = 'poisson'
 poisson_params['poisson_max_delta_step'] = 1.5
@@ -347,6 +346,18 @@ print_step('Importing Data 14/15 3/3')
 test_ = pd.concat([test_, test_multi], axis=1)
 
 print_step('Importing Data 14/15 1/3')
+train_multi = pd.read_csv('cache/train_liu_nn_multiclass.csv')
+test_multi = pd.read_csv('cache/test_liu_nn_multiclass.csv')
+train_multi.columns = ['liu_' + c for c in train_multi.columns]
+test_multi.columns = ['liu_' + c for c in test_multi.columns]
+print_step('Importing Data 14/15 2/3')
+train_ = pd.concat([train_, train_multi], axis=1)
+print_step('Importing Data 14/15 3/3')
+test_ = pd.concat([test_, test_multi], axis=1)
+import pdb
+pdb.set_trace()
+
+print_step('Importing Data 14/15 1/3')
 train_cnn_ft, test_cnn_ft = load_cache('CNN_binary')
 print_step('Importing Data 14/15 2/3')
 train_['CNN_binary'] = train_cnn_ft['CNN_binary']
@@ -385,6 +396,7 @@ test_['liu_lgb'] = test_liu_lgb['liu_lgb']
 models = [c for c in train_.columns if 'svd' not in c and 'price' not in c and 'img' not in c and 'parent_category' not in c]
 pprint(sorted([(m, rmse(target, train_[m])) for m in models], key = lambda x: x[1]))
 good_models = [m for m in models if 'lgb' in m or 'nn' in m or 'NN' in m or 'fm' in m]
+pd.set_option('display.max_columns', 500)
 print(pd.DataFrame(np.corrcoef([train_[m] for m in good_models]), index = good_models, columns = good_models))
 
 print_step('Importing Data 15/15 1/4')
