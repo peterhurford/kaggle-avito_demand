@@ -21,7 +21,6 @@ from cache import get_data, is_in_cache, load_cache, save_in_cache
 
 params = {'learning_rate': 0.01,
           'application': 'regression',
-          'boosting': 'dart',
           'num_leaves': 31,
           'verbosity': -1,
           'metric': 'rmse',
@@ -502,7 +501,7 @@ print('~~~~~~~~~~~~~~~~~~~~~~~~~')
 print_step('Run Flat Blender LGB')
 print(train_fe.shape)
 print(test_fe.shape)
-results = run_cv_model(train_fe, test_fe, target, runLGB, params, rmse, 'flat_blender_lgb_dart')
+results = run_cv_model(train_fe, test_fe, target, runLGB, params, rmse, 'flat_blender_lgb')
 import pdb
 pdb.set_trace()
 
