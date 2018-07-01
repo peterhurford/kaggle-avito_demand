@@ -242,9 +242,47 @@ print('\nAll Data shape: {} Rows, {} Columns'.format(*df.shape))
 print("Feature Engineering")
 df['no_image'] = df['image_top_1'].isnull().astype('uint8')
 df['no_price'] = df['price'].isnull().astype('uint8')
-df["price"] = np.log(df["price"] + 0.001)
-df["price"].fillna(-999, inplace=True)
 df["image_top_1"].fillna(-999, inplace=True)
+
+
+def get_wo_nan_price(df):
+  df_wo_nan = pd.DataFrame(index=df.index)
+  df_wo_nan['price_imputed'] = df.groupby(
+    ['region', 'city', 'parent_category_name', 'category_name', 'param_1',
+     'param_2', 'param_3'])['price'].apply(lambda x: x.fillna(x.median()))
+  print(df_wo_nan['price_imputed'].isnull().sum())
+  df_wo_nan['price_imputed'] = df.groupby(
+    ['region', 'city', 'parent_category_name', 'category_name', 'param_1',
+     'param_2'])['price'].apply(lambda x: x.fillna(x.median()))
+  print(df_wo_nan['price_imputed'].isnull().sum())
+  df_wo_nan['price_imputed'] = df.groupby(
+    ['region', 'city', 'parent_category_name', 'category_name', 'param_1'])[
+    'price'].apply(lambda x: x.fillna(x.median()))
+  print(df_wo_nan['price_imputed'].isnull().sum())
+  df_wo_nan['price_imputed'] = \
+  df.groupby(['region', 'city', 'parent_category_name', 'category_name'])[
+    'price'].apply(lambda x: x.fillna(x.median()))
+  print(df_wo_nan['price_imputed'].isnull().sum())
+  df_wo_nan['price_imputed'] = \
+  df.groupby(['region', 'city', 'parent_category_name'])['price'].apply(
+    lambda x: x.fillna(x.median()))
+  print(df_wo_nan['price_imputed'].isnull().sum())
+  df_wo_nan['price_imputed'] = df.groupby(['region', 'city'])['price'].apply(
+    lambda x: x.fillna(x.median()))
+  print(df_wo_nan['price_imputed'].isnull().sum())
+  df_wo_nan['price_imputed'] = df.groupby(['region'])['price'].apply(
+    lambda x: x.fillna(x.median()))
+  print(df_wo_nan['price_imputed'].isnull().sum())
+  return df_wo_nan
+
+
+price_imputed = get_wo_nan_price(df)
+df = df.merge(price_imputed, left_index=True, right_index=True, how='left')
+
+df["price"] = df["price_imputed"]
+del df["price_imputed"]
+df["price"] = np.log(df["price"] + 0.001)
+
 
 print("\nCreate Time Variables")
 df["Weekday"] = df['activation_date'].dt.weekday
@@ -318,12 +356,17 @@ def parse(x):
 print("Generate Level Feature")
 
 lbl = preprocessing.LabelEncoder()
-for col in ["parent_category_name", "category_name", "param_1", "param_2", "param_3"]:
-  gp = df[[col, 'price']].groupby(by=[col]).apply(parse).reset_index()
-  df = df.merge(gp[['level']], how='left', left_index=True, right_index=True)
-  df[f'{col}_level'] = df['level']
-  del df['level']
+gp = df[['category_name', 'price']].groupby(
+  by=['category_name']).apply(parse).reset_index()
+df = df.merge(gp[['level']], how='left', left_index=True, right_index=True)
+df['level'] = np.log(df['level'] + 0.001)
 
+df['category_level'] = df['category_name'].astype('str') \
+                       + "_" + df['level'].astype(str)
+df['category_level_encode'] = lbl.fit_transform(df['category_level'])
+
+# del df['level']
+del df['category_level']
 
 
 
@@ -517,7 +560,6 @@ lgsub = pd.DataFrame(lgpred, columns=["deal_probability"], index=testdex)
 lgsub['deal_probability'] = lgsub['deal_probability'].clip(0.0, 1.0)
 lgsub.to_csv(env_check.log_path + "/lgsub.csv", index=True, header=True)
 print_importance(last_clf)
-
 
 
 

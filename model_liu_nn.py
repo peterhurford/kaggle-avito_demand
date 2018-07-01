@@ -24,7 +24,7 @@ from sklearn.model_selection import KFold
 import time
 from gensim.models.keyedvectors import KeyedVectors
 import env_check
-from attent import Attention
+from keras_utils import Attention
 
 notebookstart = time.time()
 
@@ -291,7 +291,7 @@ class AvitoModel:
     cat_embeds = []
     for idx, col in enumerate(categorical):
       x = Lambda(lambda x: x[:, idx, None])(categorial_inp)
-      x = Embedding(categorical_value_count[idx], 30, input_length=1)(x)
+      x = Embedding(categorical_value_count[idx], 50, input_length=1)(x)
       cat_embeds.append(x)
     embeds = concatenate(cat_embeds, axis=2)
     embeds = GaussianDropout(0.2)(embeds)
@@ -357,7 +357,7 @@ class AvitoModel:
     input_list = [categorial_inp, continous_inp, title_inp, desp_inp]
     if USE_IMAGE:
       # Image input
-      img_input = Input(shape=(64, 64, 3))
+      img_input = Input(shape=(80, 60, 3))
       img_cnn = Conv2D(filters=64, kernel_size=(3, 3), activation='relu')(img_input)
       img_cnn = BatchNormalization()(img_cnn)
       img_cnn = MaxPool2D()(img_cnn)
@@ -392,7 +392,6 @@ class AvitoModel:
     model.compile(loss=rmse,
                   optimizer=Adam(lr=0.001),
                   metrics=[rmse])
-    print(model.summary())
     return model
 
 
@@ -411,14 +410,14 @@ def get_input(df, train=True):
     get_input_list.append(img)
   return get_input_list
 
-def save_prediction(pred, file):
-  sub = pd.DataFrame(pred, columns=["deal_probability"], index=testdex)
+def save_prediction(pred, file, dex):
+  sub = pd.DataFrame(pred, columns=["deal_probability"], index=dex)
   sub['deal_probability'] = sub['deal_probability'].clip(0.0, 1.0)
   sub.to_csv(env_check.log_path + f"/{file}.csv", index=True, header=True)
 
 
-fold_count = 10
-skf = KFold(fold_count, shuffle=True, random_state=12345)
+fold_count = 5
+skf = KFold(fold_count, shuffle=True, random_state=2017)
 gen = skf.split(train_df, y)
 if not USE_KFLOD:
   fold_count = 1
@@ -447,7 +446,9 @@ for index, (train_index, valid_index) in enumerate(gen):
   gc.collect()
   model.load_weights(file_path)
   prediction = model.predict(get_input(test_df, train=False), batch_size=128)
-  save_prediction(prediction, f'kfold_{index}')
+  save_prediction(prediction, f'kfold_{index}', testdex)
+  valid_pred = model.predict(get_input(X_valid))
+  save_prediction(valid_pred, f'valid_fold{index}', X_valid.index)
   prediction = np.reshape(prediction, (-1))
   test_prediction[index] = prediction
   if index == fold_count - 1:
@@ -460,5 +461,4 @@ print("Notebook Runtime: %0.2f Minutes" % ((time.time() - notebookstart) / 60))
 
 lgpred = test_prediction.mean(axis=0)
 
-save_prediction(lgpred, 'lgsub')
-
+save_prediction(lgpred, 'lgsub', testdex)
